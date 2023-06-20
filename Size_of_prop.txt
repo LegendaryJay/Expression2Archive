@@ -1,0 +1,12 @@
+@name Size of prop
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+runOnTick(1)
+Ent = owner():aimEntity()
+if (Ent){
+    print(toUnit("in", Ent:boxSize():z()))
+}
+

@@ -1,0 +1,61 @@
+@name 
+@inputs 
+@outputs 
+@persist Props:array Count
+@trigger 
+
+@persist Test:vector
+
+function void entity:moveTo(Pos:vector){
+    Vec = (Pos - This:pos())*50
+    This:applyForce((Vec-This:vel())*This:mass())
+    if (This:pos():distance(Pos)<1) {Face=1}
+}
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+
+#sample Code:
+
+interval(200)
+if (first()){
+    findIncludeModel("models/props_c17/FurnitureWashingmachine001a.mdl")
+    findAllowPlayerProps(owner())
+    findInSphere(entity():pos(),500)
+    Props=findToArray()
+    Count=Props:count()
+    for(I=1,Count){
+        lightCreate(I,Props[I,entity]:pos())
+        #lightParent(I,Props[I,entity])
+        Props[I,entity]:propFreeze(0)
+        noCollideAll(Props[I,entity], 0 )
+    }
+    
+}
+for (I=1,Count){
+    
+    if (!Props[I, entity]){
+        Props:remove(I)
+    } else {
+        Prop = Props[I, entity]
+        Prop:propFreeze(Prop:isPlayerHolding())
+        if (random(0,1)){
+            
+            Prop:setMaterial("lights/white")
+            Color = hsv2rgb(random() * 360, 1, 1)
+            Prop:setColor(Color)
+            lightColor(I, Color)
+            lightPos(I, Prop:pos())
+            Prop:face(Prop:angles()+ang(random(-10,10),random(-10,10),random(-10,10)))
+            if (random(0,2)){
+                Prop:moveTo(Prop:pos()  + vec(random(-1,1),random(-1,1),random(0,2)))
+            }
+        }
+    }
+}

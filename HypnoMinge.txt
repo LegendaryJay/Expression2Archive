@@ -1,0 +1,50 @@
+@name HypnoMinge
+@inputs 
+@outputs 
+@persist Target:entity
+@trigger 
+
+function void entity:moveTo(Pos:vector){
+    Vec = (Pos - This:pos())*50
+    This:applyForce((Vec-This:vel())*This:mass())
+}
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+if (first()){
+    Dist = 125
+    E = entity()
+    propSpawnUndo(0)
+    runOnTick(1)
+    
+    Target = findPlayerBySteamID("STEAM_0:0:20435647") 
+    hint(Target:name(),4)
+    DirArray = array(Target:forward(),Target:right(), -Target:forward(), -Target:right(), Target:up(), -Target:up())
+    for(I = 1, 6){
+        Direction = DirArray[I, vector]
+        holoCreate(I)
+        holoModel(I, "models/props_lakeside_event/wof_plane.mdl")
+        holoPos(I, Target:boxCenterW() + Direction * Dist)
+        
+        if (I < 5){
+            holoAng(I, Direction:rotateAroundAxis(Target:up(), -90):toAngle())
+        } elseif (I == 5) {
+            holoAng(I, Target:toWorld(ang(0, 0 ,90)))
+        } else {
+            holoAng(I, Target:toWorld(ang(0, 0 ,-90)))
+        }
+        holoParent(I, Target)
+        holoVisible(I, players(), 0)
+        holoVisible(I, Target, 1)
+    }
+    
+}
+for(I = 1, 6){
+    holoColor(I, hsv2rgb(random() * 360, 1, 1))
+}

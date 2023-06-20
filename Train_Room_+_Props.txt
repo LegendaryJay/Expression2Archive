@@ -1,0 +1,171 @@
+@name Train Room + Props
+@inputs 
+@outputs VCount
+@persist Center:vector Scale [V VOld P POld]:array 
+
+#old
+@persist BoxScale 
+@persist PropTrigger MapSize:vector HoloV OldVCount VCount
+@trigger
+if (first()){
+    runOnTick(1)
+    
+    if (map()=="!gm_construct_flatgrass_v6-2"){
+        Scale=0.01 
+        BoxScale=0.083333280351461*Scale
+        BigBoxScale=0.0026308863553119*Scale
+        MapSize=vec(14319.71875,14319.71875,10239.71875)
+        Center=vec(-4808,8324,-978)
+            holoCreate(99,Center + vec(0,0,10000 * 2 * 0.43692448357374 * Scale))
+            holoModel(99,"models/hunter/blocks/cube8x8x8.mdl")
+            holoMaterial(99,"models/debug/debugwhite")
+            holoScale(99,vec(14300,14300,10000)*BigBoxScale*-2)
+            holoAlpha(99,50)
+    }
+    elseif (map()=="gm_construct_flatgrass_v6-2"){
+        Scale=0.1
+        BoxScale=0.083333280351461*Scale
+        BigBoxScale=0.0026308863553119*Scale
+        MapSize=vec(14319.71875,14319.71875,10239.71875)
+        Center=entity():pos()+vec(0,0,MapSize:z()*Scale+5)
+            holoCreate(99,Center + vec(0,0,MapSize:z() * 2 * 0.43692448357374 * Scale))
+            holoModel(99,"models/hunter/blocks/cube8x8x8.mdl")
+            holoMaterial(99,"models/debug/debugwhite")
+            holoScale(99,MapSize*BigBoxScale*-2)
+            holoAlpha(99,50)
+    }
+    elseif (map()=="gm_flatgrass"){
+        Scale=0.05
+        BoxScale=0.083333280351461*Scale
+        BigBoxScale=0.0026308863553119*Scale
+        MapSize=vec(15500,15500,12800)
+        Center=entity():pos() + vec(0,0,MapSize:z()*Scale+2)
+        
+        holoCreate(98,Center)
+        
+        holoCreate(99,Center + vec(0,0,12800 * 2 * 0.43692448357374 * Scale))
+        holoModel(99,"models/hunter/blocks/cube8x8x8.mdl")
+        holoMaterial(99,"models/debug/debugwhite")
+        holoScale(99,vec(15500,15500,12800)*BigBoxScale*-2)
+        holoAlpha(99,50)
+    }
+    else {hint("Fix Me",2)}
+    timer("Props",1)
+
+ 
+}
+
+Count=numPlayers()
+if (changed(Count)){
+    POld=P:clone()
+    P=players()
+    for (I=1,Count>POld:count() ? Count : POld:count()){
+        if (P[I,entity]!=POld[I,entity]){
+            holoDelete(I)
+        }
+    }
+    
+}
+
+for (I=1,Count){
+    Target=P[I,entity]
+    if (!holoEntity(I)){
+        holoCreate(I)
+    }
+    holoColor(I,teamColor(Target:team()))
+    holoScale(I,Target:boxSize()*BoxScale)
+    holoPos(I,Target:boxCenterW()*Scale+Center)
+    holoAng(I,Target:angles())
+}
+
+###################
+for(TempI=1,VCount>OldVCount ? VCount : OldVCount ){
+    TempV=V[TempI,entity]
+    if (TempV){
+        holoPos(TempI*100,TempV:pos()*Scale+Center)
+        holoAng(TempI*100,TempV:angles())
+    }
+    else{
+        holoDelete(TempI*100)
+        holoDelete(TempI*100+1)
+    }
+}
+if (clk("Props")){
+    timer("Props",1000)
+    
+    OldVCount=V:count()
+    findIncludeClass("jeep")  
+    findIncludeClass("airboat")
+    findIncludeClass("prisoner_pod")
+    findInBox(-MapSize,MapSize)
+    VOld=V:clone()
+    V=findToArray()
+    VCount=V:count()
+    
+    if (OldVCount!=VCount | V[VCount,entity]!=VOld[VCount,entity]){
+        for (I3=1,VCount){
+            TempV=V[I3,entity]
+            hint(toString(I3),1)
+            if (TempV!=VOld[I3,entity]){
+                
+
+                holoUnparent(I3*100)
+                holoDelete(I3*100+1)
+                if (!holoEntity(I3*100)){
+                    holoCreate(I3*100)
+                }
+                holoPos(I3*100,TempV:pos()*Scale+Center)
+                holoModel(I3*100,TempV:model())
+                holoScale(I3*100,vec(1,1,1)*Scale)
+                holoModel(I3*100,TempV:model())
+                holoAng(I3*100,TempV:angles())
+            }
+        }
+        PropTrigger=1
+        HoloV=1
+    }
+
+}
+
+
+if (PropTrigger==1 & holoRemainingSpawns()>38){
+    if (HoloV<=VCount){
+        Thing=V[HoloV,entity]
+        if (Thing:isConstrained()){
+            Stuff=Thing:getConstraints()
+            StuffCount=Stuff:count()
+            HoloP=1
+            while (HoloP<=StuffCount & perf() & holoCanCreate() & HoloP<40){
+                Prop=Stuff[HoloP,entity]
+                if (Prop:type()=="prop_vehicle_prisoner_pod" | Prop:type()=="prop_vehicle_jeep" | Prop:type()=="prop_vehicle_airboat"){
+                    for (TempI=1,HoloV){
+                        if (Prop==V[TempI,entity]){
+                            holoDelete(HoloV*100+1)
+                            HoloP=999
+                            break
+                        }
+                    }
+                }
+                else {
+                    HoloI=HoloV*100 + HoloP
+                    holoCreate(HoloI)
+                    holoModel(HoloI,Prop:model())
+                    holoPos(HoloI,Prop:pos()*Scale+Center)
+                    holoAng(HoloI,Prop:angles())
+                    holoMaterial(HoloI,Prop:getMaterial())
+                    holoColor(HoloI,Prop:getColor())
+                    holoScale(HoloI,vec(1,1,1)*Scale)
+                    if (HoloP==1){holoParent(HoloI,HoloV*100)}
+                    else {holoParent(HoloI,HoloV*100+1)}
+                    HoloP++
+                }
+            }
+            
+            
+        }
+        HoloV++  
+    }
+    else {
+        PropTrigger=0
+    }
+}

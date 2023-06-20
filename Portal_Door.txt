@@ -1,0 +1,29 @@
+@name Portal Door
+@inputs 
+@outputs 
+@persist [Me Seat]:entity [AimPos AimNorm]:vector
+@trigger 
+
+if (first()){
+    propSpawnUndo(0)
+    runOnTick(1)
+    Seat = seatSpawn("models/expression 2/cpu_microchip_nano.mdl", 1)
+    Me = owner()
+    for(I = 1, 2){
+        holoCreate(I)
+        holoModel(I, "models/holograms/cplane.mdl")
+        holoScale(I, vec(10,5,1))
+    }
+}
+AimPos = Me:aimPos()
+DoorBtn = Me:keyPressed("r")
+if (changed(DoorBtn) & DoorBtn){
+    AimNorm = Me:aimNormal()
+    AimEnt = Me:aimEntity()
+    if(AimEnt){
+        holoPos(1, AimPos + AimNorm/10)
+        holoAng(1, (quat(AimNorm:toAngle() ) * quat(ang(90,0,0))):toAngle())
+        holoParent(1, AimEnt)
+        OtherSide = AimEnt:boxCenter()
+    }
+}

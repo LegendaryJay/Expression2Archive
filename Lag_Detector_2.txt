@@ -1,0 +1,34 @@
+@name Lag Detector 2
+@inputs 
+@outputs Lag TimeElapsed RawLag LastRawLag
+@persist LastRawLag E:entity LastRunTime
+@model models/props_c17/gravestone_cross001a.mdl
+interval(200)
+RealTime = realtime()
+RawLag = curtime() - RealTime
+
+TimeElapsed = RealTime - LastRunTime
+
+    
+if (first()){
+    E = entity()
+    E:setMaterial("lights/white")
+    #runOnTick(1)
+} elseif (TimeElapsed) {
+    Lag = (abs(RawLag - LastRawLag) / TimeElapsed) * 1000
+    if (Lag > 100){
+        if (Lag > 500){
+            print("Lag: " + Lag + "ms/sec")
+            owner():soundPlay(1, 2,"error.wav")
+        }
+        concmd("\"" + Lag:toString() + " ms/sec lag")
+    }
+    Color = 255 * clamp(Lag/1000, 0, 1)
+    E:setColor(vec(Color,255 - Color, 0))
+} else {
+    print("Elapsed" + TimeElapsed)
+}
+
+LastRawLag = RawLag
+LastRunTime = RealTime
+

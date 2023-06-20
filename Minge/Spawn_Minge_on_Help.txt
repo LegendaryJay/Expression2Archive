@@ -1,0 +1,13 @@
+@name Spawn Minge on Help
+@inputs 
+@outputs 
+@persist 
+@trigger 
+if (first()){
+    runOnChat(1)
+    runOnTick(1)
+}
+if (chatClk() & lastSaid():find("help")){
+    concmd("say !spawn \"" + lastSpoke():name() + "\"")
+    print(lastSaid())
+}

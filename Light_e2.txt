@@ -1,0 +1,29 @@
+@name 
+@inputs 
+@outputs 
+@persist I Max Mode
+@trigger 
+if (first()){
+    I=1
+    Max=10
+}
+if (!Mode){
+    
+    if ( I<=Max){
+        lightCreate(I, entity():pos() + vec(I*40*sin(137.508*I),I*40*cos(137.508*I),150))
+        lightColor(I,hsv2rgb(200,1,1))
+        interval(1000)
+    }
+    else{
+        Mode=1
+    }
+}
+#[if (Mode){
+    for (II=1,Max){
+        lightColor(II,hsv2rgb(I,1,1))   
+        runOnTick(1) 
+    }
+}]#
+I++
+if (I>360){I-=360}
+if (I>Max){}

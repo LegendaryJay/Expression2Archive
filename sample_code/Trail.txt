@@ -1,0 +1,9 @@
+@name Trail
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+
+entity():setTrails(3,3,3,"trails/laser",vec(255,100,100),255)
+

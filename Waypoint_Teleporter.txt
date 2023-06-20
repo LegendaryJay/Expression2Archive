@@ -1,0 +1,69 @@
+@name Waypoint Teleporter
+@inputs 
+@outputs Table:table Json:string Error:string
+@persist Me:entity
+@trigger 
+if (first()){
+    runOnFile(1)
+    Me = owner()
+    Table = table()
+    ValueTable = table()
+    Waypoints = table()
+    ValueTable["name", string] = map()
+    
+    Waypoints["spawn", vector] = randvec(-1,1) * 1000
+    Waypoints["skybox", vector] = randvec(-1,1) * 1000
+    Waypoints["1", vector] = randvec(-1,1) * 1000
+    Waypoints["2", vector] = randvec(-1,1) * 1000
+    
+    ValueTable["waypointlist", table] = Waypoints   
+    
+    Table["maplist",table] = table(ValueTable,ValueTable)
+    
+    Json = jsonEncode(Table, 1)
+}
+if (fileCanWrite()){
+    runOnTick(0)
+    fileWrite("DeleteMe.txt",Json)
+    
+}
+hint(fileStatus():toString(),2)
+
+if (first()){
+    runOnChat(1)
+    TPCommand = "bamf"
+    Prefix = "!"
+    
+    CommandLength = TPCommand:length() + Prefix:length()
+}
+
+setWarp [spawn, {name}]
+delWarp
+warp
+warpList
+
+spawn
+
+bamf [{playername}]
+
+
+
+if (chatClk(Me)){
+    LastSaid = lastSaid()
+    LastSpoke = lastSpoke()
+    if (LastSaid:sub(1, 1) == Prefix){
+       LastSaidArray = LastSaid:sub(2):explode(" ")
+        switch (LastSaidArray[1, string]:lower()){
+            case TPCommand,
+                TargetPlayer = findPlayerByName(LastSaidArray[2, string])?:findPlayerByName(LastSaid:explode("\"")[2, string])
+                if (TargetPlayer){
+                    LastSpoke:plySetPos(TargetPlayer:boxCenterW() - TargetPlayer:eye() * 100 - LastSpoke:boxCenter())
+                    LastSpoke:plySetAng(TargetPlayer:eye():toAngle())
+                }
+                break
+            
+        }
+    }
+
+    
+}

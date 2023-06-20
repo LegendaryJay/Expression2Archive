@@ -1,0 +1,34 @@
+@name 
+@inputs 
+@outputs 
+@persist Turn Max Dist Scale
+@model models/sprops/misc/pyramids/rsize_4/rpyr_48x144.mdl
+runOnTick(1)
+if (first()){
+    Max=20
+    
+    Scale=5
+    Dist=23
+    for (I=1,Max){
+        
+        holoCreate(I)
+        holoModel(I,"models/sprops/triangles/misc/ctri_48.mdl")
+        holoScale(I,vec(Scale))
+    }
+}
+    
+for (I=1,Max){
+    
+    Pitch=(I/Max )*360 + 180 #cos(Turn)*45 +45 + 90
+    Yaw = 0 #sin(Pitch)*90
+    Roll= 0 #0 + (1 + cos(Turn))*45
+    
+    
+    X=sin(-I*360/Max)*Dist*(1.2+cos(Turn)*0.2)
+    Y= 0
+    Z=100 + cos(-I*360/Max)*Dist*(1.2+cos(Turn)*0.2) 
+    
+    holoPos(I,entity():pos() + vec(X,Y,Z)*Scale)
+    holoAng(I,ang(Pitch,Yaw,Roll))
+}
+Turn++

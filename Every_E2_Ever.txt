@@ -1,0 +1,13 @@
+@name Every E2 Ever
+@inputs 
+@outputs 
+@persist [E Me]:entity
+@trigger 
+runOnTick(1)
+
+if (first()){
+    Me=owner()
+    E=entity()
+}
+MePos=Me:pos()
+EPos=E:pos()

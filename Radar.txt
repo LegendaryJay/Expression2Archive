@@ -1,0 +1,189 @@
+@name Radar
+@inputs 
+@outputs HoloIndArray:array LastHoloInd
+@persist HoloIndArray:array LastHoloInd E:entity LogVal MiniMapSize MaxUnitScale TrackWorld
+@model models/sprops/geometry/sphere_3.mdl
+
+if (first()){
+    #include "lib/WatchPlayers"
+
+    #Intersect = 1, Plateforms = 0
+    DisplayMode = 1
+    
+    TrackWorld = 1
+    MiniMapSize = 20
+    
+    
+    
+    
+    
+    
+    runOnTick(1)
+    
+    E = entity()
+    Players = players()
+    for(I = 1, Players:count()){
+        HoloIndArray:pushNumber(I)
+        
+    }
+    LastHoloInd = Players:count()
+    
+
+    MaxUnitScale = 0.35 * MiniMapSize
+    
+    holoCreate(999)
+    holoModel(999, "models/editor/axis_helper.mdl")
+    holoMaterial(999, "models/debug/debugwhite")
+    holoScaleUnits(999, vec(1,1,1)*MiniMapSize * 2)
+    holoColor(999, vec(0,0,0), 250)
+    holoAng(999, ang(0))
+    holoParent(999, E)
+    
+
+    #holoCreate(998)
+    holoModel(998, "models/sprops/geometry/sphere_144.mdl")
+    holoScaleUnits(998, -vec(MiniMapSize * 2) )
+    holoParent(998, 999)
+    holoMaterial(998, "models/debug/debugwhite")
+    holoAng(998, ang(0,0,90))
+    holoColor(998, vec(30), 200)
+    
+    
+    GuideModel = "models/sprops/geometry/fdisc_48.mdl"
+    GuideMaterial = "models/weapons/v_models/tablet/tablet_circle_future"
+    
+    GuideAlpha = 255
+    GuideColor = vec(255)
+    #GuideColors = 255
+
+    if(DisplayMode == 1){
+        TempScale = vec(1,0,1) * MiniMapSize * 2
+        #middle    
+        holoCreate(997)
+        holoModel(997, GuideModel)
+        holoScaleUnits(997,  TempScale)
+        holoParent(997, 999)
+        holoMaterial(997, GuideMaterial)
+        holoAng(997, ang(0,0,90))
+        holoColor(997, GuideColor, GuideAlpha)
+        holoDisableShading(997,1)
+        
+        holoCreate(996)
+        holoModel(996, GuideModel)
+        holoScaleUnits(996, TempScale )
+        holoParent(996, 999)
+        holoMaterial(996, GuideMaterial)
+        holoAng(996, ang(0,0,0))
+        holoColor(996, GuideColor, GuideAlpha)
+        holoDisableShading(996,1)
+
+        
+        holoCreate(995)
+        holoModel(995, GuideModel)
+        holoScaleUnits(995, TempScale)
+        holoParent(995, 999)
+        holoMaterial(995, GuideMaterial)
+        holoAng(995, ang(90,0,90))
+        holoColor(995, GuideColor, GuideAlpha)
+        holoDisableShading(995,1)
+
+
+    } elseif (DisplayMode == 0) {
+        RadiusPos = 0.5
+        TempScale = vec(1,0,1) * MiniMapSize * 2 * sqrt( 1 - RadiusPos^2 )
+    #middle    
+        EPos = E:pos()
+        holoCreate(997)
+        holoModel(997, GuideModel)
+        holoScaleUnits(997, vec(1,0,1) * MiniMapSize * 2 )
+        holoParent(997, 999)
+        holoMaterial(997, GuideMaterial)
+        holoAng(997, ang(0,0,90))
+        holoColor(997, GuideColor, GuideAlpha)
+        holoDisableShading(997,1)
+        
+        
+        holoCreate(996)
+        holoModel(996, GuideModel)
+        holoScaleUnits(996, TempScale )
+        holoParent(996, 999)
+        holoMaterial(996, GuideMaterial)
+        holoAng(996, ang(0,0,90))
+        holoColor(996, GuideColor, GuideAlpha)
+        holoPos(996, EPos + vec(0,0,MiniMapSize * RadiusPos))
+        holoDisableShading(996,1)
+        
+
+        holoCreate(995)
+        holoModel(995, GuideModel)
+        holoScaleUnits(995, TempScale )
+        holoParent(995, 999)
+        holoMaterial(995, GuideMaterial)
+        holoAng(995, ang(0,0,90))
+        holoColor(995, GuideColor, GuideAlpha)
+        holoPos(995, EPos + vec(0,0,-MiniMapSize * RadiusPos))
+        holoDisableShading(995,1)
+    }
+}
+if (TrackWorld){
+    holoAng(999,ang())
+} else {
+    holoAng(999,E:angles():setPitch(0))
+}
+    
+if(ChangePlayer){
+    if (NewPlayer){
+        LastHoloInd++
+        HoloIndArray:pushNumber(LastHoloInd)
+        if (!holoEntity(LastHoloInd)){
+            HoloEnt = holoCreate(LastHoloInd)
+            holoModel(LastHoloInd, "models/sprops/cylinders/size_5/cylinder_12x42.mdl")
+            holoMaterial(LastHoloInd, "debug/debugdrawflat")
+        }
+    } else {
+        holoDelete(HoloIndArray[LeftPlayer, number])
+        HoloIndArray:remove(LeftPlayer)
+    }
+}
+
+
+for (I = 1, Players:count()){
+    Player = Players[I, entity]
+    HoloI = HoloIndArray[I, number]
+    
+    VecFromOrigin = Player:boxCenterW() - E:boxCenterW()
+    Distance = VecFromOrigin:length()
+    
+    
+    SoftMaxDist = 500
+    
+    Special = Distance/SoftMaxDist
+    
+    
+    PosScale = MiniMapSize * (2^(Special + 1) - 1) / (2 * (2^Special))
+    
+
+    
+    
+    
+    
+    HoloEnt = holoEntity(HoloI)
+    if (!HoloEnt){
+        HoloEnt = holoCreate(HoloI)
+        holoModel(HoloI, "models/sprops/cylinders/size_5/cylinder_12x42.mdl")
+        holoMaterial(HoloI, "debug/debugdrawflat")
+    }
+    holoVisible(HoloI, Player, 0)
+    holoColor(HoloI, teamColor(Player:team()))
+    holoScaleUnits(HoloI, Player:boxSize():normalized() * ( clamp(1 - Distance/2000, 0.2, 1)) * MaxUnitScale)
+    
+    holoAng(HoloI, Player:angles())
+    holoPos(
+        HoloI, 
+        entity():pos() + 
+            VecFromOrigin:normalized() * PosScale + HoloEnt:boxCenter()
+    ) 
+}
+    
+
+

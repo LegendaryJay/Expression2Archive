@@ -1,0 +1,37 @@
+@name Useful Textures
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+Materials = array(
+    "models/player/shared/ice_player",
+    "engine/shadowbuild",
+    "engine/writez",
+    "lights/white",
+    "models/debug/debugwhite",
+    "models/wireframe",
+    "models/props_c17/fisheyelens",
+    "hlmv/debugmrmwireframe",
+    "effects/combineshield/comshieldwall",
+    "models/effects/portalfunnel_sheet",
+    "models/perftest/high_poly_test",
+    "models/props_lab/monitorface",
+    "models/effects/vortshield",
+    "dev/dev_energyflow",
+    "glass/glasswindow_refract01",
+    "models/props_dev/test_graygrid",
+    "wingf0x/seethrough_plastic",
+    "dak/dakpittedmetaldark",
+    "effects/combineshield/comshieldwall2"
+    
+    
+)
+E = entity()
+for (I = 1, Materials:count()){
+    holoCreate(I)
+    holoModel(I, "models/sprops/geometry/sphere_42.mdl")
+    holoPos(I, E:pos() + vec((I - 1)*60 - (Materials:count() - 1)*30,0,60))
+    holoMaterial(I, Materials[I, string])
+}
+

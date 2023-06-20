@@ -1,0 +1,43 @@
+@name Teleport animation
+@inputs 
+@outputs Pos Scale Ticker
+@persist E:entity BoxSize:vector Middle Ticker
+@trigger 
+
+if (first()){
+    runOnTick(1)
+    
+    BoxSize = vec(48.500003814697, 78.500366210938, 48.500007629395)
+    holoCreate(1)
+    holoModel(1, "models/sprops/misc/tubes/size_4/tube_48x78.mdl")
+    holoMaterial(1, "Models/effects/comball_tape")
+    holoAng(1,ang(0,0,90))
+    E = entity()
+    Max = 100
+    
+    Middle = Max/2
+    Ticker = 0
+    
+}
+Pos = BoxSize:y() * ( Ticker / Middle )/2
+holoPos(
+    1, E:pos() + vec(
+        0, 
+        Pos, 
+        0
+    ) 
+)
+
+Scale = 1 - abs( Ticker - Middle )/10
+holoScale( 1,
+    vec(
+        1, 
+        Scale,
+        1
+    )
+)
+
+if (Ticker >= Max){
+    Ticker = 0
+}
+Ticker++

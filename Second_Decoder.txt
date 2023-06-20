@@ -1,0 +1,39 @@
+@name Second Decoder
+@inputs 
+@outputs 
+@persist I
+@model models/hunter/blocks/cube8x8x8.mdl 
+
+interval(1000)
+if (first()){
+    Days = 0
+    Hrs = 0
+    Min = 10
+    Sec = floor(random() * 60)
+    I = Days * 86400 + Hrs * 3600 + Min * 60 + Sec 
+    
+}
+Days = floor(I/86400)
+Hrs = floor(I/3600) % 24
+Min = floor(I/60) % 60
+Sec = I % 60
+String = ""
+if (Days){
+    String += Days + " days "
+}
+if (Hrs){
+    String += Hrs + " hours "
+} 
+if (Min){
+    String += Min + " minutes "    
+}
+if (Sec){
+    String += Sec + " seconds "
+}
+setName("Crash Server In " + String)
+I--
+if (!I){
+    
+    selfDestruct()
+    concmd("say *Explode*")
+}

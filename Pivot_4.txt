@@ -1,0 +1,53 @@
+@name Pivot
+@inputs
+@outputs Fix3
+@persist Prop:entity Fix:vector Count Pitch Roll 
+@trigger 
+runOnTick(1)
+
+if (first()){
+    for(I=1,8){
+        Vec= toWorld(-Fix,ang(),vec(),holoEntity(I):angles())
+        Ang= toWorldAng(vec(),ang(180, -22.5,0),vec(),ang(Roll,-45*I,-Pitch))
+        Fix=vec(-18.042938,-43.728516,-0.282339)*0.5
+        
+        
+        
+        holoCreate(I,entity():pos()+vec(-sin(360*(I/8))*47,-cos(360*(I/8))*47,100) + Vec)
+        holoScale(I,vec(0.5))
+        holoAng(I,Ang)
+        holoModel(I,"models/hunter/misc/shell2x2e.mdl")
+        #holoModel(I,"models/sprops/trans/plates/license_1.mdl")
+        #holoMaterial(I,"models/debug/debugwhite")
+        #holoColor(I,vec(100))
+    }
+}
+
+
+for (I=1,8){
+    
+    
+
+    EAng=entity():angles()
+    
+    AngFix=entity():toWorld(ang(0,-45*I + -90,0))
+    AngFix2=toWorldAng(vec(),ang(0,Pitch,Roll),vec(),AngFix)
+    Ang= toWorldAng(vec(),ang(180, 68.5,0) ,vec(),AngFix2)
+    
+    Vec= entity():toWorld(vec(-sin(360*(I/8))*23.5,-cos(360*(I/8))*23.5,0))    
+    Fix2=toWorld(-Fix,ang(),Vec,Ang)
+    holoPos(I,Fix2)
+    holoAng(I,Ang )
+    
+}
+#Count++
+Max=180
+if (Count<=Max){
+    Pitch=Count
+    Roll=0
+    Count++
+}
+elseif(Count<=Max+45){
+    Roll=Count-Max
+    Count++
+}

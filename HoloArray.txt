@@ -1,0 +1,36 @@
+@name HoloArray
+@inputs 
+@outputs X Y I Gap SmallGap
+@persist E:entity RangerSqr HoloSqr [Box HoloPos]:vector2 Gap I X Y 
+@model models/sprops/rectangles/size_10/rect_480x480x3.mdl
+
+if (first()){
+    HoloSqr = 10
+    RangerSqr = 3
+    RangerGap = Box:x()/(RangerSqr)
+    runOnTick(1)
+    E = entity()
+    Box= vec2(E:boxSize())
+    
+    SmallGap = 1/(HoloSqr + 1)
+    Gap = Box:x()*SmallGap
+    X = 1
+    Y = 1
+    I = 1
+}
+for(RangerY = 1,RangerSqr){
+    for(RangerX = 1,RangerSqr){
+        Ranger = 
+while (holoCanCreate() & Y <= HoloSqr){
+    HoloPos = vec2(Gap + (X - 1) * Gap, Gap + (Y - 1) * Gap) - Box/2
+    holoCreate(I)
+    holoPos(I, E:pos() + E:right()*HoloPos:x() + E:forward()*HoloPos:y())
+    holoAng(I, E:angles())
+    holoParent(I, E)
+    X++
+    I++
+    if (X > HoloSqr){
+        Y++
+        X = 1
+    }
+}

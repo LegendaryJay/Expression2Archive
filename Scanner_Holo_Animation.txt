@@ -1,0 +1,53 @@
+@name Scanner Holo Animation
+@inputs 
+@outputs Scale Height X
+@persist [Me Target]:entity Diameter Radius X UnitScale:vector
+#@model models/sprops/geometry/sphere_60.mdl 
+
+if (first()){
+    runOnTick(1)
+    entity():setMaterial("models/wireframe")
+    
+    Diameter = 150
+    Radius = Diameter * 0.5
+    
+    Target = holoCreate(3)
+    holoModel(3, "models/sprops/geometry/sphere_144.mdl")
+    Me = owner()
+    
+    
+    for (I = 1, 2){
+        holoCreate(I)
+        holoMaterial(I, "lights/white")
+        holoModel(I, "models/sprops/geometry/sphere_144.mdl")
+        holoAng(I, Target:toWorld(ang(0,0,0)))
+        #holoParent(I, Target)
+        holoColor(I, vec4(vec(255,0,0),200))
+    }
+    UnitScale = holoScaleUnits(1)
+}
+ChangeTargetBtn = Me:keyPressed("k")
+
+if (changed(ChangeTargetBtn) & ChangeTargetBtn){
+    AimEnt = Me:aimEntity()
+    if (AimEnt){
+        Target = AimEnt
+    }
+}
+X = angnorm(X + 0.5)
+
+Height = cos(X)
+Scale = abs(sin(X))
+
+for (I = 1, 2){
+    #Inv = 3 + -2 * I
+
+    holoPos(I, Target:boxCenterW() + vec(0,0,Height) * Radius * (3 + -2 * I))
+    
+    holoScaleUnits(I, vec(
+        1, 
+        1,
+        0
+    ) * Scale * Diameter)
+}
+

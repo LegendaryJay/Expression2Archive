@@ -1,0 +1,38 @@
+@name Position Fix
+@inputs 
+@outputs Distance
+@persist [Me Target]:entity
+@trigger 
+
+interval(100)
+if (first()){
+    Me=owner()
+}
+Aim=Me:aimEntity()
+if (Aim){
+    Target=Aim
+}
+
+if (!holoEntity(1)) {
+    holoCreate(1,Target:pos())
+    holoModel(1,"models/beer/wiremod/gate_e2.mdl")
+    holoDisableShading(1,1)
+
+    holoCreate(2,Target:pos())    
+    holoAlpha(2,50)
+    holoMaterial(2,"models/debug/debugwhite")
+    holoModel(2,"models/hunter/blocks/cube8x8x8.mdl")
+    holoDisableShading(2,1)
+}
+
+holoPos(1,Target:toWorld(Target:boxCenter()+vec(Target:boxSize():x()/2,0,0)))
+holoAng(1,Target:toWorld(ang(-90,180,0)))
+holoParent(1,Target)
+
+BoundScale=Target:boxSize()*0.0026308863553119
+OverBoundScale=1.005
+holoAng(2,Target:angles())
+holoScale(2,BoundScale*OverBoundScale)
+holoPos(2,Target:toWorld(Target:boxCenter()-vec(0,0,Target:boxSize():z()*0.43692448357374*OverBoundScale)))
+holoParent(2,Target)
+

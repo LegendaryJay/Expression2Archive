@@ -1,0 +1,41 @@
+@name All Lights
+@inputs On HeadLightsActive MainPoliceLightsActive SidePoliceLightsActive BreakLightsActive
+@outputs [MainPoliceLightsLeft MainPoliceLightsRight HeadLightsColor SidePoliceLightsLeft SidePoliceLightsRight BreakLights]:vector On Mode Step
+@persist Mode Step ColorPattern:array ColorCount LightInterval
+@trigger
+
+if (first()){
+    LightInterval = 200
+    ColorPattern = array(vec(255, 0, 0), vec( 0, 0, 255))
+    ColorCount = ColorPattern:count()
+}
+if (changed(On) | On){
+    interval(LightInterval * (1 - (Step > 5) * 0.8))
+    
+    HeadLightsColor = vec(200) * HeadLightsActive
+    BreakLights = vec(155, 0, 0) * BreakLightsActive
+
+    if (MainPoliceLightsActive | SidePoliceLightsActive){
+        if (!(Mode % 3)){
+            LeftColor = RightColor = vec(150)
+        } elseif (Mode < 3){
+            LeftColor = ColorPattern[Mode, vector]
+            RightColor = vec()
+        } else {
+            LeftColor = vec()
+            RightColor = ColorPattern[Mode - 3, vector]
+        }
+        
+        Mode = Mode % 6 + 1
+        Step = (Step + 1) % 30
+    }
+  
+    MainPoliceLightsLeft = (MainPoliceLightsActive & On) ? LeftColor : vec()
+    MainPoliceLightsRight = (MainPoliceLightsActive & On) ? RightColor : vec()
+
+    SidePoliceLightsLeft = (SidePoliceLightsActive & On) ? LeftColor : vec()
+    SidePoliceLightsRight = (SidePoliceLightsActive & On) ? RightColor : vec()
+}
+
+
+

@@ -1,0 +1,70 @@
+@name 
+@inputs 
+@outputs 
+@persist [E Seat]:entity
+@trigger
+ 
+function void entity:moveTo(Pos:vector){
+    This:applyForce((Pos*50-This:vel())*This:mass())
+}
+
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+if (first()){
+    runOnTick(1)
+    runOnLast(1)
+    
+    runOnTick(1)
+    E=entity()
+    
+    
+    holoCreate(1)
+    holoMaterial(1,"hlmv/debugmrmwireframe")
+    holoModel(1,"models/editor/axis_helper.mdl")
+    holoColor(1, vec(160, 160, 200))
+    holoScale(1,vec(0.7))
+    holoAlpha(1,170)
+    
+    holoPos(1, entity():pos() + vec( 0, 0, 20))
+    Seat = seatSpawn("models/cheeze/wires/nano_value.mdl", entity():pos() + vec( 0, 0, 20), ang(), 1)
+    noCollideAll(E, 1)
+}
+
+if (last()){
+    propDeleteAll()
+}
+
+Driver=Seat:driver()
+
+
+if (Driver){
+    Seat:propFreeze(0)
+    LClick=Driver:keyAttack1()
+    RClick=Driver:keyAttack2()
+    R=Driver:keyReload()
+    W=Driver:keyPressed("w")
+    A=Driver:keyPressed("a")
+    D=Driver:keyPressed("d")
+    S=Driver:keyPressed("s")
+    Shift=Driver:keyPressed("LSHIFT")
+    Ctrl=Driver:keyPressed("LCONTROL")
+    Space=Driver:keyPressed("Space")
+    
+    ShiftVal = 1 + Shift * 0.2
+    MoveVec = 50 * ShiftVal * ((W - S) * Driver:eye() + (D - A) * Driver:eye():toAngle():right()):normalized()
+    
+    Seat:moveTo(MoveVec)
+    Seat:face(ang( 0, vec2(Driver:eye()):toAngle() - Seat:angles():yaw(), 0))
+
+} else {
+    Seat:setPos(holoEntity(1):pos())
+    Seat:propFreeze(1)
+}
+

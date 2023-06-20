@@ -1,0 +1,110 @@
+@name 
+@inputs 
+@outputs LocalIntersect:vector Trap Run
+@persist [Me Prop]:entity [BoxCenter VecPos BoxSize]:vector Trap Biggest:string HoloI HoloCount Perimeter Model:string Run X Y Z Table:table Scale:vector Hue
+@trigger 
+if (!Run){
+    if (first()){
+        Hue = 100
+        Model = "models/sprops/cuboids/height48/size_1/cube_48x48x48.mdl"
+        runOnTick(1)
+        Me = owner()
+        propSpawnUndo(0)
+        Prop = propSpawn( Model, entity():pos() + vec(0,0,100), 1)
+        Prop:setMaterial("models/wireframe")
+        BoxSize = Prop:boxSize()
+        BoxCenter = Prop:boxCenter()
+        
+        Perimeter = 17
+        HoloCount = Perimeter ^ 2
+        Scale = vec(1/Perimeter)
+        holoCreate(999)
+        holoScale(999, Scale * 2)
+        holoMaterial(999, "debug/debugdrawflat")
+    }
+    while (HoloI < HoloCount & holoCanCreate()){
+        HoloI++
+        
+
+        if (X > (Perimeter - 1)){
+            X = 0
+            Y++
+        }
+        
+
+            
+        holoCreate(HoloI)
+        holoAng(HoloI, Prop:angles())
+        holoDisableShading(HoloI, 1)
+        holoShadow(HoloI, 0)
+        holoScale(HoloI, Scale * vec(1,0,1) * 1.02)
+        holoModel(HoloI, Model)
+        holoMaterial(HoloI, "debug/debugdrawflat")
+        holoParent(HoloI, Prop)
+        
+        Table[HoloI, vector2] = vec2(X,Y) / (Perimeter - 1)
+        holoPos(HoloI, Prop:toWorld(-BoxCenter + (vec(X, 0, Y)/Perimeter - 0.5 + Scale * vec(1,0,1) * 0.5 ) * BoxSize))
+        ColorVec = Table[HoloI,vector2]
+        holoColor(HoloI, hsv2rgb(Hue,ColorVec:x(),ColorVec:y()))
+        X++
+        
+        if (HoloI == HoloCount){
+            Run = 1
+            print(Table[1, vector2]:toString())
+            print(Table[HoloCount, vector2]:toString())
+
+            
+        }
+    }
+} else {
+
+    if (Me:weapon():type() == "remotecontroller"){
+        SelectButton = Me:keyAttack1()
+        SelectButtonChange = changed(SelectButton)
+        
+        if (SelectButton){
+            
+            if (SelectButtonChange){
+                AimEnt = Me:aimEntity()
+                if (AimEnt == Prop ){
+                    Trap = 1
+                    PropLocalBox = Prop:toLocal( Me:aimPos() - Prop:boxCenter() )
+                    PropLocal =  PropLocalBox/ BoxSize
+                    PropLocalPositive = positive(PropLocal)
+                    
+                    AbsX = PropLocalPositive:x()
+                    AbsY = PropLocalPositive:y()
+                    Absz = PropLocalPositive:z()
+                    if (AbsX > Absz & AbsX > AbsY){
+                        VecPos = Prop:toWorld(Prop:boxCenter() + BoxSize * vec(sign(PropLocalBox:x()),0,0) * 0.5) 
+                        Biggest = "X"
+                    } elseif (AbsY > Absz){
+                        VecPos = Prop:toWorld(Prop:boxCenter() + BoxSize * vec(0,sign(PropLocal:y()),0) * 0.5) 
+                        Biggest = "Y"
+                    } else {
+                        VecPos = Prop:toWorld(Prop:boxCenter() + BoxSize * vec(0,0,sign(PropLocal:z())) * 0.5) 
+                        Biggest = "z"
+                    }
+                    
+                    
+                    
+                } else {
+                    Trap = 0
+                }
+            }elseif (Trap) {
+                VecDir = VecPos - Prop:boxCenterW()
+                Intersect = rayPlaneIntersection(Me:shootPos(), Me:eye(),VecPos,VecDir)
+                LocalIntersect = clamp(Prop:toLocal(Intersect)/BoxSize,vec(-0.5),vec(0.5)) + 0.5
+                holoPos(999, Intersect)
+                Color = vec(Hue,LocalIntersect:x(), LocalIntersect:z())
+                holoColor(999, hsv2rgb(Color))
+                hint(round(Color,2):toString(),2)
+            } else {
+            }
+        } elseif (SelectButtonChange){
+            Trap = 0
+        }
+    }
+
+}
+    

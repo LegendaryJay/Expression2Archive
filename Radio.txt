@@ -1,0 +1,73 @@
+@name StreamPlay (Owner Only)
+@outputs SongList:table
+@persist Me:entity Prefix:string SongList:table
+@model models/props_lab/citizenradio.mdl
+
+if (first()){
+
+    function fancyPrint(TextA:string, TextB:string){
+        printColor(vec(77,1,53),TextA, vec(255), TextB)
+    }
+    Me = owner()
+    Prefix = "!"
+    runOnChat(1)
+    
+    FileName = "JsonSongs"
+}elseif (chatClk(Me)){
+    LastSaid = Me:lastSaid()
+    if (LastSaid:sub(1,1) == Prefix){
+        Args = LastSaid:sub(2):explode(" ")
+        
+        switch (Args[1,string]:lower()){
+            case "help",
+                hideChat(1)
+                for( I = 1,  SongList:count()){
+                    fancyPrint("Track " + I + ": ", SongList[I, array][ 1, string])    
+                }
+                break
+            case "stop",
+                hideChat(1)
+                streamStop(1)
+                fancyPrint("Status: ", "Paused")
+                break
+            case "play",
+                hideChat(1)
+                TrackId = Args[2, string]:toNumber()
+                if (TrackId & inrange(TrackId, 1, SongList:count())){
+                    fancyPrint("Now Playing: ", SongList[TrackId, array][1,string])
+                    Me:streamStart(1,1,SongList[TrackId, array][2,string])
+                } else {
+                    print("Not a track")
+                }
+                
+        }
+    }
+} elseif (fileClk(FileName)){
+    switch(fileStatus()){
+        case _FILE_UNKNOWN, 
+            print("File Unknown")
+            break
+        case _FILE_OK, 
+            FileString = fileRead()
+            MaterialList = FileString:explode("\n")
+            MaterialCount = MaterialList:count()
+            Loaded = 1
+            checkGrid()
+            break
+        case _FILE_TIMEOUT, 
+            print("File Timeout")
+            break
+        case _FILE_404,
+            fileWrite(FileName,"")
+            hint("New file Created",2)
+            MaterialList = array()
+            MaterialCount = 0
+            Loaded = 1
+            checkGrid()
+            break
+        case _FILE_TRANSFER_ERROR,
+            print("file transfer error")
+            break
+    }
+}
+

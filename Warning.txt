@@ -1,0 +1,39 @@
+@name Warning
+@inputs 
+@outputs 
+@persist [E Me Prop]:entity Radius
+@trigger 
+runOnTick(1)
+
+if (first()){
+    Me=owner()
+    E=entity()
+    
+    Radius=200
+    
+    holoCreate(0,Me:pos())
+    holoScale(0,vec(1,1,1)*0.16666658719384*Radius)
+    holoModel(0,"hq_sphere")
+    
+    holoCreate(1)
+}
+Aim=Me:aimEntity()
+if (Me:keyAttack1()){Prop=Aim}
+MePos=Me:pos()
+EPos=E:pos()
+Distance=Prop:pos():distance(Me:pos())
+if (Distance<Radius){
+    Alpha=255
+}
+elseif (Distance< 4*Radius){
+    Alpha=255*(1-((Distance-Radius)/(3*Radius)))
+}
+else
+{
+    Alpha=0
+}
+holoPos(0,Me:pos())
+holoAlpha(0,Alpha)
+holoPos(1,Me:pos()+vec(Radius,0,0))
+
+

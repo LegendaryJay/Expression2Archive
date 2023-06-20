@@ -1,0 +1,47 @@
+@name Police Lights
+@inputs 
+@outputs 
+@persist LightMode
+@model models/sprops/cuboids/height36/size_1/cube_36x36x36.mdl
+
+if (first()){
+    E = entity()
+    E:setMaterial("sprops/textures/gear_metal")
+    EBox = E:boxSize()
+    for(I = 1, 2){
+        Inv = (I * 2) - 3
+        holoCreate(I)
+        
+        holoModel(I, "models/sprops/cuboids/height24/size_1/cube_24x72x24.mdl")
+        holoMaterial(I, "lights/white")
+        LightBox = holoScaleUnits(I)
+        holoPos(
+            I, 
+            E:toWorld(
+                vec( 
+                    Inv * (EBox:x() * 0.5 - LightBox:x() + 0.5), 
+                    0, 
+                    (EBox:z()* 0.5 - LightBox:z())
+                ) + E:boxCenter()
+            )
+        )
+        holoParent(I, E)
+        lightCreate(I, holoEntity(I):boxCenterW())
+        lightParent(I, holoEntity(I))
+        lightColor(I, vec( 255 - Inv * 255, 0, 255 + Inv * 255))
+        lightToggle(I, 0)
+        
+        
+    }
+
+}
+
+interval(300)
+LightMode = !LightMode
+
+holoColor(LightMode + 1, hsv2rgb(240 * LightMode, 1, 1))
+lightToggle(LightMode + 1, 1)
+
+holoColor(2 - LightMode, hsv2rgb(240 * (1 - LightMode), 1, 0.3))
+lightToggle(2 - LightMode, 0)
+

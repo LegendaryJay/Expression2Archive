@@ -1,0 +1,7 @@
+@name Flatgrass Box
+@inputs 
+@outputs 
+@persist 
+@trigger 
+holoCreate(1, vec(32,0,-15837.964005481), vec(0.3368459375,0.3368459375,0.084188375), ang(), vec(), "models/hunter/blocks/cube8x8x8.mdl")
+holoMaterial(1, "models/wireframe")

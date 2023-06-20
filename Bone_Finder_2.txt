@@ -1,0 +1,88 @@
+@name Bone Finder 2
+@inputs
+@outputs BoneI [BoneEnt Me]:entity BoneCount TargetBone:bone HoloCount Bones:array Setup
+@persist BoneI [BoneEnt Me]:entity BoneCount TargetBone:bone HoloCount Bones:array Setup
+@model models/flag/briefcase.mdl
+
+if (first()){
+    runOnTick(1)
+    Me = owner()
+    runOnKeys(1, array("left", "right", "n"))
+    function setFocus(TargetPos){
+        hint("bone " + BoneI + " / " + (BoneCount - 1), 2)
+        TargetBone = BoneEnt:bone(TargetPos)
+        BoneI = TargetPos
+        
+        Bone = Bones[BoneI, bone]
+        
+        holoPos(900, Bone:pos())
+        holoAng(900, Bone:angles())
+    }
+    
+    function moveFocus(MoveDir){
+        if (MoveDir != 0){
+            BoneI = (BoneI + MoveDir) % (BoneCount - 1)
+            setFocus(BoneI)
+        }
+        
+    }
+    
+    function spawnHolo(Index){
+        holoCreate(HoloCount, vec(), vec(0.75), ang(), vec4(160, 160, 255, 170),"models/editor/axis_helper.mdl")
+        holoMaterial(HoloCount,"hlmv/debugmrmwireframe")
+    }
+    
+    function initiateHolos(Ent:entity){
+        hint(BoneEnt:model(),2)
+        Bones = Ent:bones()
+        BoneCount = Ent:boneCount()
+        Setup = 1
+
+    }
+    
+    function setHolos(){
+        for(I = 1, BoneCount){
+            Bone = Bones[I - 1, bone]
+            holoPos(I, Bone:pos())
+            holoAng(I, Bone:angles())
+            holoParent(I, Bone)
+        }
+    }
+    holoCreate(900)
+    holoModel(900,"models/sprops/misc/origin.mdl")
+    holoColor(900, vec4(160, 160, 255, 170))
+    holoScale(900,vec(2))
+}
+if (Setup){
+    while (HoloCount < BoneCount & holoCanCreate() ){
+        HoloCount++
+        spawnHolo(HoloCount)
+    }
+    if (HoloCount == BoneCount){
+        Setup = 0
+        setHolos()
+        setFocus(0)
+    }
+    
+} else {
+    setHolos()
+}
+
+if (keyClk()){
+    N = Me:keyPressed("n")
+    Left = Me:keyPressed("left")
+    Right = Me:keyPressed("right")
+    LeftTrigger = changed(Left) & Left
+    RightTrigger = changed(Right) & Right
+    if (LeftTrigger | RightTrigger){
+        moveFocus(-LeftTrigger + RightTrigger)
+        
+    }
+    if (changed(N) & N){
+        AimEnt = Me:aimEntity()
+        if (AimEnt != BoneEnt){
+            BoneEnt = AimEnt
+            initiateHolos(BoneEnt)
+        }
+    }
+}

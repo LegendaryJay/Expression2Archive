@@ -1,0 +1,61 @@
+@name Actual golden spiral
+@inputs 
+@outputs R
+@persist I Max Run B E:entity BoxSize:vector Offset Increment
+@model models/sprops/geometry/sphere_48.mdl 
+if (first()){
+    Max = holoMaxAmount()
+    
+    
+    
+    
+    
+    E = entity()
+    E:setAlpha(0)
+    BoxSize = E:boxSize()
+    I = 1
+    B = 	ln(1.6180339887498948482) * 2/pi()
+    runOnTick(1)
+    
+    Offset = 2/Max
+    Increment = pi() * (3 - sqrt(5))
+}
+while (!Run & holoCanCreate()){
+    
+    
+
+
+    Phi = acos(1 - 2*I/Max)
+    Theta = pi() * (1 + 20 * 0.5) * I
+
+    X = cos(Theta) * sin(Phi)
+    Y = sin(Theta) * sin(Phi)
+    Z = cos(Phi)
+            
+        
+#[    Ratio = I/(Max - 1)
+    Angle = Ratio * 360
+    R = e() ^ (toRad(Angle) * B)
+    
+    
+    
+    Z = (Ratio - 0.5) * 2
+    ZChord = sqrt(1 - abs(Z)^2)
+    
+    X = sin(R) * ZChord
+    Y = cos(R) * ZChord]#
+    
+    holoCreate(I, E:boxCenterW() + vec(X,Y,Z) * BoxSize * 0.5)
+    holoModel(I, "models/sprops/misc/alphanum/alphanum_arrow_a.mdl")
+    holoColor(I,hsv2rgb(360 * I / Max,1,1))
+    holoAng(I,ang(Phi, Theta, 0))
+    holoScale(I,vec(1,1,2) * 0.05) #* R/2 + 0.01))
+    holoParent(I, E)
+    I++
+    if (I > Max){
+        Run++
+        runOnTick(0)
+    }
+    
+}
+

@@ -1,0 +1,48 @@
+@name Tp to grenade
+@inputs 
+@outputs [Timer Entities]:array 
+@persist [Timer Entities LastPosArray]:array Me:entity
+@trigger 
+
+
+if (first()){
+    Me = owner()
+    runOnTick(1)
+    concmd("say " + "\"" + Me:name() + "\"" + " frag")
+    
+    
+    function void entity:moveTo(Pos:vector){
+        Vec = (Pos - This:pos())*50
+        This:applyForce((Vec-This:vel())*This:mass())
+    }
+}
+if (findCanQuery()){
+    findExcludeEntities(Entities)
+    findByClass("npc_grenade_frag")
+    
+    TempEntities = findToArray()
+    Entities = Entities:add(TempEntities)
+}
+
+for ( I = 1, Entities:count()){
+    Ent = Entities[I, entity]
+    if (Ent){
+        LastPosArray[I, vector] = Ent:pos()
+        Timer[I,number] = Timer[I,number] + 1
+        if (Timer[I, number] == 160){
+            Ent:setPos(owner():pos())
+            Me:plySetPos(LastPosArray[I, vector])
+        }
+        
+    } else {
+        concmd("say !ammo _ grenade 2")
+        Timer:remove(I)
+        Entities:remove(I)
+        LastPosArray:remove(I)
+        
+    }
+    
+    
+}
+        
+    

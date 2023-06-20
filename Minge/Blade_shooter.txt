@@ -1,0 +1,45 @@
+@name Blade shooter
+@inputs 
+@outputs 
+@persist Prop:entity Mode
+@trigger 
+function void entity:moveTo(Pos:vector){
+    Vec = (Pos - This:pos())*50
+    This:applyForce((Vec-This:vel())*This:mass())
+}
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+if (first()){
+    runOnTick(1)
+    runOnLast(1)
+    Mode=1
+    Prop=propSpawn("models/props_c17/trappropeller_blade.mdl",entity():pos(),0)
+    Prop:setMass(90000)
+}
+if (owner():keyAttack1() & owner():weapon():type()=="weapon_physcannon" & owner():aimPos():distance(owner():pos())>100 & owner():eyeAngles():pitch()<60){
+    Prop:propNotSolid(0)
+    Prop:moveTo(owner():aimPos()+vec(0,0,20))
+    Prop:face(Prop:angles()+ang(0,40,0))
+    
+    stoptimer("!")
+    timer("!",40)
+    Mode=0
+}
+if (clk("!")){
+    Mode=1
+    Prop:propNotSolid(1)
+}
+if (Mode){
+    Prop:moveTo(owner():pos() + vec(0,0,200))
+    Prop:face(Prop:angles()+ang(0,40,0))
+}
+if (last()){
+    propDeleteAll()
+}

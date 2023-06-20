@@ -1,0 +1,54 @@
+@name TeleportIntoThePast
+@inputs 
+@outputs 
+@persist Me:entity [PosArr VelArr AngArr]:array TeleportIdx Shadow
+@trigger 
+
+if (tickClk()){
+    TempTable = table()
+    PosArr:unshiftVector(Me:pos())
+    AngArr:unshiftAngle(Me:angles())
+    VelArr:unshiftVector( Me:vel())   
+    
+    holoPos(1, PosArr[TeleportIdx, vector] + vec(0,0,0.5))
+    holoAng(1, AngArr[TeleportIdx, angle])
+    PosArr:remove(TeleportIdx + 1) 
+    AngArr:remove(TeleportIdx + 1) 
+    VelArr:remove(TeleportIdx + 1)
+    
+    if (Shadow){
+        holoAlpha(2, Shadow)
+        Shadow--
+    }
+} elseif (keyClk()){
+    if (keyClk(Me) == 1 & PosArr:exists(TeleportIdx)){
+        Me:plySetPos(PosArr[TeleportIdx, vector])
+        Me:plySetAng(AngArr[TeleportIdx, angle])
+        Me:plyApplyForce(VelArr[TeleportIdx, vector])
+        
+        Shadow = 255
+        holoPos( 2, PosArr[1, vector])
+        holoAng( 2, AngArr[1, angle])
+        holoAnim( 2, Me:getAnimation(), 0, 0)
+        
+        PosArr = array()
+        AngArr = array()
+        VelArr = array()
+    }
+
+} elseif (first()){
+    Me = owner()
+    
+    holoCreate(1)
+    holoScale(1, vec(4))
+    holoModel(1, "models/holograms/cplane.mdl")
+    
+    holoCreate(2)
+    holoMaterial(2,  "debug/debugdrawflat")
+    holoModel(2, Me:model())
+    
+    
+    TeleportIdx = 180
+    runOnTick(1)
+    runOnKeys(Me, 1, array("lalt"))
+}

@@ -1,0 +1,58 @@
+@name Bone Finder
+@inputs Ent:entity
+@outputs I
+@persist I [AimEnt Me]:entity BoneCount Bone:bone
+@model models/flag/briefcase.mdl
+
+if (first()){
+    runOnTick(1)
+    Me = owner()
+    if (Ent){
+        AimEnt = Ent
+    }
+    holoCreate(1)
+    holoMaterial(1,"hlmv/debugmrmwireframe")
+    holoModel(1,"models/editor/axis_helper.mdl")
+    holoColor(1, vec(160, 160, 255))
+    holoScale(1,vec(0.75))
+    holoAlpha(1,170)
+    
+    holoCreate(2)
+    #holoMaterial(2,"hlmv/debugmrmwireframe")
+    holoModel(2,"models/sprops/misc/origin.mdl")
+    holoColor(2, vec(160, 160, 255))
+    holoScale(2,vec(2))
+    holoAlpha(2,170)
+}
+N = Me:keyPressed("n")
+Left = Me:keyPressed("left")
+Right = Me:keyPressed("right")
+
+if (changed(Left) & Left){
+    I--
+}
+if (changed(Right) & Right){
+    I++
+}
+if (changed(N) & N){
+    AimEnt = Me:aimEntity()
+    I = 0
+    BoneCount = AimEnt:boneCount()
+    hint(AimEnt:model(),2)
+    hint("bone " + I + " / " + (BoneCount - 1), 2)
+    Bone = AimEnt:bone(I)
+}
+    
+if (changed(I)){
+    if (I < 0){
+        I = BoneCount - 1
+    } elseif (I > BoneCount - 1) {
+        I = 0
+    }
+    hint("bone " + I + " / " + (BoneCount - 1), 2)
+    Bone = AimEnt:bone(I)
+}
+holoPos(1,Bone:pos())
+holoAng(1, Bone:angles())
+holoPos(2,Bone:pos())
+holoAng(2, Bone:angles())

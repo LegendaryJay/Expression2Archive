@@ -1,0 +1,260 @@
+@name HoloTrail Rewrite 4
+#initial & Core Variables
+@persist [Me Target]:entity HoloNumber Delay [ScaleRange AlphaRange]:vector2
+#Arrays
+@persist HistoryTable:table TargetModel:string
+#Modes
+@persist ActiveI Rainbow SpawnHolos RainbowProp ColorI MatOverride:string
+@model models/props_phx/construct/metal_wire1x1x1.mdl
+#################
+#Change this Stuff!##
+###################
+
+function void helpMenu(Page){
+    local Title = vec(104, 40, 125)
+    local Msg = vec(255)
+    local Cmd = vec(250, 10, 0)
+    local Args = vec(255, 150, 0)
+    
+    if (!Page | Page == 1){
+        print()
+        printColor(Title,"     HowTo:")
+        printColor(Args,"Aim ", Msg, "at a prop and press ", Args, "R")
+        printColor(Title,"     Commands:")
+        printColor(Cmd, "!alpha ", Args, "[0 - 255] {0 - 255} ", Msg, "- Changes the tail transparency front to back")
+        printColor(Cmd, "!length ", Args, "[0 - " + holoMaxAmount() + "] ", Msg, "- Changes the tail transparency front to back")
+        printColor(Cmd, "!scale ", Args, "[0 - 50] {0 - 50}", Msg, "- Changes the tail scale front to back")
+        printColor(Cmd, "!delay ", Args, "[1 - 100]", Msg, "- Changes the distance between the tail peices")
+        printColor(Cmd, "!mat ", Args, " [light, wire, white, clear, \"[custom path]\"] ", Msg, "- Overrides the tail material")
+        printColor(Cmd, "!colors ", Msg, "- Toggles rainbow mode")
+        printColor(Cmd, "!help ", Args, " [1 - 2] ", Msg, "- Displays this text.")
+        
+    } elseif (Page == 2){
+        printColor(Cmd, "!info", Msg, "- Displays current settings")
+        printColor(Cmd, "!prop alpha", Args, "[0 - 255] ", Msg, "- Changes the prop transparency")
+        printColor(Cmd, "!prop mat", Args, " [light, wire, white, clear, \"[custom path]\"] ", Msg, "- Changes the prop material")
+        printColor(Cmd, "!prop colors",  Msg, "- Toggles prop rainbow mode")
+    }
+        
+}
+
+if (first()){
+    HoloNumber = 30      #1-251 [Integer]
+    Delay=1              #1-any [Integer]
+    
+    Rainbow = 0             # 0 - 1 | True - False
+    RainbowProp = 0
+#                        (Prop,End)
+    ScaleRange=vec2(1,1) # -20 - 20 
+    AlphaRange=vec2(255,255) #0-255
+    
+##############################\
+##############################
+# dont change stuff after here ###
+##############################
+###############################
+
+    if(holoMaxAmount() < HoloNumber){
+        HoloNumber = holoMaxAmount()
+    }
+    SpawnHolos = 1
+    runOnTick(1)
+    runOnChat(1)
+    Me=owner()
+    
+    Target = entity()
+    TargetModel = Target:model()
+    helpMenu(1)  
+}
+
+function void info(){
+    local Title = vec(104, 40, 125)
+    local Msg = vec(255)
+    local Cmd = vec(250, 10, 0)
+    local Args = vec(255, 150, 0)
+    
+    print()
+    printColor(Title, "     Settings:")
+    printColor(Args,"Target: ", Msg, Target:toString())
+    printColor(Args,"Alpha: ", Msg, toString(AlphaRange))
+    printColor(Args,"Length: ", Msg, holoAmount() + " / " + HoloNumber)
+    printColor(Args,"Scale: ", Msg, toString(ScaleRange))
+    printColor(Args,"Delay: ", Msg, toString(Delay))
+    printColor(Args,"Colors: ", Msg, toString(Rainbow))
+    printColor(Args,"Ops: ", Msg, ops() )
+}
+
+R = Me:keyPressed("R")
+if (changed(R) & R & Me:aimEntity()){
+    Target = Me:aimEntity()
+    if (Target){
+        hint("locked onto " + Target:owner():name() + "'s " + Target:type(),6)
+        TargetModel = Target:model()
+        hint(TargetModel,6)
+    }
+}
+
+
+if (RainbowProp){
+    Target:setColor(hsv2rgb(ColorI,1,1))
+    ColorI = (ColorI + 1) % 360
+}
+
+HistoryTable:unshiftArray(array(Target:pos(), Target:angles(), TargetModel, Target:getSkin(), Target:getMaterial(), Target:getColor(), Target:boxCenter()))
+HistoryTable:remove((HoloNumber + 1) * Delay + 1)
+
+
+if (SpawnHolos){
+    for(I = 1, HoloNumber){
+        if (!holoEntity(I)){
+            if (holoCanCreate()){
+                holoCreate(I)
+                holoModel(I, TargetModel)
+            } else {
+                break
+            }
+        }
+    }
+    if (holoAmount() >= HoloNumber){
+        SpawnHolos = 0
+    }
+}
+            
+
+while (perf()){            
+    Array = HistoryTable[ActiveI * Delay, array]
+
+    Ang = Array[2, angle]
+    PercentScaler = (ActiveI - 1) / (HoloNumber - 1)
+    Scale = ScaleRange:x() - (ScaleRange:x() - ScaleRange:y()) * PercentScaler
+    
+    holoReset(ActiveI, Array[3, string], vec(Scale), Rainbow ? hsv2rgb(360 * ActiveI/HoloNumber, 1, 1) : Array[6, vector], MatOverride ? MatOverride : Array[5, string])
+    holoAlpha(ActiveI, AlphaRange:x() - (AlphaRange:x() - AlphaRange:y()) * PercentScaler )
+    holoPos(
+        ActiveI,
+        toWorld(
+            Array[7, vector] * ( 1 - Scale), 
+            ang(), 
+            Array[1, vector], 
+            Ang
+        )
+    )
+    holoAng(ActiveI,Ang)
+    holoSkin(ActiveI, Array[4, number])
+    
+    ActiveI++
+    if (ActiveI > HoloNumber){
+        ActiveI = 1
+        break
+    }
+}
+
+
+
+if (chatClk(Me)){
+    LS=Me:lastSaid():lower()
+    if (LS[1] == "!"){
+        Chat = LS:sub(2):explode(" ")
+        Command = Chat:string(1)
+        if (Command == "alpha"){
+            hideChat(1)
+            AlphaRange = vec2(Chat:string(2):toNumber(),Chat:string(3):toNumber())
+            print("Alpha: " + toString(AlphaRange))
+        }
+        elseif (Command == "length"){
+            hideChat(1)
+            OldNumber=HoloNumber
+            HoloNumber=Chat:string(2):toNumber()
+            if(holoMaxAmount() < HoloNumber){
+                HoloNumber = holoMaxAmount()
+            }
+            if (OldNumber > HoloNumber){
+                for (TempI = 1 + HoloNumber, OldNumber){
+                    holoDelete(TempI)
+                }
+            } else {
+                SpawnHolos = 1
+            }       
+            print("Holos: " + HoloNumber)
+        }
+        elseif (Command == "scale"){
+            hideChat(1)
+            ScaleRange=vec2(Chat:string(2):toNumber(),Chat:string(3):toNumber())
+            print("Scale: " + toString(ScaleRange))
+        }
+        elseif (Command == "delay"){
+            hideChat(1)
+            Delay=Chat:string(2):toNumber()
+            print("Delay: " + Delay)
+        }
+        elseif (Command == "colors"){
+            hideChat(1)
+            Rainbow = !Rainbow
+            print("Rainbow")
+        }
+        elseif (Command == "mat"){
+            Command2 = Chat:string(2)
+            if (Command2 == "wire"){
+                MatOverride = "models/wireframe"
+                print("Wireframe Material")
+            } elseif (Command2 == "white"){
+                MatOverride = "models/debug/debugwhite"
+                print("White Material")
+            } elseif (Command2 == "light"){
+                MatOverride = "lights/white"
+                print("Light Material")
+            } elseif (Command2 == "clear" | Command2 == ""){
+                MatOverride = ""
+                print("Default Material")
+            } else {
+                MatOverride = LS:explode("\"")[2, string]:trim()
+            }
+            print("\"" + MatOverride + "\"")
+            hideChat(1)
+            
+        }
+        elseif (Command == "help"){
+            Command2 = Chat:string(2)
+            if (Command2 == "" | Command2 == "1"){
+                helpMenu(1)
+            } elseif (Command2 == "2"){
+                helpMenu(2)
+            } else {
+                hint("Page does not exist", 2)
+            }
+            hideChat(1)       
+        }
+        elseif (Command == "prop"){
+            Command2 = Chat:string(2)
+            Command3 = Chat:string(3)
+            if (Command2 == "alpha"){
+                Target:setAlpha(Chat:string(3):toNumber())
+                print("Target Alpha: " + Target:getAlpha())
+            } elseif ((Command2 == "mat")){
+                if (Command3 == "wire"){
+                    Target:setMaterial("models/wireframe")
+                } elseif (Command3 == "white"){
+                    Target:setMaterial("models/debug/debugwhite")
+                    print("White Material")
+                } elseif (Command3 == "light"){
+                    Target:setMaterial("lights/white")
+                    print("Light Material")
+                } elseif (Command3 == "clear" | Command2 == ""){
+                    Target:setMaterial("")
+                    print("Default Material")
+                } else {
+                    Target:setMaterial(LS:explode("\"")[2, string]:trim())
+                }
+                print("Target Material: " + Target:getMaterial())
+            } elseif (Command2 == "colors"){
+                RainbowProp = !RainbowProp
+                hint("Rainbow Prop",2)
+            }
+            hideChat(1)
+        }
+        elseif (Command == "info"){
+            hideChat(1)
+            info()
+        }
+    }
+}

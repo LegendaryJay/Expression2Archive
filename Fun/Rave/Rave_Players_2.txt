@@ -1,0 +1,32 @@
+@name Rave Players 2
+@inputs 
+@outputs 
+@persist P:array
+@trigger 
+interval(100)
+
+OldP=P:clone()
+P=players()
+for (I=1,numPlayers()){
+    Target=P[I,entity]
+    BoundScale=Target:boxSize()*0.0026308863553119
+    OverBoundScale=1.005
+    if (P[I,entity]!=OldP[I,entity]){
+        if (!holoEntity(I)){
+            holoCreate(I)
+            holoModel(I,"models/hunter/blocks/cube8x8x8.mdl")
+            holoVisible(I,P,1)
+            holoVisible(I,Target,0)
+            holoMaterial(I,"engine/writez")
+            holoDisableShading(I,1)
+            #holoAlpha(I,50)
+        }
+        holoPos(I,Target:toWorld(Target:boxCenter()-vec(0,0,Target:boxSize():z()*0.43692448357374*OverBoundScale)))
+        holoAng(I,Target:angles())
+        holoParent(I,Target)
+    }
+    holoScale(I,BoundScale*OverBoundScale)
+    holoColor(I,vec(random(0,255),random(0,255),random(0,255)))
+         
+}
+

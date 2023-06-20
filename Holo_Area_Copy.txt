@@ -1,0 +1,111 @@
+@name Holo Area Copy
+@inputs 
+@outputs [Min Max Size Center LocMin LocMax]:vector [Entities]:array
+@persist [Entities Markers Blacklist]:array Me:entity [Min Max Size Center LocMin LocMax]:vector Recording I [MatsTable EntitiesTable]:table 
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl
+
+if (first()){
+    runOnTick(1)   
+    E = entity()
+    Me = owner()
+    
+    propSpawnUndo(0)
+    
+    Blacklist:pushEntity(Markers:pushEntity(propSpawn("models/sprops/geometry/sphere_3.mdl", E:toWorld( vec( 50, 50, 50)), 1)))
+    Blacklist:pushEntity(Markers:pushEntity(propSpawn("models/sprops/geometry/sphere_3.mdl", E:toWorld( vec( 10, 10, 10)), 1)))
+    
+    for (I = 1, 2){
+        Marker = Markers[I, entity]
+        Marker:setAlpha(0)
+        noCollideAll( Marker, 1)
+        
+        Blacklist:pushEntity(holoCreate(I))
+        holoColor(I, vec(105,0,75))
+        holoPos(I, Marker:boxCenterW())
+        holoAng(I, Marker:angles())
+        holoMaterial(I, "models/wireframe")
+        holoModel(I,"models/editor/axis_helper.mdl")
+        holoParent(I, Marker)
+    }
+    holoColor(1, vec(75,0,105))
+    
+    Blacklist:pushEntity(holoCreate(100))
+    holoMaterial(100,"models/wireframe")
+    holoModel(100, "models/hunter/blocks/cube8x8x8.mdl")
+    holoScale(100, vec())
+}
+
+Hold = Markers[1, entity]:isPlayerHolding() + Markers[2, entity]:isPlayerHolding()
+if (changed(Hold) | Hold){
+    Marker1Pos = Markers[1, entity]:boxCenterW()
+    Marker2Pos = Markers[2, entity]:boxCenterW()
+    
+    Min = minVec(Marker1Pos, Marker2Pos)
+    Max = maxVec(Marker1Pos, Marker2Pos)
+    
+    LocMin = Min - Center
+    LocMax = Max - Center
+    Size = Max - Min
+    Center = (Min + Max) * 0.5
+    
+    holoScaleUnits(100, -Size)
+    holoPos(100, Center - holoEntity(100):boxCenter() * holoScale(100))
+    holoAlpha(100, 250)
+    
+    Center = holoEntity(100):boxCenterW()
+    
+    for(I = 1, 2){
+        Markers[I, entity]:propFreeze(!Markers[I, entity]:isPlayerHolding())
+    }
+}
+
+CopyBtn = Me:keyPressed("pageup")
+PasteBtn = Me:keyPressed("pageDown")
+
+if (changed(CopyBtn) & CopyBtn){
+    findExcludeEntities(Blacklist)
+    findInBox(Min,Max)
+    findExcludeClass("weapon")
+    findExcludeClass("player")
+    findExcludeClass("tool")
+    Entities = findToArray()
+    local Count = Entities:count()
+    hint("Copying " + Count + " Entities",4)
+    Recording = Count ? 1 : 0
+}
+if (Recording){
+    while(perf()){
+        Entity = Entities[I, entity]
+        EntitiesTable:pushArray( array( I, Entity:pos() - Center, Entity:angles(), Entity:getColor4(), Entity:model(), Entity:getMaterial()))
+        Materials = Entity:getMaterials()
+        for (I = 1, Materials:count()){
+            Materials[I, string] = Entity:getSubMaterial(I)
+        }
+        MatsTable:pushArray( Materials )
+        I++
+        if (I > Entities:count()){
+            Recording = 0
+        }
+    }
+} 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+

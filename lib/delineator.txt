@@ -1,0 +1,43 @@
+@name Delineator 
+
+function array delineate(Prefix:string, Chat:string){
+    local Args = array()
+    if (Chat:index(1) == Prefix){
+        local PreArgs = Chat:sub(2):explode("\"")
+        for(I = 1, PreArgs:count()){
+            String = PreArgs[I, string]
+            if (I % 2){
+                TempArray = String:explode(" ")
+                foreach (K, String2:string = TempArray){
+                    String3 = String2:trim()
+                    if (String3 != ""){
+                        Args:pushString(String3)
+                    }
+                }
+            } elseif (String != ""){
+                Args:pushString(String)
+            }
+        }     
+    }
+    return Args
+}
+
+function array delineate(Chat:string){
+    local Args = array()
+    local PreArgs = Chat:explode("\"")
+    for(I = 1, PreArgs:count()){
+        String = PreArgs[I, string]
+        if (I % 2){
+            TempArray = String:explode(" ")
+            foreach (K, String2:string = TempArray){
+                String3 = String2:trim()
+                if (String3 != ""){
+                    Args:pushString(String3)
+                }
+            }
+        } elseif (String != ""){
+            Args:pushString(String)
+        }
+    }     
+    return Args
+}

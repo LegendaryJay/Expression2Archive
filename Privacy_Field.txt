@@ -1,0 +1,485 @@
+@name Privacy Field
+@outputs WhitelistBySteam:table TargetsExist TargetI TargetCount TargetList:array ConnectedWhitelist:array
+@persist [Prop E Marker1 Marker2 Me]:entity HoloSeperation EBottom [Min Max RoomCenter BoxSize RoomBoxCenter]:vector 
+@persist [WhitelistBySteam]:table  EYaw Darkness
+@persist TargetI
+@persist ProtectMode EditMode SpawnMarkers TwoMarkers SpawnProtect
+@persist [DimDownBtn DimUpBtn EditBtn ProtectBtn M1Btn M2Btn]:string MaxDark
+@persist [LastM1 LastM2 CenterColors]:vector TargetsExist M1Down 
+@persist [FileName Prefix]:string ConnectedWhitelist:array
+@model models/sprops/geometry/hring_18.mdl
+#models/sprops/misc/sq_holes/hsqhole_d0_12.mdl 
+# models/sprops/misc/tubes_thin/size_1/t_h_tube_12x6.mdl
+
+#include "lib/async"
+if (first()){
+    TwoMarkers = 1  # 0 or 1
+    Prefix = "!"
+     
+    
+    
+    ############## Basic ##############
+
+    Me = owner()
+    
+    E = entity()
+    
+    CenterColors = hsv2rgb(290, 1, 0.3)
+    E:setMaterial("lights/white")
+    E:setColor(CenterColors)
+    EBottom = E:boxSize():z()*0.5
+    
+    FileName = "friends.txt"
+    fileLoad(FileName)
+    #include "lib/delineator"
+    #include "lib/fancyPrint"
+
+    ############# Keys ##############
+    
+    DimDownBtn = "pad_minus"
+    DimUpBtn = "pad_plus"
+    ProtectBtn = "pad_6"
+    EditBtn = "pad_3"
+    M1Btn = "mouse_left"
+    M2Btn = "mouse_right"
+    
+    runOnKeys(Me, 1, array(DimDownBtn, DimUpBtn, EditBtn, ProtectBtn, M1Btn, M2Btn))
+    
+    #################################
+    
+    
+    ########### Run Conditions ##############
+    
+    runOnFile(1)
+    runOnChat(1)
+    runOnPlayerConnect(1)
+    runOnPlayerDisconnect(1)
+    propSpawnUndo(0)
+    
+    #################################
+    
+    ############ Move Prop #############
+    
+    function moveProp(Vector:vector){
+        Prop:setAng(ang())
+        Prop:applyForce(Vector)
+    }
+    
+    function setProp(Vector:vector){
+        Prop:setAng(ang())
+        Prop:setPos(Vector)
+    }
+    
+    function attack(Entity:entity){
+        moveProp((Entity:boxCenterW() - Prop:pos()) * 1000 * Prop:mass())
+        PropActive = 0
+        interval(1)
+    }
+    
+    function prepareAttack(Tar:entity){
+        Dir = (E:boxCenterW() - Tar:boxCenterW()):normalized()
+        StartPos = rayAABBoxIntersection(E:boxCenterW(),-Dir, Tar:boxCenterW(), Tar:boxSize())
+        
+        setProp(StartPos + Dir * Prop:boxSize() * 2)
+        
+        async(2,"attack", Tar)
+    }
+    function sendPropHome(){
+        setProp(E:boxCenterW() - E:up() * EBottom)
+        Prop:propFreeze(1)
+        soundStop(1)
+    }
+    
+    function array:nextTarget(){
+        TargetI = (TargetI + 1) % This:count()
+        Target = This[TargetI + 1, entity]
+        
+        if (Target:isAlive()){
+            Target:soundPlay(1,0,"hornet/ag_buzz" + randint(3) + ".wav")
+            Prop:propFreeze(0)
+            async(1, "prepareAttack", Target)
+            PropActive = 1
+        } else {
+            This:remove(TargetI + 1)
+            if (This:count()){
+                This:nextTarget()
+            } else {
+                sendPropHome()
+                TargetsExist = 0
+            }
+                
+        }
+    }
+    function moveCenter(Vec:vector){
+        E:setPos(Vec)
+        setProp(Vec  - vec(0,0,Prop:boxSize():z()))
+    }
+    
+    ####################################
+    
+    ################ Room Info #####################
+    
+    function getRoomStats(){
+        if (Marker1 & TwoMarkers == (Marker2 ? 1 : 0)){
+            if (TwoMarkers){
+                M1Pos = Marker1:boxCenterW()
+                M2Pos = Marker2:boxCenterW()
+                
+                BoxSize = positive( M1Pos - M2Pos )
+                
+                RoomCenter = (M1Pos + M2Pos) * 0.5
+                
+                Min = RoomCenter - BoxSize * 0.5
+                Max = RoomCenter + BoxSize * 0.5
+                
+            } else {
+                M1Pos = Marker1:boxCenterW()
+                M2Pos = E:pos() - vec(0,0,EBottom)
+                BoxSize = positive( M1Pos - M2Pos ) * vec(2,2,1)
+                
+                RoomCenter = M2Pos + vec(0,0,BoxSize:z() * 0.5)
+                
+                Min = RoomCenter - BoxSize * 0.5
+                Max = RoomCenter + BoxSize * 0.5
+            }
+        } else {
+            M1Pos = E:toWorld(E:boxCenter() + E:boxSize() * 0.5)
+            M2Pos = E:toWorld(E:boxCenter() - E:boxSize() * 0.5)
+            BoxSize = positive( M1Pos - M2Pos )
+            
+            RoomCenter = E:boxCenterW()
+            
+            Min = RoomCenter - BoxSize * 0.5
+            Max = RoomCenter + BoxSize * 0.5
+        
+        }
+        
+        
+    }
+    
+    function changeRoomSize(){
+        holoAng(100, ang())
+        getRoomStats()
+        
+        for(I = 1, 4){
+            HoloOffset = vec(HoloSeperation) * (I - 1)
+            holoScaleUnits(I, sign(2.5 - I) * (BoxSize - HoloOffset) * 1.0013)
+            holoPos(I, RoomCenter - RoomBoxCenter * holoScale(I)) 
+        }
+        if (TwoMarkers) {
+            moveCenter(RoomCenter - vec( 0, 0, BoxSize:z() * 0.5 - EBottom))
+        }
+    }
+    ##########################################################################
+    
+    ################## Misc Function ######################
+    
+    function checkRunOnTick(){
+        Value = Marker1:isPlayerHolding() + Marker2:isPlayerHolding() + TargetsExist
+    }
+    
+    ######################################################
+
+    ######################### Make Room #####################################
+    
+    MatArray = array("models/wireframe","engine/writez_model","lights/white","models/wireframe")
+    ColorArray = array(vec(20), vec(255), vec(0), vec(50))
+    for(I = 1, 4){
+        holoCreate(I)
+        holoAng(I, ang())
+        holoModel(I, "models/hunter/blocks/cube8x8x8.mdl")
+        holoMaterial(I, MatArray[I, string])
+        holoColor(I, ColorArray[I, vector])
+    }
+    holoAlpha(3, Darkness * 255)
+    RoomBoxCenter = holoEntity(1):boxCenter()
+    
+    HoloSeperation = 0.644
+    
+    #########################################################################
+    
+    ########################### Shading ####################################
+    Darkness = 0.5
+    MaxDark = 100
+    function changeShading(Change){
+        Darkness = clamp(Darkness + Change * (10 * (1- Darkness/MaxDark) + 1), 
+            0, 
+            MaxDark 
+        )
+        DarkPercent = Darkness/MaxDark 
+        DarkDisplayPercent = round(100 * DarkPercent)
+    
+        hint(DarkDisplayPercent + "% Shade", 2)
+        holoAlpha(3, DarkPercent * 255)
+    }
+    #########################################################################
+
+    ###### Starting Values ######
+    
+    EditMode = 1
+    SpawnProtect = 1
+    SpawnMarkers = 1
+    
+    LastM1 = E:toWorld(E:boxCenter() + E:boxSize() * 0.5)
+    LastM2 = E:toWorld(E:boxCenter() - E:boxSize() * 0.5)
+    
+    
+    
+    #############################
+} elseif(keyClk()){
+    Key = keyClkPressed()
+    State = keyClk(Me)
+    
+    Controller = Me:weapon():type() == "remotecontroller"
+    ChangedController = changed(Controller)
+    ValidController = Controller & !ChangedController
+    if (State == 1){
+        switch (Key){
+            case M1Btn,
+                M1Down = 1
+                interval(50)
+                if (ValidController & EditMode){
+                    Marker1:setPos(Me:aimPos())
+                    timer("changeSize", 1)
+                }
+                break
+            case M2Btn,
+                if (ValidController & EditMode & TwoMarkers){
+                    Marker2:setPos(Me:aimPos())
+                    timer("changeSize", 1)
+                }
+                break
+            case DimDownBtn,
+                changeShading(-1)
+                break
+            case DimUpBtn,
+                changeShading(1)
+                break
+            case EditBtn,
+                EditMode = !EditMode
+                if (EditMode){
+                    interval(1)
+                    SpawnMarkers = 1
+                    hint("Edit Mode Enabled", 2)
+                } else {
+                    LastM1 = Marker1:boxCenterW()
+                    LastM2 = Marker2:boxCenterW()
+                    Marker1:propDelete()
+                    Marker2:propDelete()
+                    hint("Edit Mode Disabled", 2)
+                }
+                break
+            case ProtectBtn,
+                ProtectMode = !ProtectMode
+                if (!ProtectMode){
+                    hint("Defences offline", 2)
+                    sendPropHome()  
+                } else {
+                    hint("Defences activated", 2)
+                    SpawnProtect = 1
+                    interval(1)
+                }
+        }
+    } elseif (M1Btn == Key) {
+        M1Down = 0
+    }
+} elseif (chatClk(Me)){
+    LastSaid = lastSaid()
+    Args = delineate(Prefix, LastSaid)
+    switch (Args[1, string]:lower()){
+        case "whitelist",
+            local TargetPlayer = findPlayerByName(Args[2, string])
+            if (TargetPlayer){
+                WhitelistBySteam[TargetPlayer:steamID(), string] = TargetPlayer:name()
+                fileWrite(FileName, jsonEncode(WhitelistBySteam,1))
+                fancyPrint("Whitelisted " , TargetPlayer:name())
+                timer("updatePlayers", 1)
+            }
+            break
+        case "blacklist",
+            local TargetPlayer = findPlayerByName(Args[2, string])
+            if (TargetPlayer){
+                WhitelistBySteam:remove(TargetPlayer:steamID())
+                fileWrite(FileName, jsonEncode(WhitelistBySteam,1))
+                fancyPrint("Blacklisted ", TargetPlayer:name())
+                timer("updatePlayers", 1)
+            }
+            break
+        case "list",
+            foreach(K, PlayerName:string = WhitelistBySteam){
+                Player = findPlayerBySteamID(K)
+                if (Player){
+                    WhitelistBySteam[K, string] = Player:name()
+                    printColor(vec(0,255,0), "[Online] ", vec(255) , WhitelistBySteam[K, string])
+                } else {
+                    printColor(vec(255,0,0), "[Offline] ", vec(255), WhitelistBySteam[K, string])
+                }
+            }
+            break
+        case "help",
+            fancyPrint("Whitelist [name] - ", "Whitelists player")
+            fancyPrint("Blacklist [name] - ", "Blacklists player")
+            fancyPrint("List - ", "Lists whitelisted players")
+            fancyPrint("Help - ", "that's me!")
+            break
+        
+    }
+}elseif (clkName() == "changeSize"){ 
+    changeRoomSize()
+} elseif (fileClk(FileName)){
+    switch(fileStatus()){
+        case _FILE_UNKNOWN, 
+            print("File Unknown")
+            break
+        case _FILE_OK, 
+            FileString = fileRead()
+            WhitelistBySteam = jsonDecode(FileString)
+            timer("updatePlayers", 1)
+            break
+        case _FILE_TIMEOUT, 
+            print("File Timeout")
+            break
+        case _FILE_404,
+            WhitelistBySteam[Me:steamID(), string] = Me:name()
+            fileWrite(FileName, jsonEncode(WhitelistBySteam,1))
+            hint("New file Created",2)
+            break
+        case _FILE_TRANSFER_ERROR,
+            print("file transfer error")
+            break
+    }
+} elseif ( playerConnectClk() | playerDisconnectClk() | clkName() == "updatePlayers"){
+    ConnectedWhitelist = array()
+    foreach (K, Player:entity = players()){
+        if (WhitelistBySteam:exists(Player:steamID())){
+            ConnectedWhitelist:pushEntity(Player)
+        }
+        findClearBlackEntityList()
+        findExcludeEntities(ConnectedWhitelist)
+        
+    }
+
+
+} else {
+    
+    if (M1Down){
+        interval(50)
+    }
+    
+    if (ProtectMode){
+        TargetList = array()
+        TargetsExist = 0
+        if (findCanQuery()){
+            findInBox(Min, Max)
+            findClipToClass("player")
+            findExcludeEntities(ConnectedWhitelist)
+            TargetList = findToArray() 
+        }
+        
+        if (TargetList:count()){
+                TargetsExist = 1
+            }
+        ChangedTargetExists = changed(TargetsExist)
+        
+        if (TargetsExist){
+            if (!PropActive){
+                TargetList:nextTarget()
+            }
+        } else {
+            if (ChangedTargetExists){
+                sendPropHome()
+            }
+            interval(300)
+        }
+    }
+    
+    Holding = Marker1:isPlayerHolding() + Marker2:isPlayerHolding() * 2
+    if (changed(Holding)){
+        if (!Holding){
+            changeRoomSize()
+            Marker1:propNotSolid(0)
+            Marker1:propFreeze(1)
+            if (TwoMarkers){ 
+                Marker2:propNotSolid(0)
+                Marker2:propFreeze(1)
+            } 
+        } else {
+            Marker1:propNotSolid(1)
+            if (TwoMarkers){
+                Marker2:propNotSolid(1)
+            }
+        }
+    }
+    
+    
+    if (SpawnProtect){
+        if (propCanCreate() & !Prop){
+            Prop = propSpawn("models/sprops/misc/domes/size_0/dome_6x3.mdl", 1)
+            Prop:setMaterial("lights/white")
+            Prop:setColor(CenterColors)
+            Prop:propGravity(0)
+            Prop:setMass(500)
+            Prop:setTrails(0,50,0.01,"trails/laser",vec(255),255)
+            Prop:propDraw(0)
+            sendPropHome()
+        }
+        if (Prop){
+            SpawnProtect = 0    
+        }
+    }
+    
+    
+    if (SpawnMarkers){
+        if (!Marker1){
+            if (propCanCreate()){
+                    
+                MarkerColor = vec(105,0,75)
+                HoloColor = vec(30)
+                MarkerModel = "models/sprops/rectangles/size_1/rect_3x3x3.mdl"     # "models/jaanus/wiretool/wiretool_pixel_med.mdl"
+                HoloMaterial = "lights/white"
+                
+                Marker1 = propSpawn(MarkerModel, LastM1, 1)
+                Marker1:setMaterial("models/wireframe")
+                Marker1:setColor(MarkerColor)
+                noCollideAll( Marker1, 1)
+                
+                holoCreate( 100, Marker1:boxCenterW(), vec(1), Marker1:angles(), HoloColor, "models/editor/axis_helper.mdl")
+                holoMaterial(100, HoloMaterial)
+                holoParent(100, Marker1)
+                
+                MarkerBoxSize = Marker1:boxSize()
+            }
+        }
+        if (TwoMarkers){
+            if (!Marker2){
+                if (propCanCreate()){
+                    Marker2 = propSpawn(MarkerModel, LastM2, 1)
+                    Marker2:setMaterial("models/wireframe")
+                    Marker2:setColor(MarkerColor)
+                    noCollideAll( Marker2, 1)
+                    
+                    holoCreate( 101, Marker2:boxCenterW(), vec(1), Marker2:angles(), HoloColor, "models/editor/axis_helper.mdl")
+                    holoMaterial(101, HoloMaterial)
+                    holoParent(101, Marker2)
+    
+                }
+                
+            }
+        }
+        if (Marker1 & (TwoMarkers == (Marker2 ? 1 : 0))){
+            SpawnMarkers = 0
+        }
+        
+    }
+    
+    EYaw = (EYaw + 1) % 360
+    E:setAng(E:angles():setYaw(EYaw))
+    
+}
+
+
+
+
+
+
+

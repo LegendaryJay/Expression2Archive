@@ -1,0 +1,92 @@
+@name Train thing
+@inputs
+@outputs Forward 
+@persist [Seat Prop]:entity Forward LightMode
+@trigger 
+runOnTick(1)
+function void entity:moveTo(Pos:vector){
+    Vec = (Pos - This:pos())*50
+    This:applyForce(Vec)
+}
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+if (first()){
+    if (entity():parent()){
+        Prop=entity():parent()
+        findByClass("prop_vehicle_prisoner_pod")
+        
+        Seat=findClosest(entity():pos())
+    }
+    else {        
+        Seat=entity():isConstrainedTo()
+        Prop=propSpawn("models/sprops/trans/train/slider_2.mdl",Seat:pos()-vec(0,0,0),Seat:angles()+ang(0,90,0),1)
+        Seat:parentTo(Prop)
+        entity():parentTo(Prop)
+        Prop:setPos(Prop:pos()+vec(0,0,10))
+    }
+    
+    Prop:propFreeze(0)
+    Prop:setMass(1000)
+}
+Driver=Seat:driver()
+
+W=Driver:keyPressed("W")
+S=Driver:keyPressed("S")
+A=Driver:keyPressed("A")
+D=Driver:keyPressed("D")
+Shift=Driver:keyPressed("LShift")
+Space=Driver:keyPressed("Space")
+F=Driver:keyPressed("f")
+Boost= Shift ? 1.2 : 1
+if (Driver){
+    if (W|S){
+        Forward = W ? Forward + 10*Boost : Forward - 10*Boost
+        Forward=Forward*0.80
+        MoveTo=Prop:toWorld(vec(Forward,0,-1000))
+        
+        }
+    elseif (Space){
+        MoveTo=Prop:pos() - Prop:vel()
+    }
+    else {MoveTo=Prop:pos()- Prop:vel()*0.001}
+    
+    if (changed(F) & F){    
+        LightMode=!LightMode
+    }
+    if (changed(LightMode)){
+        if (LightMode){
+            lightCreate(1,Prop:boxCenterW())
+            lightColor(1,vec(10,10,30))
+            lightCreate(2,Prop:boxCenterW())
+            lightColor(2,vec(10,10,30))
+            lightParent(1,Prop)
+        }
+        else {
+            lightRemoveAll()
+        }
+    }
+    Aim=Driver:aimPos()
+    LightRange=200
+    LightDist= Prop:pos():distance(Aim)
+    Scale= LightDist>LightRange ? (LightRange / LightDist) : 1
+    LightPos = Prop:toWorld(Prop:toLocal(Aim) * Scale)
+    lightPos(2,LightPos)
+   
+    
+    
+}
+else{
+    MoveTo=Prop:pos() - Prop:vel()
+}
+Prop:moveTo(MoveTo)
+Prop:face(Prop:angles():setRoll(0))
+    
+
+

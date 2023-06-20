@@ -1,0 +1,105 @@
+@name E2 finder Advanced
+@outputs [MakeHolos]:array HoloN
+@persist [E2s NewE2s OldE2s E2Names E2Owners HoloArray MakeHolos]:array HoloN [E Me]:entity
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl 
+interval(200)
+
+if (first()){
+    HoloN = 1
+    Me = owner()
+    MakeHolos = array()
+    E = entity()
+}
+if(findCanQuery()){
+    
+    findByClass("gmod_wire_expression2")
+    E2s = findToArray()
+    E2s:unshiftEntity(E)
+    NewE2s = E2s:clone()
+    
+    OldI = 1
+    NewI = 1
+    I = 1
+    
+    for(OldI = 1, OldE2s:count()){
+        OldE2 = OldE2s[OldI, entity]
+        if (OldE2s[OldI, entity]){
+            if (OldE2:getName() != E2Names[I, string]){
+                printColor(vec(255,255,0), "Name Change: ", vec(180), E2Names[I, string], vec(255), " to " , vec(180), OldE2:getName() , vec(255), " by " ,teamColor(E2Owners[ I, entity]:team()), E2Owners[ I, entity]:name())
+            }
+            E2Names:remove(I)
+            E2Owners:remove(I)
+        } else {
+            OldI++
+            I++
+            continue
+        }
+        while(NewI <= NewE2s:count()){
+            NewE2 = NewE2s[NewI, entity]
+            if (OldE2 == NewE2){
+                NewE2s:remove(NewI)
+                NewI = 1
+                break
+            }
+            NewI++
+        }
+        OldI++
+    } 
+    if (E2Names:count()){
+        for(I = 1, E2Names:count()){
+            printColor(vec(255,0,0), "Removed: ", vec(180),  E2Names[ I, string], vec(255), " by " ,teamColor(E2Owners[ I, entity]:team()), E2Owners[ I, entity]:name())
+        }
+    }
+    if (NewE2s:count()){
+        for(I = 1, NewE2s:count()){
+            E2 = NewE2s[I, entity]
+            printColor(vec(0,255,0), "Added: ", vec(180), E2:getName() , vec(255), " by ", teamColor(E2:owner():team()), E2:owner():name())
+            MakeHolos:pushEntity(E2)
+        }
+    }
+    OldE2s = E2s:clone()
+    E2Names = array()
+    E2Owners = array()
+    for(I = 1, E2s:count()){
+        
+        E2Names:pushString(E2s[I,entity]:getName())
+        E2Owners:pushEntity(E2s[I,entity]:owner())
+    }
+    
+}
+while (MakeHolos:count() & holoCanCreate()){
+    Target = MakeHolos:popEntity()
+    holoCreate(HoloN)
+    holoPos(HoloN, Target:pos())
+    holoAng(HoloN, Target:angles())
+    
+    holoMaterial(HoloN,"hlmv/debugmrmwireframe")
+    holoDisableShading(HoloN,1)
+    holoColor(HoloN,vec(77,1,53))
+    holoModel(HoloN,Target:model())
+    holoScale(HoloN, vec(1.01))
+    
+    holoVisible(HoloN,players(),0)
+    holoVisible(HoloN,owner(),1)
+    
+    holoParent(HoloN, Target)
+    HoloArray:pushNumber(HoloN)
+    HoloN++
+}
+I = 1
+while(I <= HoloArray:count()){
+    HoloIdx = HoloArray[I,number]
+    Holo = holoEntity(HoloIdx)
+    if (!Holo){
+        HoloArray:remove(I)
+    } else {
+        Target = Holo:parent()
+        Holo2World = 2/Target:boxSize()
+        Dist = Me:pos():distance(Holo:pos())
+        holoScale(HoloIdx, vec(clamp(Dist/50, 1.02, 10)))
+        I++
+    }
+}
+
+
+

@@ -1,0 +1,47 @@
+@name Buddy
+@inputs 
+@outputs [LocalNorm Direction Thing]:vector 
+@persist [Buddy E]:entity TargetVec:vector R Speed TurnSpeed MaxSpeed
+@trigger 
+
+function void findRandomVec(){
+    TargetVec = E:toWorld( vec(0,0, R * 1.1) + vec(random(-1, 1),random(-1, 1),random(-1, 1) * 0.4) * R * random())
+    holoPos(1, TargetVec)
+}
+
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    Thing = rotationVector(Q)
+    V = This:toLocal(rotationVector(Q) + This:pos())
+    This:applyTorque((V * TurnSpeed  - This:angVelVector() * TurnSpeed * 0.4) * This:inertia())
+}
+
+    
+if (first()){
+    holoCreate(1)
+    runOnTick(1)
+    propSpawnUndo(0)
+    R = 400
+    E = entity()
+    Buddy = seatSpawn("models/Gibs/HGIBS.mdl", 0)
+    findRandomVec()
+    MaxSpeed = 20
+}
+LocalVec = Buddy:toLocal(TargetVec)
+LocalNorm = LocalVec:normalized()
+Speed = min(Speed +( LocalVec:x() - abs(LocalVec:y())) * 0.001, MaxSpeed)
+TurnSpeed = (1 - abs(Speed)/(MaxSpeed * 1.2)) * MaxSpeed
+Vec = toWorld(
+    vec( Speed, 0, 0),
+    ang(),
+    vec(),
+    Buddy:angles()
+)
+Buddy:applyForce((Vec*5-Buddy:vel())*Buddy:mass())
+Buddy:face((TargetVec - Buddy:pos()):toAngle())
+if (Buddy:boxCenterW():distance(TargetVec) < 20){
+    findRandomVec()
+}

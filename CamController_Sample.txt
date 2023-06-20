@@ -1,0 +1,22 @@
+@name 
+@inputs 
+@outputs Dist Seat:entity
+@persist 
+
+if(first()){
+    runOnTick(1)
+    Seat = seatSpawn("", 1)
+    cameraCreate(1)
+}
+Driver = Seat:driver()
+if (Driver){
+    cameraToggle(1, 1, Seat)
+    W = Driver:keyPressed("W")
+    S = Driver:keyPressed("S")
+
+    Dist += -(W - S) * 5
+    cameraPos(1, Seat:pos() - Driver:eye() * Dist)
+    cameraAng(1, Driver:eye():toAngle())
+} else {
+    cameraToggle(1, 0)
+}

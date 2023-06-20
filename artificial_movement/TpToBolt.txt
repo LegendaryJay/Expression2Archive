@@ -1,0 +1,48 @@
+@name Tp to bolt
+@inputs 
+@outputs Speed Tracking Holo:entity
+@persist [Bolt Me Holo]:entity [PropPos LastPos]:vector Tracking PropAng:angle
+@model models/props_medieval/target/target.mdl 
+if (first()){
+    Me = owner()
+    runOnTick(1)
+    holoCreate(1)
+    holoModel(1, "models/crossbow_bolt.mdl")
+    concmd("say !weapon kinky crossbow")
+    
+    
+    
+    Holo = holoEntity(1)
+}
+if (!Tracking){
+    if (findCanQuery()){
+        findByClass("crossbow_bolt")
+        findClipToPlayerProps(Me)
+        Bolt = find()
+        if (Bolt){
+            Tracking = 1
+            PropPos = Bolt:pos()
+            hint(Bolt:toString() + " | " + Bolt:owner():name(), 4)
+        }
+    }
+} else {
+    PropPos = Bolt:pos()
+    
+    
+    Speed = PropPos:distance(LastPos)
+    if (Speed == 0 | !PropPos){
+        TempPropPos = PropPos != vec() ? PropPos : LastPos
+        TempPropAng = Bolt:angles() != ang() ? Bolt:angles() : PropAng 
+        hint("Boop",2)
+        Me:plySetPos(TempPropPos)
+        holoPos(1, TempPropPos)
+        holoAng(1, TempPropAng)
+        Bolt:propDelete()
+        concmd("say !ammo kinky XBowBolt 2")
+        Tracking = 0
+        
+    }
+    LastPos = PropPos
+    PropAng = Bolt:angles()
+}
+

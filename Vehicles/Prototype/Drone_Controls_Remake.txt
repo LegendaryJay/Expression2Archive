@@ -1,0 +1,153 @@
+@name Drone Controls Remake
+@inputs Seat:entity Camera:wirelink
+@outputs LiftPerc Lift RollPerc YawPerc AngVel:angle 
+@persist [Driver E]:entity SpawnPos:vector LiftPerc LiftChange LiftRange LiftMax PitchPerc RollPerc TiltChange TiltMax YawPerc YawChange YawMax
+@trigger 
+@model models/props_junk/sawblade001a.mdl
+
+function void entity:moveTo(Pos:vector){
+    Vec = (Pos - This:pos())*50
+    This:applyForce((Vec-This:vel())*This:mass())
+}
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+AngVel = E:angVel()
+if (first())
+{
+    E:propGravity(0)
+    runOnTick(1)
+    E:propFreeze(0)
+    E:setMass(5000)
+    LiftPerc = 0.7
+    
+    
+    E=entity()
+    SpawnPos = E:pos()
+    
+    LiftChange=0.001
+    TiltChange = 0.1
+    YawChange = 0.2
+    LiftRange=600
+    LiftMax= 930
+    TiltMax = 15
+    YawMax = 15
+}
+
+Driver = Seat:driver()
+LClick=Driver:keyAttack1()
+RClick=Driver:keyAttack2()
+W=Driver:keyPressed("w")
+A=Driver:keyPressed("a")
+D=Driver:keyPressed("d")
+S=Driver:keyPressed("s")
+Shift=Driver:keyPressed("LSHIFT")
+Ctrl=Driver:keyPressed("LCONTROL")
+Space=Driver:keyPressed("Space")
+R=owner():keyPressed("R")
+Left=Driver:keyPressed("Left")
+Right=Driver:keyPressed("Right")
+
+if (Driver){
+    Camera["Activated",number] = 1
+    Camera["Angle",angle] = E:angles()
+    Camera["Position",vector] = E:pos() + vec(-20,0,10)
+    Camera["Parent",entity]= E
+    
+}
+else {
+    Camera["Activated",number] = 0
+}
+if (changed(R))
+{
+    E:setAng(ang())
+    E:setPos(SpawnPos)
+    LiftPerc = 0.7
+    E:propFreeze(0)
+    PitchPerc = 0
+    RollPerc = 0
+    
+}
+if (Ctrl|Space)
+{
+    if (Space)
+    {
+        LiftPerc+= LiftChange
+    }
+    elseif (Ctrl)
+    {
+        LiftPerc-=LiftChange
+    }
+    if (LiftPerc>1){LiftPerc=1}
+    if (LiftPerc<0){LiftPerc=0}
+}
+
+
+if (W|S)
+{
+    if (W)
+    {
+        PitchPerc+= TiltChange
+    }
+    elseif (S)
+    {
+        PitchPerc-=TiltChange
+    }
+    if (PitchPerc>1){PitchPerc=1}
+    if (PitchPerc<-1){PitchPerc=-1}
+    Pitch = PitchPerc*TiltMax*(Lift/LiftMax)
+}
+else {Pitch= -AngVel:pitch()*2}
+#[    if (PitchPerc>0){ PitchPerc -= TiltChange/4 }
+    if (PitchPerc<0){ PitchPerc += TiltChange/4 }
+}]#
+if (Right|Left)
+{
+    if (Left)
+    {
+        YawPerc+= YawChange
+    }
+    elseif (Right)
+    {
+        YawPerc-=YawChange
+    }
+    if (YawPerc>1){YawPerc=1}
+    if (YawPerc<-1){YawPerc=-1}
+    Yaw = YawPerc*YawMax
+}
+else {Yaw= -AngVel:yaw()*3}
+#[    if (YawPerc>0){ YawPerc -= YawChange/4 }
+    if (YawPerc<0){ YawPerc += YawChange/4 }
+}]#
+
+
+if (A|D)
+{
+    if (D)
+    {
+        RollPerc+= TiltChange
+    }
+    elseif (A)
+    {
+        RollPerc-=TiltChange
+    }
+    if (RollPerc>1){RollPerc=1}
+    if (RollPerc<-1){RollPerc=-1}
+    Roll = RollPerc*TiltMax*(Lift/LiftMax)
+}
+else {Roll= -AngVel:roll()*2}
+
+#[    if (RollPerc>0){ RollPerc -= TiltChange/4 }
+    if (RollPerc<0){ RollPerc += TiltChange/4 }
+}]#
+Lift= LiftPerc*LiftRange - (LiftRange-LiftMax)
+E:applyForce(E:up()*Lift)
+E:applyTorque(vec(Roll,Pitch,Yaw))
+
+#E:face(ang(PitchPerc*TiltMax,0,RollPerc*TiltMax))
+#E:propFreeze(1)

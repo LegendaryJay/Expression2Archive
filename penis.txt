@@ -1,0 +1,15 @@
+@name 
+@inputs 
+@outputs 
+@persist E:entity Ranger:ranger
+@model models/sprops/rectangles/size_10/rect_480x480x3.mdl
+
+#Inputs: Distance, StartPos, Direction, Hull MinSize, Hull MaxSize
+if (first()){
+    runOnTick(1)
+    E = entity()
+    EBox = E:boxSize()
+    holoCreate(1)
+}
+Ranger=rangerOffsetHull(E:pos(), E:boxCenterW() - E:up()*200, E:boxSize())
+holoPos(1, Ranger:position())

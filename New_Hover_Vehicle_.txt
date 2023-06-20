@@ -1,0 +1,67 @@
+@name New Hover Vehicle
+@inputs 
+@outputs Out
+@persist E:entity V:vector2 RangerRadius M:matrix2 TargetHeight Sense RangerArray:array
+@model models/sprops/mechanics/bgears/bevel_60t_l.mdl
+
+if(first()){
+    function void entity:moveTo(Pos:vector){
+        Vec = (Pos - This:pos())*50
+        This:applyForce((Vec-This:vel())*This:mass())
+    }
+    function entity:face(Ang:angle)
+    {
+        TarQ = quat(Ang)
+        CurQ = quat(This)
+        Q = TarQ/CurQ
+        Vec = This:toLocal(rotationVector(Q)+This:pos())
+        This:applyTorque((Vec*30 - This:angVelVector())*25*This:inertia())
+    }
+    
+    
+    E = entity()
+    RangerRadius = 10
+    TargetHeight = 40
+    local Kp = 2
+    local Td = 20
+    M = matrix2(Kp + Kp * Td / tickInterval(), Kp * -Td / tickInterval(), 1, 0)
+    runOnTick(1)
+    
+    for (I = 1, 4){
+        holoCreate(I)
+        holoScale(I, vec(0.3))
+    }
+    
+}
+
+
+ECenter = E:boxCenterW()
+EAng = E:angles()
+
+Down = -E:up()
+
+
+
+AvgDist = 0
+
+for(I = 1, 4){
+    #Ranger=rangerOffset(number distance,vector from,vector direction)
+    I0 = (I - 1)
+    Corner = vec(floor(I0 * 0.5) * 2 - 1, (I0 % 2) * 2 - 1, 0)
+    RangerPos = toWorld(Corner * RangerRadius , ang(), ECenter, EAng)
+    
+    rangerFilter(E)
+    Ranger = rangerOffset(TargetHeight * 2, RangerPos, Down)
+    
+    RangerArray[ I, ranger] = Ranger
+    
+    AvgDist += Ranger:distance() * 0.25
+    holoPos(I, RangerPos)
+}
+if(tickClk()){ 
+    V = M * V:setX(TargetHeight - AvgDist), Out = V:x() 
+}
+entity():face(ang())
+
+applyForce(entity():up() * Out)
+

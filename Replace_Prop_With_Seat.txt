@@ -1,0 +1,27 @@
+@name Replace Prop With Seat
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+Target = entity():isConstrainedTo()
+
+Model = Target:model()
+Skin = Target:getSkin()
+Mat = Target:getMaterial()
+Color = Target:getColor4()
+Alpha = Target:getAlpha()
+Weight = Target:mass()
+
+Pos=Target:pos()
+Ang=Target:angles()
+    
+Target:propDelete()
+
+Seat = seatSpawn(Model, Pos, Ang, Target:isFrozen())
+Seat:setMaterial(Mat)
+Seat:setColor(Color)
+Seat:setAlpha(Alpha)
+Seat:setMass(Weight)
+
+selfDestruct()

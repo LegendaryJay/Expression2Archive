@@ -1,0 +1,14 @@
+@name Material Helper
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+runOnChat(1)
+Me = owner()
+Prop = entity():isConstrainedTo()
+Said = lastSaid()
+if (chatClk(Me) & !Said:find(" ")){
+    Prop:setMaterial(Said)
+    hideChat(1)
+}

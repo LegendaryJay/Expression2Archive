@@ -1,0 +1,10 @@
+if(first()){
+    function void async(T, F:string, X){ timer(format("cb:%i:%s:%s", randint(2e9), F, toString(X)), T * 1000) }    
+}
+if(clkName() & !clk()){
+    local T = clkName():match("^cb:(%d+):([%w_]+):(.*)$")
+    if(T){
+        T[2, string](T[3, string]:toNumber())
+        exit()
+    }
+}

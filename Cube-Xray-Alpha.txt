@@ -1,0 +1,111 @@
+@name 
+@inputs 
+@outputs Debug:entity Mode PlaneThing:vector Array:array
+@persist [Me E Prop Plane]:entity Cornerlist:array Mode HoloCount HoloMax
+@trigger 
+@model models/sprops/cuboids/height96/size_1/cube_96x96x96.mdl
+
+if (!Mode){
+    Mode = 1
+    runOnTick(1)
+    propSpawnUndo(0)
+
+    HoloMax = 10
+    HoloCount = 0
+    
+    Me = owner()
+    
+    E = entity()
+    E:setMaterial("models/wireframe")
+    
+    #E:setAlpha(0)
+    
+    BoxSize = E:boxSize()/2
+    
+    Prop = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", E:toWorld(vec(0,BoxSize:y() * 2,0)),1)
+    
+    Cornerlist = array(
+        vec(-1, -1, -1) * BoxSize,
+        vec(-1, -1,  1) * BoxSize,
+        vec(-1,  1, -1) * BoxSize,
+        vec(-1,  1,  1) * BoxSize,
+        vec( 1, -1, -1) * BoxSize,
+        vec( 1, -1,  1) * BoxSize,
+        vec( 1,  1, -1) * BoxSize,
+        vec( 1,  1,  1) * BoxSize,
+        vec()
+    )
+} elseif (Mode == 1){
+    while(holoCanCreate() & HoloCount < HoloMax){
+        HoloCount++
+        holoCreate(HoloCount)
+        if(HoloCount >= HoloMax){
+            Mode++
+            for(HoloI = 1, 9){
+                holoModel(HoloI, "hq_sphere")
+                holoScale(HoloI, vec(0.1))
+            }
+            holoModel(10, "models/holograms/cplane.mdl")
+            holoScale(10, vec(10))
+            holoColor(10, vec())
+            holoAlpha(10, 100)
+            
+            Debug = holoEntity(1)
+            
+            
+        }
+    }
+    
+} elseif(Mode == 2){
+    StartPos = Prop:boxCenterW()
+    
+    AbsEnd = E:boxCenterW()
+    AbsDirection = (AbsEnd - StartPos):normalized()
+    AbsAng = AbsDirection:toAngle()
+    
+    PlanePos = StartPos + AbsDirection * 30
+    Array = array()
+    
+    for(HoloI = 1, 9){
+        RelEnd = E:toWorld(Cornerlist[HoloI, vector])
+        RelDirection = (RelEnd - StartPos):normalized()
+        RelAng = RelDirection:toAngle()
+        
+        #vector start,vector dir,vector pos,vector normal)
+
+        PlaneThing = rayPlaneIntersection( 
+            StartPos, 
+            RelDirection, 
+            PlanePos, 
+            -AbsDirection 
+        )
+        
+        Thing = toLocal( PlaneThing - PlanePos, ang(), vec(), AbsAng)
+        holoPos(HoloI,      Thing           + entity():pos() + vec(0,0,100) )
+        Array[HoloI, vector] = Thing
+    }
+
+    holoPos(10, E:pos() + vec(0,0, 100))
+            holoAng(10, ang(90,0,0))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        

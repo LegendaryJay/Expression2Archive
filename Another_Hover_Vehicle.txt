@@ -1,0 +1,58 @@
+@name Another Hover Vehicle
+@inputs 
+@outputs 
+@persist E:entity EBox:vector RangerPosArr:array HoverHeight Vdist:array
+@model models/sprops/trans/train/slider_2.mdl 
+
+if (first()){
+    runOnTick(1)
+    E = entity()
+    EBox = E:boxSize()
+    holoCreate(1)
+    holoPos(1, E:pos())
+    holoModel(1, E:model())
+    holoParent(1, E)
+    holoAlpha(1,100)
+    
+    for(I = 2, 5){
+        holoCreate(I)
+        holoScale(I, vec(0.25))
+        holoColor(I, hsv2rgb((I - 2) * 90,1,1))
+    }
+    RangerPosArr = array(
+        vec( 1, 1, 0) * EBox * 0.5,
+        vec(-1, 1, 0) * EBox * 0.5,
+        vec( 1,-1, 0) * EBox * 0.5,
+        vec(-1,-1, 0) * EBox * 0.5
+    )
+    HoverHeight = 50
+}
+EAng = E:angles()
+EDown = -E:up()
+EPos = E:pos()
+for(I = 1, 4){
+    rangerFilter(E)
+    Ranger = rangerOffset( 999, E:toWorld(RangerPosArr[I,vector]), EDown)
+    holoPos(I + 1, Ranger:pos())
+    Vdist[I, number] = Ranger:distance()
+}
+RearVdist = (Vdist[1, number] + Vdist[3, number]) * 0.5
+FrontVdist = (Vdist[2, number] + Vdist[4, number]) * 0.5
+
+RightVDist = (Vdist[1, number] + Vdist[2, number]) * 0.5
+LeftVDist = (Vdist[3, number] + Vdist[4, number]) * 0.5
+
+AvgVDist = (FrontVdist + RearVdist) * 0.5
+
+holoPos(1, E:toWorld(vec(0,0,HoverHeight - AvgVDist)))
+holoAng(
+    1, 
+    E:toWorld(
+        ang(
+            atan((RearVdist - FrontVdist)/EBox:x()),
+            0,
+            atan((LeftVDist - RightVDist)/EBox:y())
+        )
+    )
+)
+

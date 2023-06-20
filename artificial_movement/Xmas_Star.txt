@@ -1,0 +1,26 @@
+@name Xmas Star
+@inputs 
+@outputs 
+@persist Ticker E:entity
+@trigger 
+
+if (first()){
+    E = entity()
+    E:setAlpha(0)
+    for(I = 1, 2){
+        holoCreate(I)
+        holoModel(I,"models/sprops/misc/alphanum/alphanum_star_3.mdl")
+        holoMaterial(I,"lights/white")
+        holoColor(I, vec(255, 355, 0))
+        holoAng(I, E:toWorld(ang(0,90 * I,0)))
+        holoParent(I, E)
+        holoScale(I, vec(1, 0, 1) * 10)
+    }
+}
+runOnTick(1)
+
+for(I = 1, 2){
+    holoAng(I, E:toWorld(ang(0,90 * I + Ticker,0)))
+    holoPos(I, E:toWorld(vec(0,0,sin(Ticker)*5)))
+    Ticker++
+}

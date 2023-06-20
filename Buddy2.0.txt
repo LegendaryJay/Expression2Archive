@@ -1,0 +1,68 @@
+@name Buddy 2
+@inputs 
+@outputs [P1 P2 TargetVec]:vector  Tick Buddy:entity
+@persist [Buddy E]:entity [P1 P2 TargetVec LastPos]:vector R TicksToTarget Tick 
+@model models/props_lab/kennel_physics.mdl 
+
+function void findRandomVec(){
+    TargetVec = E:toWorld( vec(0,0, R * 1.1) + vec(random(-1, 1),random(-1, 1),random(-1, 1) * 0.4) * R * random())
+    holoPos(1, TargetVec)
+    holoAng(1, ang(0, random() * 180, 0))
+}
+
+function void entity:moveTo(Pos:vector){
+    Vec = (Pos - This:pos())*50
+    This:applyForce((Vec-This:vel())*This:mass())
+}
+
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+    
+if (first()){
+    runOnTick(1)
+    propSpawnUndo(0)
+    
+    E = entity()
+    
+    Buddy = Buddy = seatSpawn("models/Gibs/HGIBS.mdl", 0)
+    Buddy:propNotSolid(0)
+    
+    P1 = Buddy:boxCenterW()
+    P2 = E:boxCenterW() + E:forward() * 500
+    
+    Food = holoCreate(1)
+    holoModel(1, "models/balloons/balloon_star.mdl")
+    
+    R = 400
+    TicksToTarget = 300
+    
+    
+    
+    findRandomVec()
+}
+
+Tick++
+
+if (Tick > TicksToTarget){
+    Tick = 0
+    
+    findRandomVec()
+    
+    P1 = Buddy:boxCenterW()
+    P2 = P1 + Buddy:vel() * 1.5
+}
+
+Ratio = Tick / TicksToTarget
+Speed = abs(Ratio - 0.5) * 2
+
+Pos = bezier(P1, P2, TargetVec, Ratio)
+Buddy:moveTo( Pos )
+Buddy:face((-Pos + bezier(P1, P2, TargetVec, Ratio + 1 / TicksToTarget)):toAngle())
+LastPos = Pos

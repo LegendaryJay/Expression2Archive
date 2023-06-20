@@ -1,0 +1,182 @@
+@name HoloTrail Rewrite 2
+@inputs 
+@outputs AngCount
+#initial & Core Variables
+@persist [Me Target]:entity HoloNumber Delay [DecayRange AlphaRange]:vector2
+#Arrays
+@persist [Pos Ang]:array
+#Modes
+@persist Reset Active ActiveI SpawnI Spawn
+#################
+#Change this Stuff!##
+###################
+
+if (first()){
+    HoloNumber=10      #1-251 [Integer]
+    Delay=1              #1-any [Integer]
+#                        (Prop,End)
+    DecayRange=vec2(1,1) # -20 - 20 
+    AlphaRange=vec2(255,255) #0-255
+    
+##############################\
+##############################
+# dont change stuff after here ###
+##############################
+###############################
+
+    Target=entity()
+    runOnTick(1)
+    runOnChat(1)
+    Me=owner()
+    Reset=0
+    
+    print("     Commands:")
+    print("!alpha # #: Changes the Alpha of the front and back of trail")
+    print("!holoNumber #: Changes the amount of holos")
+    print("!decay # #: Changes the scale of the front and back of trail")
+    print("!delay #: changes the distance between holos")
+    print("!trail: Resets the trail")
+    print("!help: Resets the trail")
+    print("     HowTo:")
+    print("Aim at an entity, Crouch, Press shift, then Shoot")
+}
+Shift=Me:keyPressed("lShift")
+LClick=Me:keyAttack1()
+Ctrl=Me:keyDuck()
+
+if (changed(LClick) & LClick & Shift & Ctrl & Me:aimEntity()){
+    Target=Me:aimEntity()
+    if (Target){
+        hint("locked",2)
+    }
+    Reset=1
+}
+
+if (Reset){ 
+    Spawn=1
+    SpawnI=1
+    
+    Active=0
+    
+    Reset=0
+}
+if (Spawn){
+    while (perf() & SpawnI<=HoloNumber & holoCanCreate()){
+        for (DelayI=1,Delay){
+            Ang:unshiftAngle(Target:angles())
+            Pos:unshiftVector(Target:pos())
+        }
+        
+        if (!holoEntity(SpawnI)){
+            holoCreate(SpawnI)
+
+        }        
+        holoAlpha(SpawnI,0)
+        holoModel(SpawnI,Target:model())
+        holoSkin(SpawnI,Target:getSkin())     
+        
+        Scale=DecayRange:x()-((DecayRange:x()-DecayRange:y())/(HoloNumber-1))*(SpawnI-1)
+        holoScale(SpawnI,vec(1,1,1)*Scale)
+        
+
+        holoPos(SpawnI,toWorld(Target:boxCenter()*(1-Scale), ang(), Pos[SpawnI,vector], Ang[SpawnI,angle]))
+        holoAng(SpawnI,Ang[SpawnI,angle])
+        
+        SpawnI++
+    }
+    if (SpawnI>HoloNumber){
+        Spawn=0
+        Active=1
+        timer("array",1)
+
+        hint("Holos Ready",2)
+    }
+}
+if (Active){
+
+    Ang:unshiftAngle(Target:angles())
+    Pos:unshiftVector(Target:pos())
+    
+    if (Ang:count()>(HoloNumber+1)*Delay + 1){
+        Ang:pop()
+        Pos:pop()
+    }
+    if (Ang:count()>(HoloNumber+1)*Delay + 1){
+        Ang:pop()
+        Pos:pop()
+    }
+    while ( perf() & ActiveI<=HoloNumber){
+        holoColor(ActiveI,Target:getColor())
+        holoMaterial(ActiveI,Target:getMaterial())
+        
+        Alpha=AlphaRange:x()-((AlphaRange:x()-AlphaRange:y())/(HoloNumber-1))*(ActiveI-1)
+        holoAlpha(ActiveI,Alpha)
+        
+        Scale=DecayRange:x()-((DecayRange:x()-DecayRange:y())/(HoloNumber-1))*(ActiveI-1)
+        holoPos(ActiveI,toWorld(Target:boxCenter()*(1-Scale), ang(), Pos[round(ActiveI*Delay),vector], Ang[round(ActiveI*Delay),angle]))
+        holoAng(ActiveI,Ang[round(ActiveI*Delay),angle])
+        ActiveI++
+
+    }
+    
+
+    if (ActiveI>HoloNumber){
+        ActiveI=1
+    }
+}
+
+LS=Me:lastSaid()
+if (chatClk(Me)){
+    Chat = LS:explode(" ")
+    if (Chat:string(1)=="!alpha"){
+        hideChat(1)
+        AlphaRange=vec2(Chat:string(2):toNumber(),Chat:string(3):toNumber())
+        print("Alpha: " + toString(AlphaRange))
+        Reset=1
+    }
+    elseif (Chat:string(1)=="!holoNumber"){
+        hideChat(1)
+        OldNumber=HoloNumber
+        HoloNumber=Chat:string(2):toNumber()
+        
+        if (OldNumber>HoloNumber){
+            for (TempI=1+HoloNumber,OldNumber){
+                holoDelete(TempI)
+            }
+        }
+        Reset=1
+        
+        print("HoloNumber: " + HoloNumber)
+    }
+    elseif (Chat:string(1)=="!decay"){
+        hideChat(1)
+        DecayRange=vec2(Chat:string(2):toNumber(),Chat:string(3):toNumber())
+        print("Decay: " + toString(DecayRange))
+        Reset=1
+    }
+    elseif (Chat:string(1)=="!delay"){
+        hideChat(1)
+        Delay=Chat:string(2):toNumber()
+        print("Delay: " + Delay)
+    }
+    elseif (Chat:string(1)=="!trail"){
+        hideChat(1)
+        reset()
+        print("Trail Reset")
+    }
+    elseif (Chat:string(1)=="!help"){
+        hideChat(1)
+        
+        print("     Commands:")
+        print("!alpha # #: Changes the Alpha of the front and back of trail")
+        print("!holoNumber #: Changes the amount of holos")
+        print("!decay # #: Changes the scale of the front and back of trail")
+        print("!delay #: changes the distance between holos")
+        print("!trail: Resets the trail")
+        print("!help: Resets the trail")
+        print("     HowTo:")
+        print("Aim at an entity, Crouch, Press shift, then Shoot")
+    }
+    
+}
+AngCount=Ang:count()

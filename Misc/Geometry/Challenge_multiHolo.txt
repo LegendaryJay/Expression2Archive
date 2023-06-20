@@ -1,0 +1,58 @@
+@name Challenge MultiHolo
+@inputs 
+@outputs Val1
+@persist Val1 Val2 Val3 I HoloNumber
+@trigger 
+runOnTick(1)
+if (first()){
+    HoloNumber=33
+    I=1
+}
+
+
+while (perf() & I<=HoloNumber){
+    Var1=I*360/HoloNumber + Val1
+    Var2=I*360/HoloNumber + Val2
+    Var3=I*360/HoloNumber + Val3
+    Layer1=entity():pos()+ vec(sin(Var1)*200,cos(Var1)*200,100)
+    Layer2=Layer1+vec(sin(Var1)*sin(Var2)*75,cos(Var1)*sin(Var2)*75,cos(Var2)*75)
+    Cos3=vec(sin(Var2)*sin(Var1)*cos(Var3)*40,sin(Var2)*cos(Var1)*cos(Var3)*40,cos(Var2)*cos(Var3)*40)
+    Sin3=vec(cos(-Var1)*sin(Var3)*40,sin(-Var1)*sin(Var3)*40,0)
+    Layer3=Layer2 + Cos3 + Sin3
+
+    Which=(I+3) % 3   
+    
+    if (Which==1){
+        if (!holoEntity(I)){
+            holoCreate(I)
+            holoEntity(I):setTrails(5,5,10,"trails/laser",hsv2rgb(vec(0,1,1)),255)
+            holoScale(I,vec(1)*0.2)
+        }
+            
+        Var1=I*360/HoloNumber + Val1
+        Layer1=entity():pos()+ vec(sin(Var1)*200,cos(Var1)*200,100)
+        holoPos(I,Layer1)
+    }
+    elseif (Which==2){
+        if (!holoEntity(I)){
+            holoCreate(I)
+            holoEntity(I):setTrails(5,5,10,"trails/laser",hsv2rgb(vec(120,1,1)),255)
+            holoScale(I,vec(1)*0.2)
+        }
+        holoPos(I,Layer2)
+    }
+    elseif (Which==0){
+        if (!holoEntity(I)){
+            holoCreate(I)
+            holoEntity(I):setTrails(5,5,10,"trails/laser",hsv2rgb(vec(240,1,1)),255)
+            holoScale(I,vec(1)*0.2)
+        }
+        holoPos(I,Layer3)
+    }
+    I++
+}
+        
+if (I>HoloNumber){I=1}
+Val1+=0.1
+Val2+=0.6
+Val3+=3.6

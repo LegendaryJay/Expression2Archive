@@ -1,0 +1,32 @@
+@name Velocity Offset Finder
+@inputs 
+@outputs Vels:array Distance
+@persist [Vels Props]:array Target:entity
+@trigger 
+
+if (first()){
+    runOnTick(1)
+    propSpawnUndo(0)
+    Target = owner()
+    for (I = 1, 2){
+        Prop = Props:pushEntity(holoCreate(I))#Props:pushEntity(propSpawn("models/sprops/cuboids/height06/size_1/cube_6x" + 6 * I + "x6.mdl", 0))
+        holoModel(I, "models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl")
+        holoScale(I, vec(0.4 - 0.1 * I))
+        #holoParent(I, Target)
+        holoColor(I, hsv2rgb(120 * (I - 1),1,1))
+    }
+    Vels = array( 0, 0.17)
+    #holoParent(3, Target)
+    holoPos(3, Target:pos())
+}
+Distance = Target:pos():distance(Props[1, entity]:pos())
+for(I = 1, 2){
+    Prop = Props[I, entity]
+    TargetVec = (Target:pos() + Target:vel() * Distance)
+    holoPos(I, TargetVec)
+#[    Prop:applyForce(
+        (
+            (TargetVec - Prop:pos()) * 50 - Prop:vel()
+        ) * Prop:mass()
+    )]#
+}

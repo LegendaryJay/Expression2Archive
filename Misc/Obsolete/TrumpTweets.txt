@@ -1,0 +1,193 @@
+@name 
+@inputs 
+@outputs 
+@persist LineSpace Space Tab LetterY E:entity MonthTable:table WkDayTable:table SpCharTable:table String:string Tweet:string I Keming WordArray:array [TextBoxSize TextPos]:vector2
+@trigger 
+
+function vector textToWorldPos(Vec2:vector2){
+    return E:toWorld(
+        vec(
+            0, 
+            Vec2:x() - TextBoxSize:x()/2,
+            -Vec2:y() + TextBoxSize:y()
+        )
+    )
+}
+function void newLine(){
+    TextPos = TextPos:setX(0) + vec2(0,LetterY + LineSpace)
+}
+function void fixedHoloPlace(I, Box:vector){
+    local Scale = Box/vec(380.10003662109,380.10000610352,380.10000610352)
+    holoScale(I, Scale)
+    holoPos( I, entity():pos() + vec( -Box:x()/2, 0, Box:z()/2 - Box:z()*0.87384895752935/2 ) )
+}
+
+
+if (first()){
+    Keming = -2
+    Space = 4
+    Tab = Space * 4
+    TextBoxSize = vec2(600,150)
+    LineSpace = 3
+        
+    runOnHTTP(1)
+    runOnTick(1)
+    runOnLast(1)
+    
+    E=entity()
+    
+    holoCreate(1)
+    holoMaterial(1,"phoenix_storms/Pro_gear_side")      
+    holoModel(1,"models/hunter/blocks/cube8x8x8.mdl")  
+    fixedHoloPlace(1,vec(5,TextBoxSize:x(),TextBoxSize:y()))
+    holoAng(1,E:angles())
+    holoParent(1,entity())
+    
+    holoCreate(2,textToWorldPos(TextBoxSize))
+    
+    LetterY = 12.5
+    
+    MonthTable = table()
+    MonthTable["jan",string] = "January"
+    MonthTable["feb",string] = "February"
+    MonthTable["mar",string] = "March"
+    MonthTable["apr",string] = "April"
+    MonthTable["may",string] = "May"
+    MonthTable["jun",string] = "June"
+    MonthTable["jul",string] = "July"
+    MonthTable["aug",string] = "August"
+    MonthTable["sep",string] = "September"
+    MonthTable["oct",string] = "October"
+    MonthTable["nov",string] = "November"
+    MonthTable["dec",string] = "December"
+    
+    WkDayTable = table()
+    WkDayTable["sun",string] = "Sunday"
+    WkDayTable["mon",string] = "Monday"
+    WkDayTable["tue",string] = "Tuesday"
+    WkDayTable["wed",string] = "Wednesday"
+    WkDayTable["thu",string] = "Thursday"
+    WkDayTable["fri",string] = "Friday"
+    WkDayTable["sat",string] = "Saturday"
+    
+    SpCharTable = table()
+    SpCharTable["!",string] = "models/sprops/misc/alphanum/alphanum_xmark.mdl"
+    SpCharTable[":",string] = "models/sprops/misc/alphanum/alphanum_colon.mdl"
+    SpCharTable[".",string] = "models/sprops/misc/alphanum/alphanum_prd.mdl"
+    SpCharTable["?",string] = "models/sprops/misc/alphanum/alphanum_qmark.mdl"
+    SpCharTable["-",string] = "models/sprops/misc/alphanum/alphanum_min.mdl"
+    SpCharTable[",",string] = "models/sprops/misc/alphanum/alphanum_com.mdl"
+    SpCharTable["(",string] = "models/sprops/misc/alphanum/alphanum_lpar.mdl"
+    SpCharTable[")",string] = "models/sprops/misc/alphanum/alphanum_rpar.mdl"
+    SpCharTable["\"",string] = "models/sprops/misc/alphanum/alphanum_quote.mdl"
+    SpCharTable["=",string] = "models/sprops/misc/alphanum/alphanum_equal.mdl"
+    
+     
+    timer("getTweet",1)
+}
+    
+function string getCharModel(S:string){
+    local ReturnString = "models/sprops/misc/alphanum/alphanum_"
+    Byte = toByte(S)
+    if (S == " " | S == "\n" | S == "\t"){
+        return ""
+    } elseif ((Byte >= 48 & Byte <= 57) | Byte >= 65 & Byte <= 90){
+        return ReturnString + S + ".mdl"
+    } elseif (Byte >= 97 & Byte <= 122){
+        return "models/sprops/misc/alphanum/alphanum_l_" + S + ".mdl"
+    } elseif (SpCharTable[S,string]){
+        return SpCharTable[S,string]
+    } else {
+        return "models/sprops/misc/alphanum/alphanum_star_4.mdl"
+    }
+    print(S)
+}
+
+if(clk("getTweet")){
+    runOnHTTP(1)
+    httpRequest("https://twitrss.me/twitter_user_to_rss/?user=realDonaldTrump")
+}
+if (httpClk()){
+    local Data = httpData()
+    local TempTweet = Data:explode("<title>")[3,string]:explode("</title>")[1,string]:trim()
+    if (TempTweet != Tweet){
+        Tweet = TempTweet
+        propDeleteAll()
+        local DateString = Data:explode("<pubDate>")[2,string]:explode("</pubDate>")[1,string]:explode(" ")
+        
+        local Date = table()
+        Date["year",string] = DateString[4,string]
+        Date["month",string] = MonthTable[DateString[3,string]:lower(), string]
+        Date["day",string] = DateString[2,string]
+        Date["wday",string] = WkDayTable[Date[1,string]:replace(",",""):lower(),string]
+        
+        local Time = DateString[5,string]:explode(":")
+        Date["hour",string] = Time[1,string]
+        Date["min",string] =  Time[2,string]
+        
+        local Am = (Date["hour",string]:toNumber() > 12 ? 0 : 1)
+        if(!Am){
+            Date["hour",string] = (Date["hour",string]:toNumber() - 12):toString()
+        }
+        
+        String = (Tweet + " \n\t-Trump" + Date["wday",string] + " " + Date["month",string] + " " + Date["day",string] + ", " +  Date["year",string] + " (" + Date["hour",string] + ":" + Date["min",string] + (Am ? "am" : "pm") + ")")
+        runOnHTTP(0)
+        I=1
+        print(String)
+        TextPos = vec2(0,LetterY + LineSpace)
+    }
+    timer("getTweet",300000)
+}
+while(perf() & (propCanCreate() & I <= String:length())){
+    Letter = String[I]
+    hint(Letter,2)
+    LetterProp = propSpawn(getCharModel(Letter), vec(), E:angles(), 1 )
+    WordArray:pushEntity(LetterProp)
+    LetterProp:setAng(ang(0, -90,0))
+    I++
+    
+    if (Letter == " " | I == String:length() + 1 ){
+        TotalLength = 0
+        for(J = 1, WordArray:count()){
+            TotalLength += WordArray[J,entity]:boxSize():x() + Keming
+        }
+        if (TotalLength + TextPos:x() - Keming > TextBoxSize:x()){
+            newLine()
+        }
+        for(J = 1, WordArray:count()){
+            Entity = WordArray[J,entity]
+            LetterWidth = Entity:boxSize():x()
+            Entity:setPos(textToWorldPos(TextPos + vec2(LetterWidth/2,0)))
+            #Entity:setAng(E:angles())
+            
+            
+            TextPos += vec2(LetterWidth + Keming,0) 
+        } TextPos += vec2(Space,0)
+        WordArray = array()
+        break
+    } elseif (Letter == "\n"){
+        newLine()
+    } elseif (Letter == "\t"){
+        TextPos += vec2(Tab, 0)
+    }
+}
+if (last()){
+    propDeleteAll()
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

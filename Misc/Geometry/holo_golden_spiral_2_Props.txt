@@ -1,0 +1,67 @@
+@name holo golden spiral 2
+@inputs 
+@outputs HeightPercent
+@persist I Max Run Center:vector E:entity Props:array R
+@model models/sprops/geometry/sphere_18.mdl 
+if (first()){
+    runOnTick(1)
+    
+    propSpawnUndo(0)
+    enableConstraintUndo(0
+    )
+    E = entity()
+    E:propGravity(0)
+    E:setMaterial("lights/white")
+    
+    R = 50
+    Max = 900
+    
+    #E:makeSpherical(R * 1.02 )
+}
+if (Run){
+    while(I < Max & perf()){
+        I++
+        Prop = Props[I, entity]
+        #Prop:deparent()
+        Prop:propFreeze(0)
+        Prop:constraintBreak()
+        Prop:applyForce(E:toLocal(Prop:pos()) * 50)
+        
+    }
+} else {
+    while(I < Max & propCanCreate() & perf()){
+        I++
+        
+        IPerc = I / Max
+        HeightPercent = sin( 180 * IPerc )
+        GoldenAngle = 137.508 * I
+    
+        Prop = Props[I,entity] = propSpawn(
+            "models/sprops/cylinders/size_1/cylinder_1_5x6.mdl", 
+            E:toWorld( 
+                vec(
+                    sin(GoldenAngle) * HeightPercent, 
+                    cos(GoldenAngle) * HeightPercent, 
+                    cos(180 * IPerc)
+                ) * R
+            ),
+            E:toWorld(ang( -IPerc * 180, -GoldenAngle, 0)),
+            0
+        )
+        Color = hsv2rgb(360 * (I - 1) / Max ,1, 1)
+        Prop:setColor(Color)
+        Prop:setMaterial("lights/white")
+        Prop:propNotSolid(1)
+        Prop:setTrails(10,10,10,"trails/laser",Color,255)
+        Prop:propGravity(0)
+        weld(Prop, E)
+        #Prop:parentTo(E)
+    }
+    
+    
+    if (I == Max){
+        Run++
+        I = 1
+        hint("done!", 3)
+    }
+}

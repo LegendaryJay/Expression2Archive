@@ -1,0 +1,91 @@
+@name Spy behind Player
+@inputs 
+@outputs PPos
+@persist [Target E Me]:entity Mode R PPos 
+@persist [Up Down Left Right ChangeMode Bounce]:string
+@trigger 
+
+if (first()){
+    Me = owner()
+    E = entity()
+    R = 300
+    
+    Up = "pad_8"
+    Down = "pad_2"
+    Left = "pad_4"
+    Right = "pad_6"
+    ChangeMode = "pad_0"
+    Bounce = "pad_enter"
+    
+    
+    runOnKeys(Me, 1) #, array(Up, Down, Left, Right, ChangeMode, Bounce))
+    cameraCreate(1)
+    function selectPlayer(Num){
+        PlayerCount = numPlayers()
+        PPos = (PPos - 1 + Num) % PlayerCount + 1 
+        Target = players()[PPos, entity]
+        #hint(Target:name() + " [ " + PPos + "/" + PlayerCount + " ]", 4)
+    }
+    function sleep(){
+        Mode = 0
+        runOnTick(0)
+        cameraToggle(1,0)
+    }
+} elseif(keyClk()){
+    if (keyClk(Me) == 1){
+        KeyPressed = keyClkPressed()
+        switch(KeyPressed){
+            case Up,
+                if (Target){
+                    R = R - 2 - 0.1 * abs(R)
+                    hint("-" + round(R, 1), 1)
+                }
+                break
+            case Down,
+                if (Target){
+                    R = R + 2 + 0.1 * abs(R)
+                    hint("-" + round(R, 1), 1)
+                }
+                break
+            case Left,
+                selectPlayer(-1)
+                break
+            case Right,
+                selectPlayer(1)
+                break
+            case ChangeMode,
+                Mode = !Mode
+                if(Mode){
+                    selectPlayer(0)
+                    runOnTick(1)
+                    cameraToggle(1,1)
+                    hint("Camera Mode",4)
+                } else {
+                    sleep()
+                    hint("Sleeping",4)  
+                }
+                break
+            case Bounce,
+                if (Target & Mode){
+                    Me:plySetPos(Target:boxCenterW() - Target:eye() * R)
+                    Me:plySetAng((Target:shootPos() - Me:shootPos()):toAngle())
+                    hint("Bamf!", 2) 
+                }
+                sleep()
+                break
+        }
+    }
+} else {
+    ChangedTarget = changed(Target)
+    if (Target){
+        Weapon = Target:tool() ?: Target:weapon():type()
+        if (changed(Weapon) | ChangedTarget){
+            hint( Target:name() + " - [" + Weapon + "]", 2)
+        }
+        cameraAng(1, Target:eyeAngles())
+        cameraPos(1, Target:shootPos() - Target:eye() * R)
+    } else {
+        sleep()
+    }
+
+}

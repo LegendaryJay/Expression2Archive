@@ -1,0 +1,28 @@
+@name Self Rave
+@inputs 
+@outputs 
+@persist Me:entity Run
+@trigger 
+
+interval(350)
+if (Run){
+    
+    Color = hsv2rgb(random() * 360, 1, 1)
+    Me:setColor(Color)
+    lightColor(1, Color)
+    lightPos(1, Me:pos() + Me:boxCenter())
+    if (last()){
+         Me:setMaterial("")
+        Me:setColor(vec(255))
+        concmd("say !dance 0")
+    }
+} else {
+    runOnLast(1)
+    Me = owner()
+    Me:setMaterial("lights/white")
+    lightCreate(1)
+    
+    lightParent(1, Me)
+    lightBrightness(1, 1000)
+    Run = 1
+}

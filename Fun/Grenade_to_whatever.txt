@@ -1,0 +1,33 @@
+@name Grenade to whatever
+@inputs 
+@outputs 
+@persist [Timer Entity]:array
+@trigger 
+function void entity:moveTo(Pos:vector){
+    Vec = (Pos - This:pos())*50
+    This:applyForce((Vec-This:vel())*This:mass())
+}
+runOnTick(1)
+if (first()){concmd("say !ammo _ grenade 50")}
+if (findCanQuery()){
+    findByClass("npc_grenade_frag")
+    Target=find()
+}
+if (changed(Target) & Target){
+    New=propSpawn("models/props_junk/gascan001a.mdl",Target:pos(),0)
+    New:moveTo(Target:vel()/15 + Target:pos())
+    Target:propDelete()
+    New:setMass(50000)
+    Entity:unshiftEntity(New)
+    Timer:unshiftNumber(1)
+}
+for (I=1,Entity:count()){
+    Timer[I,number]=Timer[I,number]+1
+    if (Timer[I,number]>15){
+        Entity[I,entity]:propBreak()
+        Timer:remove(I)
+        Entity:remove(I)
+    }
+}
+        
+    

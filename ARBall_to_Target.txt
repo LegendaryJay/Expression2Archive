@@ -1,0 +1,54 @@
+@name ARBall to Target
+@inputs 
+@outputs Array:array PI
+@persist Array:array Target:entity Awaiting ChatName:string Me:entity Repeats:array PI
+@trigger 
+
+#Broken D:
+if (first()){
+    runOnTick(1)
+    runOnChat(1)
+    Me = owner()
+    Target = Me#findPlayerBySteamID("STEAM_0:0:81810983")
+}
+if (findCanQuery()){
+    if (Awaiting){
+        Target = findPlayerByName(ChatName)
+        print(Target:name())
+        Awaiting = 0
+    } else {
+        #findIncludeClass("crossbow_bolt")
+        findIncludeClass("npc_grenade")
+        findIncludeClass("prop_combine_ball")
+        findIncludeClass("grenade_ar2")
+        
+        #findIncludeClass("npc_satchel")
+        #findIncludeClass("npc_tripmine")
+        
+        findExcludeEntities(Array)
+    
+        findClipToPlayerProps(Me)
+        findInSphere(Me:boxCenterW(),9999)
+        Array = Array:add(findToArray())
+    }
+}
+if (Array:count()){
+    PI = (PI - 1) % Array:count() + 1
+    while (PI <= Array:count() & perf()){
+        Prop = Array[PI, entity]
+        if(Prop == noentity()){
+            Array:remove(PI)
+        } else {
+            Prop:applyForce((Target:boxCenterW() - Prop:pos() + Target:vel()/50) * 50 - Prop:vel())
+            PI++
+        }
+    }
+}
+    
+if (chatClk(Me)){
+    Said = lastSaid()
+    if (Said:sub(1,4):lower() == "!fry") {
+        Awaiting = 1
+        ChatName = Said:explode("\"")[2, string]
+    }
+}

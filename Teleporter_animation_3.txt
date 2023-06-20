@@ -1,0 +1,52 @@
+@name Teleporter animation 2
+@inputs 
+@outputs Time AnimHoloHeight Timer Ticker AnimHoloAlpha Max
+@persist AnimHoloHeight Timer Ticker AnimHoloAlpha Max
+@trigger 
+
+
+
+function void createAnimHolos(User:entity){
+    Max = ceil(User:boxSize():z()/AnimHoloHeight) + 1
+    for(I = 1, Max){
+        if (!holoEntity(I)){
+            holoCreate(I)
+            holoModel(I, "models/sprops/misc/tubes/size_72/tube_72x6.mdl")
+            holoAng(I, ang(0,0,90))
+            holoAlpha(I, 0)
+            holoMaterial(I, "models/props_c17/fisheyelens")
+        }
+        holoPos(I, User:toWorld(vec(0, 0, (I - 0.5) * AnimHoloHeight)))
+        holoParent(I, User)
+    }
+    AnimHoloAlpha = 1
+    Ticker = 1
+    Timer = Time/Max 
+    timer("animation",1)
+}
+    
+if (first()){
+    Time = 250
+    
+    AnimHoloHeight = 6
+    runOnTick(1)
+    createAnimHolos(owner())
+    
+}
+if (clk("animation")){
+    holoAlpha(Ticker, 255 * AnimHoloAlpha)
+    Ticker++
+    timer("animation",Timer)
+    
+    if (Ticker > Max){
+        if (AnimHoloAlpha == 1){
+            AnimHoloAlpha = 0
+        } else {
+            stoptimer("animation")
+            for(I = 1,Max){
+                holoUnparent(I)
+            }
+        }
+        Ticker = 1
+    }
+}

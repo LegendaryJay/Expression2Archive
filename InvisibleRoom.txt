@@ -1,0 +1,47 @@
+@name InvisibleRoom 
+@persist Markers:array
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl
+
+if (first()){
+    runOnTick(1)   
+    E = entity()
+    
+    propSpawnUndo(0)
+    
+    Markers:pushEntity(E)
+    Markers:pushEntity(propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", E:toWorld( vec( 700, 700, 500)), 1))
+    
+    for(I = 1, 2){
+        holoCreate(I)
+        holoAng(I, ang())
+        holoModel(I, "models/hunter/blocks/cube8x8x8.mdl")
+        
+        Markers[I, entity]:propShadow(0)
+    }
+
+    holoMaterial(1,"engine/writez")
+    holoColor(1,vec(255))
+     
+    holoMaterial(2,"models/wireframe")
+    holoColor(2,vec(50))
+}
+
+if (Markers[1, entity]:isPlayerHolding() | Markers[2, entity]:isPlayerHolding() | first()){
+    Marker1Pos = Markers[1, entity]:pos() + Markers[1, entity]:boxMin()
+    Marker2Pos = Markers[2, entity]:pos() + Markers[2, entity]:boxMax()
+    
+    Min = minVec(Marker1Pos, Marker2Pos)
+    Max = maxVec(Marker1Pos, Marker2Pos)
+
+    Size = Max - Min + vec(1)
+    Center = (Min + Max) * 0.5
+
+    for(I = 1, 2){
+        Is2 = (I - 1)
+        holoScaleUnits(I, -sign(I - 1.5) * (Size - (I -1) * vec(1)))
+        holoPos( I, Center - holoScale(I) * holoEntity(I):boxCenter())
+    }
+} else {
+    Markers[1, entity]:propFreeze(1)
+    Markers[2, entity]:propFreeze(1)
+}

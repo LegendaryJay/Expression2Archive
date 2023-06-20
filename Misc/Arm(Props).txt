@@ -1,0 +1,181 @@
+@name Arm(Props)
+@inputs 
+@outputs FArmLocalVec:vector FArmRotAng TargDist YawRotAng UArmTrig
+@persist [E Gear Shoulder UpperArm ForeArm Guide Target]:entity [ShoulderOffset ArmOffset1 ArmOffset2]:vector ArmLength VelTrack
+@trigger 
+@model models/hunter/plates/plate3x3.mdl
+
+function entity:face(V:vector)
+{
+    This:applyTorque((V*15 - This:angVelVector())*45*This:inertia())
+}
+function angle shoulderAng(Thing){
+    return (quat(Shoulder:toWorld(ang(90, 0 , 90)))/quat(ang(Thing,0,0))):toAngle()
+}
+
+if(first()){
+    ShoulderMass = 2000
+    ArmMass = 200
+    Arm2Mass = 20
+    VelTrack = 0.2
+
+    ShoulderFrozen = 0
+    UArmFrozen = 0
+    FArmFrozen = 0
+    
+    runOnTick(1)
+    runOnLast(1)
+    
+    E = entity()
+    E:setMaterial("phoenix_storms/glass")
+    
+    ShoulderOffset = vec(0,0,10)
+    ArmOffset1 = vec(138,0,0)
+    ArmOffset2 = vec(-138,0,0)
+    ArmLength = (abs(ArmOffset1:x()) + abs(ArmOffset2:x()))
+    
+    #Shoulder
+    Shoulder = propSpawn("models/mechanics/robotics/xfoot.mdl", E:toWorld(vec(0,0,15.5)), E:angles(), ShoulderFrozen)
+    Shoulder:setMaterial("sprops/trans/misc/ls_m1")
+    noCollideAll(Shoulder, 1)
+    axis(E,vec(0,0,0),Shoulder,vec(0,0,0))
+    
+    Shoulder:setMass(ShoulderMass)
+    
+    Gear = holoCreate(100)
+    holoModel(100, "models/Mechanics/gears/gear16x6_large.mdl")
+    holoMaterial(100, "sprops/trans/misc/ls_m1")
+    Gear:parentTo(Shoulder)   
+    
+    
+    #UpperArm
+    UpperArmToWorld = toWorldPosAng(
+        ArmOffset1,
+        ang(0,0,0),
+        Shoulder:toWorld(ShoulderOffset),
+        Shoulder:toWorld(ang(-90,0,-90))
+    )
+    
+    UpperArm = propSpawn(
+        "models/mechanics/robotics/d4.mdl", 
+        UpperArmToWorld[1, vector],
+        UpperArmToWorld[2, angle],
+        UArmFrozen
+    )
+    
+    axis(UpperArm, ArmOffset2,Shoulder, ShoulderOffset, 0, vec(0, 10000, 0))
+    UpperArm:propNotSolid(1)
+    UpperArm:setMass(ArmMass)
+    
+    #ForeArm
+    ForeArmToWorld = toWorldPosAng(
+        ArmOffset1,
+        ang(0,0,0),
+        UpperArm:toWorld(ArmOffset1),
+        UpperArm:toWorld(ang(0,0,180))
+    )
+    
+    ForeArm = propSpawn(
+        "models/mechanics/robotics/d4.mdl", 
+        ForeArmToWorld[1, vector],
+        ForeArmToWorld[2, angle],
+        FArmFrozen
+    )
+    
+    axis(UpperArm, ArmOffset1,ForeArm, ArmOffset1, 0, vec(0, 10000, 0))
+    ForeArm:propNotSolid(1)
+    noCollideAll(ForeArm,0)
+    ForeArm:setMass(Arm2Mass)
+        
+    for (I = 1, 4){
+        holoCreate(I)
+        holoModel(I,"models/editor/axis_helper.mdl")
+        holoScale(I,vec(0.5))
+        holoMaterial(I,"hlmv/debugmrmwireframe")
+    }
+    holoColor(1,vec(0,255,0))
+    holoColor(2,vec(0,100,100))
+    holoColor(3,vec(100,0,100))
+    holoColor(4,vec(100,100,0))
+    
+    ArmLength = abs(2*ArmOffset1:x())
+    
+}
+
+
+Socket = Shoulder:toWorld(ShoulderOffset)
+Elbow = UpperArm:toWorld(ArmOffset1)
+Wrist = ForeArm:toWorld(ArmOffset1)
+
+if(findCanQuery()){
+    findByClass("player")
+    Target = findClosest(Socket)
+}
+
+TargetPos = Target:pos() + vec(0,0,Target:boxSize():z()*1.2) + Target:vel()*VelTrack
+TargDist = min(Socket:distance(TargetPos),2*ArmLength)
+
+holoPos(1, Socket)
+holoPos(2, Elbow)
+holoPos(3, Wrist)
+#holoPos(4, TargetPos)
+holoPos(4, Shoulder:toWorld(vec(0,1,0)*50))
+
+## Yaw ##
+
+YawLocalVec = toLocal(
+    Socket,
+    ang(),
+    TargetPos,
+    Shoulder:angles()
+)
+YawRotAng = vec2(-YawLocalVec:y(), YawLocalVec:x()):toAngle()
+YawRotVec = vec(0, 0, YawRotAng)
+Shoulder:face(YawRotVec)
+
+
+
+## Socket Pitch ##
+UArmTrig = acos(TargDist*0.5/ArmLength)
+UArmLocalVec = toLocal(
+    Socket,
+    ang(),
+    TargetPos,
+    UpperArm:toWorld(ang(-UArmTrig,0,0))
+)
+
+UArmRotAng = vec2(-UArmLocalVec:x() ,UArmLocalVec:z()):toAngle()
+UArmRotVec = vec( 0, UArmRotAng * 2, 0)
+UpperArm:face(UArmRotVec)
+
+FArmLocalVec = toLocal(
+    Elbow,
+    ang(),
+    TargetPos,
+    ForeArm:angles()
+)
+FArmRotAng = vec2(-FArmLocalVec:x() ,+FArmLocalVec:z()):toAngle()
+FArmRotVec = vec( 0, FArmRotAng, 0)
+ForeArm:face(FArmRotVec)
+
+if (last()){
+    array(Gear, Shoulder, UpperArm, ForeArm, Guide):propDelete()
+    propDeleteAll()
+}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

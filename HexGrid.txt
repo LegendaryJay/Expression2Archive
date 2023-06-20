@@ -1,0 +1,63 @@
+@name 
+@inputs 
+@outputs 
+@persist HoloModel:string HoloI HoloCount HoloLength HexList:array GridCenter:vector
+@trigger 
+
+if(first()){
+    #runOnTick(1)
+    
+    HoloModel = "models/sprops/geometry/fhex_12.mdl"
+    #HoloLength = 10.892309188843 * 0.5
+    HoloLength = 6
+    #HoloLength = 12.5
+    #HoloLength = 9.3
+    
+    HoloGap = 0
+    HoloCount = 7
+    
+    Holomin = vec(-2, -2, -2)
+    HoloMax = vec( 2,  2,  2)
+    
+    GridCenter = entity():pos() + vec( 0, 0, 50)
+    
+    function vector cart2Hex(Vector:vector){
+            
+        
+    }
+    function vector hex2Cart(HexVector:vector){
+        HexX = HexVector:x()
+        HexY = HexVector:y()
+        HexZ = HexVector:z()
+        return vec(
+            HexX * sin(30) + HexZ * sin(150) + HexY * sin(270),
+            HexX * cos(30) + HexZ * cos(150) + HexY * cos(270),
+            0
+        ) * HoloLength
+    }    
+    function vector hex2Cart(HexVector:vector2){
+        HexX = -HexVector:x()
+        HexY = -HexVector:y()
+        HexZ = -(HexX + HexY)
+        
+        OffsetAng = -60
+        return vec(
+            HexX * cos(0 + OffsetAng) + HexZ * cos(120 + OffsetAng) + HexY * cos(240 + OffsetAng),
+            HexX * sin(0 + OffsetAng) + HexZ * sin(120 + OffsetAng) + HexY * sin(240 + OffsetAng),
+            
+            0
+        ) * HoloLength
+    }
+
+    HexList = array( vec2(0, 0),vec2(0, 1) ,vec2(1, 0) ,vec2(-1, 1),vec2(-1, 0),vec2(0,-1),vec2(1, -1))
+}
+Thing = array( vec(0,0,0),vec(cos(30) - cos(150), sin(30) - sin(150), 0.1),vec(0,0,0),vec(0,0,0))
+while(HoloI < HoloCount & holoCanCreate()){
+    HoloI++
+    holoCreate(HoloI)
+    holoPos(HoloI, GridCenter + hex2Cart(HexList[HoloI, vector2]))#HoloLength * Thing[HoloI, vector])#+ hex2Cart(HexList[HoloI, vector2]))
+    holoColor(HoloI, hsv2rgb(360 * (HoloI - 1)/HoloCount, 1, 1))
+    holoModel(HoloI, HoloModel)
+    holoAng(HoloI, ang(0,0,90))
+}
+

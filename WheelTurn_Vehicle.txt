@@ -1,0 +1,76 @@
+@name WheelTurn
+@inputs 
+@outputs Yaw Speed
+@persist [Wheel E Me]:entity Yaw Speed Run
+@model models/sprops/rectangles/size_2_5/rect_18x18x3.mdl 
+
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+function void entity:moveTo(Pos:vector){
+    Vec = (Pos - This:pos())*50
+    This:applyForce((Vec-This:vel())*This:mass())
+}
+if (first()){
+    runOnTick(1)
+    
+    E = entity()
+    Me = owner()
+    E:propFreeze(1)
+    propSpawnUndo(0)
+    
+    Wheel = propSpawn("models/sprops/trans/miscwheels/thick_moto30.mdl", E:angles(), 1)
+    Wheel:setBodygroup(1,5)
+    Wheel:setSkin(3)
+    Wheel:setMass(1000)
+    
+    E:setPos(Wheel:boxCenterW())
+
+    timer("setup",500)
+    
+}
+if (clk("setup")){
+    Run = 1
+    ballsocket(Wheel, vec(), E)
+    E:propFreeze(0)
+    Wheel:propFreeze(0)
+}
+if (Run){
+    
+    Left = Me:keyPressed("Left")
+    Right = Me:keyPressed("Right")
+    Up = Me:keyPressed("Up")
+    Down = Me:keyPressed("Down")
+    
+    Yaw =Yaw + (Left - Right) * 3
+    
+    Speed = (Up - Down) * 1500
+    WheelTargetLocal = toWorld(
+        vec( sin(-Yaw), cos(-Yaw),0),
+        ang(),
+        vec(),
+        E:angles()
+    )
+    
+    UpDot = Wheel:up():dot(WheelTargetLocal)
+    ForDot = Wheel:forward():dot(WheelTargetLocal)
+    
+    #E:moveTo(Wheel:boxCenterW())
+    E:face(ang():setYaw(E:angles():yaw()))
+    
+    Wheel:applyTorque((vec(UpDot,0,-ForDot) * 15000 + vec(0,Speed,0) - Wheel:angVelVector():setY(0) * 25)*Wheel:inertia())
+}
+#[
+    Documentation and examples are available at:
+    https://github.com/wiremod/wire/wiki/Expression-2
+
+    Discord is available at https://discord.gg/cqJ45CT
+    Reddit is available at https://www.reddit.com/r/wiremod
+    Report any bugs you find here https://github.com/wiremod/wire/issues
+]#
+

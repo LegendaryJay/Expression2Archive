@@ -1,0 +1,97 @@
+@name Dupeable Elevator
+@persist [E Seat1 Seat2]:entity [Seat1Pos Seat2Pos]:vector
+
+interval(300)
+if (first() | duped()){
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    Model = "models/sprops/misc/alphanum/alphanum_arrow_a.mdl"
+    Material = "lights/white"
+    Color = array(  vec(255,0,0)  ,   vec(0,0,255)           )
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    EntArr = array()
+    E = entity()
+    EConstraintes = E:getConstraints()
+    
+    
+    for(I = 1, EConstraintes:count()){
+        TestProp = EConstraintes[I, entity]
+        if (TestProp:model() == Model){
+            hint(TestProp:toString(), 2)
+            EntArr:pushEntity(TestProp)
+            if(EntArr:count() > 1){
+                break
+            }
+        }
+        
+    }
+    
+    
+    if (EntArr:count() < 2){
+        EntArr = array()
+        for(I = 1, 2){
+            Ent = EntArr[I, entity] = seatSpawn(Model, E:toWorld(vec((I - 0.5) * 20,0,40)), E:angles(), 1)
+            Ent:setMaterial(Material)
+            Ent:setColor(Color[I, vector])
+            noCollide(Ent, E)
+            noCollideAll(Ent, 1)
+        }
+        
+    }
+    
+    Seat1 = EntArr[1,entity]
+    Seat2 = EntArr[2,entity]
+}
+
+
+Driver1 = Seat1:driver()
+Driver2 = Seat2:driver()
+
+if (changed(Driver1) & !first()){
+    
+    if (Driver1){
+        Seat1Pos = Seat1:pos()
+        Seat1:setPos(Seat2:pos())
+        timer("eject:Seat1", 2)
+    } else {
+        Seat1:setPos(Seat1Pos)
+        Seat1:propFreeze(1)
+    }
+}
+if (changed(Driver2) & !first()){
+    
+    if (Driver2){
+        Seat2Pos = Seat2:pos()
+        Seat2:setPos(Seat1:pos())
+        timer("eject:Seat2", 2)
+    } else {
+        Seat2:setPos(Seat2Pos)
+        Seat2:propFreeze(1)
+    }
+}
+
+if (clk("eject:Seat1")){
+    Seat1:ejectPod()
+}
+if (clk("eject:Seat2")){
+    Seat2:ejectPod()
+}

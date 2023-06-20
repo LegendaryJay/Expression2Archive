@@ -1,0 +1,10 @@
+@name 
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+if (first()){
+    propSpawnUndo(0)
+    Prop = propSpawn("Cmodels/bombs/gbu/gbu16_fold.mdl")
+}

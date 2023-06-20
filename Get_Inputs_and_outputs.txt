@@ -1,0 +1,76 @@
+@name Get Inputs and outputs
+@inputs Thing:wirelink
+@outputs String:string
+@persist Print PrintArr:array ChangedPrint
+
+if (~Thing | first()){
+    TypeArr = Thing:entity():type():explode("_")
+    Name = TypeArr[TypeArr:count(), string]
+    
+    Inputs = Thing:inputs()
+    Outputs = Thing:outputs()
+    
+    String = "Inputs:\n"
+    foreach(K, Input:string = Inputs){
+        String+= Name + "[\"" + Input + "\", " + Thing:inputType(Input) + "]\n"
+    }
+    String += "\n\nOutputs:\n"
+    foreach(K, Output:string = Outputs){
+        String+= Name + "[\"" + Output + "\", " + Thing:outputType(Output) + "]\n"
+    }
+    Print = 1
+    ChangedPrint = 1
+}
+if (Print){
+    if (ChangedPrint){
+        PrintArr = String:explode("\n")
+        ChangedPrint = 0
+    }
+    interval(50)
+    print(PrintArr:shiftString())
+    if (!PrintArr:count()){
+        Print = 0
+    }
+}
+
+#[
+Inputs
+1	=	Activated
+2	=	Direction
+3	=	Angle
+4	=	Position
+5	=	Distance
+6	=	UnRoll
+7	=	Parent
+8	=	FilterEntities
+9	=	FLIR
+10	=	FOV
+
+Outputs
+1	=	On
+2	=	HitPos
+3	=	CamPos
+4	=	CamDir
+5	=	CamAng
+6	=	Trace
+7	=	wirelink
+]#
+#[
+Camera["Activated", number]
+Camera["Direction", vector]
+Camera["Angle",angle]
+Camera["Position", pos]
+Camera["Distance"]
+Camera["UnRoll"]
+Camera["Parent"]
+Camera["FilterEntities"]
+Camera["FLIR"]
+Camera["FOV"]
+
+Camera["On", number]
+Camera["HitPos", vector]
+Camera["CamPos", vector]
+Camera["CamDir", vector]
+Camera["CamAng", angle]
+Camera["Trace", ranger]
+Camera["wirelink", wirelink]]#

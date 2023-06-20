@@ -1,0 +1,99 @@
+@name Milky 0.02
+@inputs 
+@outputs ChairAng:angle LegA LegB LegC ApplyAng [Vec Target Epos]:vector
+@persist Chair:entity [ChairAng AngVel]:angle [RangeBack RangeFront Vec ApplyTorVec]:vector ApplyAng
+@trigger 
+
+runOnTick(1)
+
+E=entity()
+Epos=E:pos()
+Eang=E:angles()
+Driver=Chair:driver()
+
+Chair= entity():isWeldedTo()
+ChairPos=Chair:pos()
+ChairAng=Chair:angles()
+
+rangerHitWater(1)
+
+HoverHight=400
+BackPos=Chair:toWorld((vec(0,-25,-50)))
+FrontPos=Chair:toWorld((vec(0,70,-50)))
+Back=rangerOffset(HoverHight*2, BackPos,-ang(0,0,0):up())
+Front=rangerOffset(HoverHight*2, FrontPos,-ang(0,0,0):up())
+FrontDist=Front:distance()
+BackDist=Back:distance()
+AvgDist=(FrontDist+BackDist)/2
+InvDist=-AvgDist+HoverHight
+
+Mass=Chair:mass()+E:mass() + Driver:mass()
+
+#rangerOffset(1000, entity():toWorld(vec(0,0,0)),-ang(0,0,0):up())
+
+#[holoCreate(16,Chair:toWorld(vec(0,70,-50)),vec(0.5,0.5,0.5),ang(0,0,0))
+holoCreate(17,Chair:toWorld(vec(0,-25,-50)),vec(0.5,0.5,0.5),ang(0,0,0))]#
+
+
+
+if (first()|duped())
+
+{
+XTar=E:toLocal(Epos):x()
+YTar=E:toLocal(Epos):y()
+
+holoCreate(1,Chair:toWorld(vec(0,76,0)),vec(4,4,2),Chair:toWorld(ang(0,0,90)))
+holoModel(1,"models/items/combine_rifle_ammo01.mdl")
+holoParent(1,Chair)
+
+holoCreate(2,Chair:toWorld(vec(0,80,-3)),vec(0.2,0.2,0.1),Chair:toWorld(ang(0,0,90)))
+holoModel(2,"models/combine_helicopter/helicopter_bomb01.mdl")
+holoParent(2,1)
+
+holoCreate(10,Chair:toWorld(vec(10,-4,-10)),vec(1,1,1),Chair:toWorld(ang(-90,-90,0)))
+holoModel(10,"models/props_combine/combine_light001b.mdl")
+holoParent(10,Chair)
+
+holoCreate(11,Chair:toWorld(vec(-10,-4,-10)),vec(1,1,1),Chair:toWorld(ang(-90,-90,0)))
+holoModel(11,"models/props_combine/combine_light001b.mdl")
+holoParent(11,Chair)
+
+holoCreate(12,Chair:toWorld(vec(0,31,-25)),vec(1,1,1),Chair:toWorld(ang(0,-90,0)))
+holoModel(12,"models/props_combine/combine_interface001a.mdl")
+holoParent(12,Chair)
+
+holoCreate(13,Chair:toWorld(vec(0,-20,10)),vec(1,1,1),Chair:toWorld(ang(-100,-90,0)))
+holoModel(13,"models/props_combine/cell_01_pod_cheap.mdl")
+holoParent(13,Chair)
+
+holoCreate(14,Chair:toWorld(vec(0,-10,4)),vec(0.3,0.3,0.09),Chair:toWorld(ang(10,-90,0)))
+holoEntity(14):setTrails(10,0,0.5,"trails/tube",vec(0,0,0),100)
+holoModel(14,"models/props_combine/headcrabcannister01a.mdl")
+holoParent(14,Chair)
+
+holoCreate(16,Chair:toWorld(vec(0,15,19)),vec(0.5,0.9,0.5),Chair:toWorld(ang(0,0,-20)))
+holoModel(16,"models/hunter/misc/sphere2x2.mdl")
+holoMaterial(16,"debug/env_cubemap_model")
+holoAlpha(16,150)
+holoParent(16,Chair)
+
+}
+owner():aimPos()
+Target= E:toWorld(vec(XTar,YTar,InvDist))
+Vec=Target-entity():pos()
+applyForce((Vec+$Vec-E:vel())*Mass)
+if (BackDist|FrontDist < 200)
+{
+    LegA=-FrontDist+BackDist
+    LegB=95
+    LegC=Back:pos():distance(Front:pos())
+    
+    if (BackDist > FrontDist){
+        
+    ApplyAng=acos(LegC/LegB)
+    }
+}
+else {ApplyAng=-acos(LegC/LegB)}
+ApplyTorVec=vec(ApplyAng,0,0)
+Chair:applyTorque((ApplyTorVec)*Chair:inertia()*1)
+Chair:applyForce(-Chair:vel())

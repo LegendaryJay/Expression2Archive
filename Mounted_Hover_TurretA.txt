@@ -1,0 +1,325 @@
+@name Mounted Hover Turret
+@inputs [Seat ACFGun1 ACFGun2 AmmoEnt]:entity
+@outputs GunTimer GunT:table
+@persist HN PN [PT HT GunT]:table [E Eye Iris AmmoEnt]:entity Run Origin:vector PropCreate HoloCreate IrisI GunAng:angle  
+@persist OldTime TargetTime FireIndMax
+@persist GunSide GunMountI GunTimer CamMode TI SoundI ACFReady GunY AimerX
+@model models/sprops/mechanics/sgears/spur_54t_s.mdl
+if (Run){
+    
+    Driver = Seat:driver()
+    if (Driver){
+        AmmoEnt:acfActive(1)
+        cameraToggle(1, 1, Seat)
+        
+        GunAng = Driver:eye():toAngle()
+        
+        if (Driver:keyAttack1()){
+            if (GunT[1, entity]:acfReady() & GunT[1, entity]:acfAmmoCount()){
+                #GunTimer += 0.005
+                #GunSide = !GunSide
+                #SoundI = (SoundI + 1) % 2
+                NewTime = realtime()
+                print(186.501 + "|" + (NewTime - OldTime))
+                OldTime = NewTime
+                #print(GunT[GunSide + 1, entity]:acfFireRate() + "|"  + )
+                
+                GunT[1, entity]:acfFire(1)
+            } else {
+                GunT[1, entity]:acfFire(0)
+                GunT[2, entity]:acfFire(0)
+            }
+        }
+        if (Driver:keyAttack2()){
+            GunT[ 1, entity]:acfReload()
+            GunT[ 1, entity]:acfReload()
+        }
+        CameraChangeBtn = Driver:keyPressed("LCONTROL")
+        if (changed(CameraChangeBtn) & CameraChangeBtn){
+            CamMode = !CamMode
+            if (CamMode){
+                cameraPos(1, Iris:toWorld(vec(-50,0,10)))
+                cameraAng(1, Iris:angles())
+            } else {
+                cameraPos(1, Iris:pos())
+                cameraAng(1, Iris:angles())
+            }
+        }
+    } else {
+        GunT[1, entity]:acfFire(0)
+        GunT[2, entity]:acfFire(0)
+    }
+    
+    if(GunTimer){
+        GunTimer += 0.01
+        if (GunTimer >= 1){
+            GunTimer = 0
+        }
+    } 
+    Eye:applyForce(((E:toWorld(Origin) - Eye:pos()) * 50 - Eye:vel()) * Eye:mass())
+    Eye:applyTorque(
+        (
+            (
+                Eye:toLocal(
+                    rotationVector( 
+                        quat(GunAng) / quat(Eye) 
+                    ) + Eye:pos()
+                )
+            ) * 20 - Eye:angVelVector()
+        ) * 35 * Eye:inertia()
+    )
+    
+} else {
+    if ( dupefinished() | first() ) {
+        runOnTick(1)
+        runOnLast(1)
+        
+        E = entity()
+        
+        GunAng = E:angles()
+        HoloCreate = 1
+        TI = 1
+        
+        if (ACFGun1 & ACFGun2 & AmmoEnt){
+            ACFReady = 1
+            GunT = table(ACFGun1, ACFGun2)
+        }
+        
+        #######
+        # Eye #
+        #######
+        propSpawnUndo(0)
+        Origin = vec(0,0,47)
+        Eye = propSpawn("models/sprops/geometry/sphere_12.mdl", E:toWorld(Origin),E:toWorld(ang(0,0,0)), 1)
+        Eye:setMaterial("lights/white")
+        Eye:setColor(hsv2rgb(240, 0.3, 1))
+        noCollideAll(Eye, 1)
+        
+        HN++,HT[HN,array] = array(HN,vec(3.53, 0, 0),ang( 90, 0, 0),"models/items/combine_rifle_ammo01.mdl","lights/white",vec4(hsv2rgb(300, 1, 0.3),255), vec(1,1,0.2))
+        HN++,HT[HN,array] = array(HN,vec(5.75, 0, 0),ang( 0, 0, 0),"models/sprops/geometry/sphere_3.mdl","lights/white",vec4(hsv2rgb(240, 0.5, 0),255), vec(0.3,0.9,0.9))
+        IrisI = HN
+        
+        ##########
+        # Sights #
+        ##########
+        AimerX = 19.3
+        #holographicSight
+        HN++,HT[HN,array] = array(HN,vec(AimerX - 1, 0, 0),ang( 0, 0, 0),"models/sprops/trans/air/prop_4b_s.mdl","lights/white",vec4(255,0,0,150), vec(0, 1, 1) * 0.012)
+        HN++,HT[HN,array] = array(HN,vec(AimerX + 1, 0, 0),ang( 0, 90, 0),"models/sprops/misc/tubes/size_2/tube_24x6.mdl","lights/white",vec4(255,0,0,150), vec(1, 0, 1) * 0.012)
+        
+        FireIndMax = 0.28
+        HN++,HT[HN,array] = array(HN,vec(AimerX,  1, 0),ang( 0, 0, 0),"models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl","lights/white",vec4(255,0,0,150), vec(0, 0.014, FireIndMax))
+        HN++,HT[HN,array] = array(HN,vec(AimerX, -1, 0),ang( 0, 0, 0),"models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl","lights/white",vec4(255,0,0,150), vec(0, 0.014, FireIndMax))
+        FireIndIT = table(HN, HN - 1)
+        
+        
+       
+        #ring
+        HN++,HT[HN,array] = array(HN,vec(AimerX, 0, 0),ang( 0, -90, 0),"models/sprops/geometry/fring_12.mdl","models/props_combine/metal_combinebridge001",vec4(vec(200),255), vec(1,1.5,1))
+        RingI = HN
+        
+        ###########
+        # Shields #
+        ###########
+        for(I = 1, 2){
+            Inv = 1
+            if (I == 2){
+                Inv = -Inv
+            }
+            #Joints
+            HN++,HT[HN,array] = array(HN,vec(0,19.1 * Inv, 0),ang( 0, 0, 0),"models/sprops/geometry/fhex_12.mdl","phoenix_storms/iron_rails",vec4(vec(100), 255), vec(1, 1.6, 1) * 1.05)
+            #Shield Hover
+            HN++,HT[HN,array] = array(HN,vec(0,16.5 * Inv, 0),ang( 0, 90 * Inv, 0),"models/sprops/trans/lights/light_a2.mdl","lights/white",vec4(hsv2rgb(240, 0.4, 1),255), vec(1.2))
+            
+            #Shield Frame
+            HN++,HT[HN,array] = array(HN,vec(8, 0, 2.5 * Inv),ang( 0, 90, 90 - 6 * Inv),"models/sprops/geometry/hring_36.mdl","phoenix_storms/iron_rails",vec4(vec(150),255), vec(1.2, 0.2, 1.5))
+            
+            HN++,HT[HN,array] = array(HN,vec(10,13.5 * Inv, 0),ang( 0, -90 * Inv, -90 * Inv),"models/sprops/geometry/qring_36.mdl","phoenix_storms/iron_rails",vec4(vec(150),255), vec(0.8,0.4,1.15))
+            
+            HN++,HT[HN,array] = array(HN,vec(8.25,12.67 * Inv, 0),ang( 0, -80 * Inv, -90 * Inv),"models/sprops/misc/tubes/size_3/q_tube_36x12.mdl","models/props_combine/metal_combinebridge001",vec4(255,255,255,255), vec(1.1,0.4,1.15))
+            
+            #Shield
+            PN++,PT[PN, array] = array(vec(6.5,17.9 * Inv,0), ang(0, -180 + 10 * Inv, 180 - 90 * Inv), "models/sprops/misc/tubes/size_4/q_tube_48x18.mdl", "models/props_lab/projector_noise", vec4(vec(255), 200), Eye)
+        }
+        PN++,PT[PN, array] = array(vec( 0, 0, 0), ang( 90, 0, 90), "models/sprops/rectangles_thin/size_2_5/rect_18x18x1_5.mdl", "models/props_lab/projector_noise", vec4(vec(255), 200), RingI)
+        HN++,HT[HN,array] = array(HN,vec(AimerX, 0, 0),ang( 0, 0, 90),"models/props_lab/crystalholder_bars.mdl","models/props_combine/metal_combinebridge001",vec4(255,255,255,255), vec( 1, 0.8, 0.3) * 0.3)
+  
+
+        ########
+        # Guns # 
+        ########
+        for(I = 1, 2){
+            Inv = 1
+            if (I == 2){
+                Inv = -Inv
+            }
+            GunY = 7 * Inv
+            
+            #GunMount
+            HN++,HT[HN,array] = array(HN,vec( GunY, -1.5, 0),ang( 0, -90, 0),"models/props_lab/powerbox02b.mdl","models/props_vents/borealis_vent001c",vec4(vec(150),255), vec(1.4,1,1.5) * 0.5, RingI)
+            GunMountI = HN
+            HN++,HT[HN,array] = array(HN,vec( -3.01, 0, -1.5),ang( 0, 180, 0),"models/items/battery.mdl","",vec4(vec(255),255), vec( 1, 1, 1) * 1, GunMountI)
+            HN++,HT[HN,array] = array(HN,vec( -3, 0,  1.5),ang( 180, 0, 0),"models/items/battery.mdl","",vec4(vec(255),255), vec( 1, 1, 1) * 1, GunMountI)
+            
+            if (!ACFReady){
+                #gunSupport
+                HN++,HT[HN,array] = array(HN,vec( -7.5, 0, 0.12),ang( 0, 90, 180),"models/props_lab/labpart.mdl","phoenix_storms/black_chrome",vec4(255,255,255,255), vec( 0.15, 0.35,0.15), GunMountI)
+                HN++,HT[HN,array] = array(HN,vec( -6.9, 0, 0.3),ang( 0, 90, 0),"models/props_c17/utilityconnecter005.mdl","phoenix_storms/black_chrome",vec4(255,255,255,255), vec( 0.2, 1, 0.7) * 0.5, GunMountI)
+                
+                #AmmoReserve
+                HN++,HT[HN,array] = array(HN,vec( -7, 0, -1),ang( 0, 90 - 90 * Inv, 0),"models/props_lab/rotato.mdl","phoenix_storms/black_chrome",vec4(vec(255),255), vec(0.45), GunMountI)
+                
+                #Barrel
+                HN++,HT[HN,array] = array(HN,vec(GunY, 11, 0),ang( 0, 0, 0),"models/sprops/misc/tubes/size_1/tube_12x48.mdl","phoenix_storms/iron_rails",vec4(vec(40),255), vec(0.055,0.12,0.055), RingI)
+                GunT[I, number] = GunI = HN
+                
+                
+                #muzzle
+                HN++,HT[HN,array] = array(HN,vec(0, 2.2, 0),ang( 0, 0, 0),"models/sprops/misc/tubes_thin/size_1/t_tube_12x12.mdl","phoenix_storms/black_chrome",vec4(vec(255),255), vec(0.08, 0.12, 0.08), GunI)
+                MuzzleI = HN
+                #muzzle Rings
+                HN++,HT[HN,array] = array(HN,vec(0, 0.5, 0),ang( 0, 0, 0),"models/sprops/misc/tubes/size_1/tube_12x12.mdl","phoenix_storms/iron_rails",vec4(vec(10),255), vec(0.085, 0.007, 0.085), MuzzleI)
+                HN++,HT[HN,array] = array(HN,vec(0, 0.3, 0),ang( 0, 0, 0),"models/sprops/misc/tubes/size_1/tube_12x12.mdl","phoenix_storms/iron_rails",vec4(vec(10),255), vec(0.085, 0.007, 0.085), MuzzleI)
+                HN++,HT[HN,array] = array(HN,vec(0, 0.1, 0),ang( 0, 0, 0),"models/sprops/misc/tubes/size_1/tube_12x12.mdl","phoenix_storms/iron_rails",vec4(vec(10),255), vec(0.085, 0.007, 0.085), MuzzleI)
+                
+                HN++,HT[HN,array] = array(HN,vec(0, 0.7, 0),ang( 0, 0, 0),"models/sprops/misc/tubes/size_1/tube_12x12.mdl","phoenix_storms/black_chrome",vec4(vec(255),255), vec(0.07, 0.007, 0.07), MuzzleI)
+                HN++,HT[HN,array] = array(HN,vec(0, 0.79, 0),ang( 0, 0, 0),"models/sprops/misc/tubes/size_1/tube_12x12.mdl","phoenix_storms/black_chrome",vec4(vec(255),255), vec(0.04, 0.007, 0.04), MuzzleI)
+            }
+        }
+
+        
+        ########
+        # Base #
+        ########
+        #HN++,HT[HN,array] = array(HN,vec(0,0,6),ang(0,0, 90),"models/sprops/geometry/fdisc_36.mdl","phoenix_storms/iron_rails",vec4(255,255,255,255), vec(1), E)
+        HN++,HT[HN,array] = array(HN,vec(0,0,4),ang(0, 0, 90),"models/sprops/misc/tubes/size_3/tube_36x12.mdl","sprops/textures/gear_metal",vec4(vec(150),255), vec(1), E)
+        #base Rings
+        HN++,HT[HN,array] = array(HN,vec(0,0,6.5),ang( 0, 0, 90),"models/sprops/geometry/fring_42.mdl","sprops/textures/gear_metal",vec4(255,255,255,255), vec(1), E)
+        HN++,HT[HN,array] = array(HN,vec(0,0,1.5),ang( 0, 0, 90),"models/sprops/geometry/fring_42.mdl","sprops/textures/gear_metal",vec4(255,255,255,255), vec(1), E)
+        #Base Decore
+        HN++,HT[HN,array] = array(HN,vec( 0, 0, 3),ang( 0,-45,-180),"models/props_c17/light_domelight02_on.mdl","lights/white",vec4(hsv2rgb(240, 0.4, 1),255), vec(1.7,1.7,1), E)
+        HN++,HT[HN,array] = array(HN,vec( 0, 0, 1),ang(-90, -90, 0),"models/props_c17/pipe_cap003.mdl","sprops/textures/gear_metal",vec4(vec(150),255), vec(1,2,2), E)
+        
+        for(I = 1, 3){
+            TempAng = (I - 1) * 120
+            HN++,HT[HN,array] = array(HN,vec(vec2(sin(-TempAng), cos(-TempAng)) * 34, 4),ang(0,90 + TempAng, 0),"models/sprops/triangles/right/size_1/rtri_12x48.mdl","sprops/textures/gear_metal",vec4(vec(150),255), vec(0.8,6,1), E)
+            HN++,HT[HN,array] = array(HN,vec(vec2(sin(-TempAng), cos(-TempAng)) * 20, 7.3),ang(-17, -90 + TempAng, 0),"","sprops/textures/gear_metal",vec4(vec(120), 255), vec(1, 5,1) * 0.25, E)
+            HN++,HT[HN,array] = array(HN,vec(vec2(sin(-TempAng), cos(-TempAng)) * 25, 5.7),ang(-17, -90 + TempAng, 0),"","sprops/textures/gear_metal",vec4(vec(120), 255), vec(1, 5,1) * 0.25, E)
+            HN++,HT[HN,array] = array(HN,vec(vec2(sin(-TempAng), cos(-TempAng)) * 30, 4.2),ang(-17, -90 + TempAng, 0),"","sprops/textures/gear_metal",vec4(vec(120), 255), vec(1, 5,1) * 0.25, E)
+        }
+        
+        ###################
+        # Build Functions #
+        ###################
+        function array:buildHolos() {
+            if (This[8, number]) {
+                Parent = holoEntity(This[8, number])
+            } elseif (This[8, entity]) {
+                Parent = This[8, entity]
+            } else {
+                Parent = Eye
+            }
+            
+            if (This[9, number]){
+                
+            } else {
+                local Index = This[1, number]
+                holoCreate( Index, Parent:toWorld( This[2, vector] ), ( This[7, vector] ?: vec(1) ), Parent:toWorld( This[3, angle] ), vec( 255 ), This[4, string] ?: "cube" )
+                holoParent( Index, Parent )
+                holoMaterial( Index, This[5, string] )
+                holoColor( Index, This[6, vector4] )
+            }
+        }
+        function array:buildProps() {
+            if (This[6, number]) {
+                Parent = holoEntity(This[6, number])
+            } elseif (This[6, entity]) {
+                Parent = This[6, entity]
+            } else {
+                Parent = Eye
+            }
+            Prop = propSpawn(This[3, string], Parent:toWorld( This[1, vector] ), Parent:toWorld( This[2, angle] ), 1)
+            Prop:setMaterial(This[4, string])
+            Prop:setColor(This[5, vector4])
+            #weld(Prop, Parent)
+            Prop:parentTo(Parent)
+            noCollideAll(Prop, 1)
+            Prop:propFreeze(0)
+            Prop:setMass(0)
+        }
+    }
+        
+    while(HoloCreate & holoCanCreate()){
+        if (TI <= HT:count()){
+            HT[TI,array]:buildHolos()
+            TI++
+        } else {
+            HoloCreate = 0
+            PropCreate = 1
+            TI = 1
+            if (ACFGun1 & ACFGun2 & AmmoEnt){
+                ACFReady = 1
+                ACFGun1:setPos(Eye:toWorld(vec(AimerX, GunY, 0)))
+                ACFGun2:setPos(Eye:toWorld(vec(AimerX, -GunY, 0)))
+                
+                ACFGun1:setAng(Eye:angles())
+                ACFGun2:setAng(Eye:angles()+ ang(0, 0, 180))
+                
+                ACFGun1:propFreeze(1)
+                ACFGun2:propFreeze(1)
+            }
+        }
+    }
+    while(PropCreate & propCanCreate()){
+        if (TI <= PT:count()){
+            PT[TI,array]:buildProps()
+            TI++
+        } else {
+            Run = 1
+            Eye:propFreeze(0)
+            cameraCreate(1)
+            Iris = holoEntity(IrisI)
+            cameraPos(1, Iris:pos())
+            cameraAng(1, Iris:angles())
+            cameraParent(1, Iris)
+            
+            if (ACFReady){
+                for(I = 1, 2){
+                    GunT[I, entity]:acfUnlinkFrom(AmmoEnt, 0)
+                    GunT[I, entity]:acfLinkTo(AmmoEnt, 1)
+                    #weld(GunT[I, entity], Seat)
+                }
+            } else {
+                GunT[1, entity] = holoEntity(GunT[1, number])
+                GunT[2, entity] = holoEntity(GunT[2, number])
+            }
+            
+            Eye:soundPlay(1, 0, "thrusters/hover00.wav")
+            soundPitch(1, 22)
+            soundVolume(1, 0.5)
+            TargetTime = 30 / GunT[1, entity]:acfFireRate()
+            break
+            
+        }
+    }
+      
+}
+if(last()){
+    ACFGun1:deparent()
+    ACFGun2:deparent()
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

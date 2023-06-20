@@ -1,0 +1,12 @@
+@name PD Controller (Dolly)
+@inputs Target Sense
+@outputs Out
+@persist V:vector2 M:matrix2
+
+if(first()){
+    local Kp = 0.2
+    local Td = 0.2
+    M = matrix2(Kp + Kp * Td / tickInterval(), Kp * -Td / tickInterval(), 1, 0)
+    runOnTick(1)
+}
+if(tickClk()){ V = M * V:setX(Target - Sense), Out = V:x() }

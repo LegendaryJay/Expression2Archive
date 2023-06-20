@@ -1,0 +1,120 @@
+@name LinkAllTracks
+@inputs 
+@outputs [Links ALinks BLinks CLinks DLinks ELinks]:array LinkSuccess
+@persist [Blacklist Links ALinks BLinks CLinks DLinks ELinks]:array Ranger:ranger HoloCount
+@trigger 
+
+
+
+if (!LinkSuccess){
+    interval(100)
+    
+    HoloCount = 0
+    while (holoCanCreate() & HoloCount < 22){
+        HoloCount++
+        holoCreate(HoloCount)
+        holoModel(HoloCount, "models/sprops/rectangles_thin/size_1_5/rect_6x6x1_5.mdl")
+        holoMaterial(HoloCount, "models/debug/debugwhite")
+        holoAng(HoloCount, ang(90,0,0))
+    }
+    
+    if (first()){
+        
+    }
+    
+    rangerFilter(Blacklist)
+    Start = vec(-5368.25,7558.25,-960.4) + vec(-5)
+    End =   vec(-5355.75,8169.75,-943.6) + vec(+5)
+    
+    Avg = (Start + End) * 0.5
+    Size = Start - End
+    
+    rangerIgnoreWorld(1)
+    Ranger = rangerOffsetHull(0, Avg, vec(1,0,0),Size)
+
+
+
+    Thing = Ranger:entity()
+    if (Thing){
+        
+        Blacklist:pushEntity(Thing)
+        
+        if (Thing:type() == "prop_dynamic"){
+            Links:pushEntity(Thing)
+        }
+    }
+    if (Links:count() == 22){
+        hint("Found All Links", 2)
+        LinkSuccess = 1
+        TempArray = Links:clone()
+
+        for (LinkI = 1, 22){
+            Link = TempArray[LinkI, entity]
+            LinkY = (Link:pos():y() - 7564)/24
+            if (LinkY > 9){
+                LinkY--
+            }
+            if (LinkY > 12){
+                LinkY--
+            }
+            if (LinkY > 15){
+                LinkY--
+            }
+            if (LinkY > 18){
+                LinkY--
+            }
+            Links[LinkY + 1, entity] = TempArray[LinkI, entity]
+            for (I=1, 22){
+                holoPos(I, Links[I, entity]:pos() + vec(0,0,35))
+                
+
+            }
+        }
+        ALinks = array(
+            Links[1, entity],
+            Links[2, entity],
+            Links[3, entity],
+            Links[4, entity],
+            Links[5, entity],
+            Links[6, entity],
+            Links[7, entity],
+            Links[8, entity],
+            Links[9, entity],
+            Links[10, entity]
+        )
+        BLinks = array(
+            Links[11, entity],
+            Links[12, entity],
+            Links[13, entity]
+        )
+        CLinks = array(
+            Links[14, entity],
+            Links[15, entity],
+            Links[16, entity]
+        )
+        DLinks = array(
+            Links[17, entity],
+            Links[18, entity],
+            Links[19, entity]
+        )
+        ELinks = array(
+            Links[20, entity],
+            Links[21, entity],
+            Links[22, entity]
+        )
+    }
+    
+} else {
+    interval(1000)
+    State = ALinks[10,entity]:wirelink()["Switch State", number]
+    hint(State:toString(), 2)
+#[    for(I = 1, 10){
+        State = ALinks[I,entity]:wirelink():wirelink("Switch State")
+        holoColor(I, (State ? vec(0, 255, 0) : vec(255, 0, 0)))
+    }]#
+}   
+
+            
+
+
+#vec(-5362,7564,-952), vec(-5362,8164,-952)

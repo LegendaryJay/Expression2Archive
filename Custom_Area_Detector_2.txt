@@ -1,0 +1,66 @@
+@name Custom Area Detector 2
+@inputs 
+@outputs BoxSize:vector
+@persist [E Marker]:entity EBottom BoxBoxCenter:vector AngleMode Blacklist:array
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl
+
+if (first()){
+    
+    AngleMode = 0
+    
+    
+    runOnTick(1)   
+    E = entity()
+    EBottom = E:boxSize():z()/2
+    propSpawnUndo(0)
+    
+    Marker = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", E:toWorld( vec( 50, 50, 50)), 1)
+    Marker:setAlpha(0)
+    noCollideAll( Marker, 1)
+    
+    holoCreate(1)
+    holoColor(1, vec(105,0,75))
+    holoPos(1, Marker:boxCenterW())
+    holoAng(1, ang())
+    holoMaterial(1, "models/wireframe")
+    holoModel(1,"models/editor/axis_helper.mdl")
+    holoParent(1, Marker)
+
+    holoCreate(2)
+    holoAng(2, E:angles())
+    holoPos(2, E:pos())
+    holoMaterial(2,"models/wireframe")
+    holoModel(2, "models/hunter/blocks/cube8x8x8.mdl")
+    holoScale(2, vec())
+    #holoParent(2, E)
+    
+    BoxBoxCenter = holoEntity(2):boxCenter()
+}
+if (AngleMode){
+    Angle = E:angles()
+    holoAng(1, E:angles())
+} else {
+    Angle = ang()
+    holoAng(2, ang())
+}
+BoxSize = -toLocal(
+    E:pos() - E:up() * EBottom,
+    ang(),
+    Marker:pos(),
+    Angle
+) * vec(2, 2, 1)
+
+AbsBoxSize = vec(abs(BoxSize:x()), abs(BoxSize:y()), abs(BoxSize:z()))
+
+holoScaleUnits(2, AbsBoxSize * vec(1, 1,-1))
+holoPos(2, E:toWorld(vec(0,0,BoxSize:z() * 0.5 - EBottom) - BoxBoxCenter * holoScale(2)))
+
+
+rangerFilter(Marker)
+rangerFilter(Blacklist)
+Ranger = rangerOffsetHull(0, holoEntity(2):boxCenter(), vec(1,0,0),AbsBoxSize)
+Thing = Ranger:entity()
+if (Thing){
+    print("Thing = " + Thing:toString())
+    Blacklist:pushEntity(Thing)
+}

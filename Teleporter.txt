@@ -1,0 +1,53 @@
+@name Teleporter
+@inputs EGP:wirelink Prop:entity
+@outputs ThingPos:array
+@persist EGP:wirelink [Prop Me Target]:entity I [Play Thing ThingPos]:array
+@trigger 
+
+runOnTick(1)
+if (first()|duped()){
+    Play=players()
+    Me=owner()
+    I=1
+    EGP:egpClear()
+    EGP:egpText(1,Play[1,entity]:name(),vec2(256,240))
+    EGP:egpAlign(1,1)
+    EGP:egpSize(1,50)
+    
+    Thing=Prop:getConstraints()
+    for (ConstI=1,Thing:count()){
+        ThingPos[ConstI,vector]=Thing[ConstI,entity]:pos()-Prop:pos()
+    }
+}
+if (numPlayers()!=Play:count()){Play=players()}
+
+L=Me:keyPressed("left")
+R=Me:keyPressed("right")
+U=Me:keyPressed("up")
+D=Me:keyPressed("down")
+
+if (changed(L)& L){I--}
+elseif (changed(R) & R){I++}
+
+if (I>numPlayers()){I=1}
+if (I<1){I=numPlayers()}
+
+
+if (changed(I)){
+    Target=Play[I,entity]
+    EGP:egpSetText(1,Target:name())
+    hint(Target:name(),2)
+}
+if (changed(D) & D){
+    TargetPos=Target:pos()-vec(0,0,10)
+    Prop:setPos(TargetPos)
+    for (ThingI=1,Thing:count()){
+        Thing[ThingI,entity]:setPos(ThingPos[ThingI,vector]+TargetPos)
+        Thing[ThingI,entity]:propFreeze(1)
+    }
+    
+}
+
+
+
+

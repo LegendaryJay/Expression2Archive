@@ -1,0 +1,22 @@
+@name Move Prop From Edge
+@inputs 
+@outputs 
+@persist Ticker E:entity
+@trigger 
+@model models/sprops/rectangles/size_54/rect_54x60x3.mdl
+
+if (first()){
+    holoCreate(1)
+    runOnTick(1)
+    E = entity()
+}
+E:setAng(ang(0,0,Ticker))
+E:setPos(
+    toWorld(
+        E:right() * E:boxSize():y()/2,
+        ang(90,0,Ticker) ,
+        holoEntity(1):pos(),
+        ang()    
+    )
+)
+Ticker++

@@ -1,0 +1,30 @@
+@name Floating Elevator
+@inputs 
+@outputs 
+@persist [Me E]:entity Radius Force
+@trigger 
+runOnTick(1)
+if (first()){
+    E = entity()
+    Radius = 20
+    Force = 20
+    holoCreate(1)
+    holoModel(1, "models/hunter/tubes/tube4x4x16.mdl")
+    holoMaterial(1, "glass/glasswindow_refract01")
+    holoAlpha(1, 100)
+    holoScaleUnits(1, vec(vec2(Radius * 2 ), 2000))
+    holoParent(1, E)
+}
+for(I = 1, numPlayers()){
+    Player = players()[1, entity]
+    PlayerToMiddle = vec2(E:pos() - Player:pos())
+    if (PlayerToMiddle:length() < Radius){
+        W = Player:keyPressed("W")
+        A = Player:keyPressed("A")
+        S = Player:keyPressed("S")
+        D = Player:keyPressed("D")
+        
+        Extra = Player:keyPressed("w") ? Player:eye() * Force * 1.05 : vec()
+        Player:applyPlayerForce(vec(0,0,Force) + Extra)
+    }
+}

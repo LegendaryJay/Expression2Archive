@@ -1,0 +1,32 @@
+@name 
+@inputs 
+@outputs Array:array
+@persist Holo
+@trigger 
+@model models/props_c17/oildrum001_explosive.mdl
+runOnTick(1)
+if (first()){
+    holoCreate(21)
+    holoModel(21,"hq_sphere")
+    holoPos(21,owner():boxCenterW())
+    holoParent(21,owner())
+    holoScale(21,-vec(6))
+    holoAlpha(21,100)
+    holoModel(21,"models/sprops/geometry/sphere_144.mdl")
+    holoColor(21,vec())
+    for (I=1,20){
+        holoCreate(I)
+        holoScale(I,vec(0.1))
+        if (I<6){holoEntity(I):setTrails(20,20,2,"trails/laser",hsv2rgb(vec(0,1,1)),255)}
+        else {holoEntity(I):setTrails(20,20,2,"trails/laser",hsv2rgb(vec(240,1,1)),255)}
+    }
+        
+}
+for (I=1,5){
+    holoPos(I,owner():boxCenterW() + vec(sin(360*I/5)*cos(Holo)*150,cos(360*I/5)*cos(Holo)*150,sin(Holo)*150))
+}
+for (I=6,20){
+    holoPos(I,owner():boxCenterW() + vec(sin(360*I/15)*cos(Holo)*400,cos(360*I/15)*cos(Holo)*400,sin(-Holo)*400))
+
+}
+Holo+=6

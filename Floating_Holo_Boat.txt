@@ -1,0 +1,100 @@
+@name Floating Holo Boat
+@inputs 
+@outputs Test:vector2
+@persist [E Me Seat]:entity VecArray:array Height Rangers:array NewForce OffsetVec:vector
+@model models/sprops/rectangles/size_1_5/rect_6x12x3.mdl
+
+function void entity:moveTo(Pos:vector){
+    Vec = (Pos - This:pos())*50
+    This:applyForce((Vec-This:vel())*This:mass())
+}
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+
+if (first()){
+    X = 5
+    Y = 5
+    Height = 10
+    runOnTick(1)
+    
+    E = entity()
+    E:setAlpha(0)
+    
+    Me = owner()
+    
+    propSpawnUndo(0)
+    Seat = seatSpawn("", 1)
+    holoCreate(100)
+    holoModel(100, "models/props_canal/boat002b.mdl")
+    holoScale(100, vec(0.1))
+    holoParent(100, E)
+
+    cameraCreate(1)
+    cameraParent(1, E)
+    cameraToggle(1, 1, Seat)
+    
+    Vec = vec(X, Y, 0)
+    VecMod = vec(1)
+    
+    
+    for(I = 1, 4){    
+        VecArray:pushVector( VecMod * Vec )
+        if (sign(VecMod:x()) == -1){
+            VecMod = VecMod:setY(-VecMod:y())
+        }
+        VecMod = VecMod:setX(-VecMod:x())
+    }
+    Rangers = array()
+    E:propFreeze(0)
+}
+Driver = Seat:driver()
+
+cameraToggle(1, 1, Seat)
+
+cameraPos(1, E:pos() - Driver:eye() * 50)
+cameraAng(1, Driver:eye():toAngle())
+Dist = array()
+OffsetVec = vec()
+Test = vec2()
+for(I = 1, 4){    
+    Rangers[I, ranger] = rangerOffset(Height, E:toWorld( VecArray[I, vector] ), -E:up())
+    DesiredPos = Rangers[I, ranger]:pos() + E:up() * Height
+    LocDesiredPos = E:toLocal(DesiredPos)
+    Test += vec2(-LocDesiredPos:z()/LocDesiredPos:x(), -LocDesiredPos:z()/LocDesiredPos:y()) * 0.25
+    holoPos(I, DesiredPos)
+
+    OffsetVec +=  DesiredPos * 0.25
+}
+
+
+#[E:applyForce(
+    E:up() * NewForce * 100 + vec( 0, 0, E:toLocal(E:pos() - E:vel() * 10 ):z()), 
+    E:toWorld(OffsetVec)
+)
+E:applyTorque((-E:angVelVector())*25*E:inertia())]#
+E:moveTo(OffsetVec)
+holoPos(5, OffsetVec)
+
+E:face(ang(asin(Test:y()), E:angles():yaw(), asin(Test:x())))
+#E:face(ang())
+
+
+
+
+
+#(Height - Rangers[I, ranger]:distance())
+
+
+
+
+
+
+
+

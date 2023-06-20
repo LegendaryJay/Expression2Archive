@@ -1,0 +1,44 @@
+@name Invisible BlackRoom 2
+@model models/hunter/blocks/cube025x025x025.mdl
+E = entity()
+
+Scale = vec(vec2(1000), 600)
+HoloSeperation = 0.644
+
+for(I = 1, 4){
+    HoloOffset = vec(HoloSeperation) * (I - 1)
+    
+    holoCreate(I)
+    holoAng(I, E:angles())
+    holoModel(I, "models/hunter/blocks/cube8x8x8.mdl")
+    holoScaleUnits(I, sign(2.5 - I) * (Scale - HoloOffset))
+    holoParent(I,E)
+    
+    TempScale = holoScale(I):z()
+    FixHeightToE2 = vec( 0, 0, 0.5 * Scale:z() * ( 1 - E:boxSize():z() / 9450 ) - E:boxSize():z() * 0.5 ) 
+    holoPos( I, E:toWorld(-holoEntity(I):boxCenter() * TempScale + HoloOffset * 0.25 - E:boxCenter() + FixHeightToE2))
+}
+
+holoMaterial(1,"models/wireframe")
+holoColor(1,vec(20))
+
+holoMaterial(2,"engine/writez")
+holoColor(2,vec(255))
+ 
+
+holoMaterial(3,"lights/white")
+holoColor(3,vec(0))
+
+holoMaterial(4,"models/wireframe")
+holoColor(4,vec(50))
+
+            
+#[
+
+"engine/writez"
+"models/wireframe"
+"engine/shadowbuild"
+"lights/white"
+
+]#
+

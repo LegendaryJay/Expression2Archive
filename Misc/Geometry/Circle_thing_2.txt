@@ -1,0 +1,42 @@
+@name Circle thing
+@inputs 
+@outputs II
+@persist II HoloNumber Sin WorldVec:vector
+@trigger 
+runOnTick(1)
+if (first()){
+    HoloNumber=100
+    II=1
+}
+
+if (II>HoloNumber){II=1}
+while (perf(80) & II<=HoloNumber){
+    Red=127*sin(360*(II/HoloNumber)+Sin)+128
+    Grn=127*sin(360*(II/HoloNumber)+85 + Sin)+128
+    Blu=127*sin(360*(II/HoloNumber)+170 + Sin)+128
+    
+    if (!holoEntity(II) & holoCanCreate()){holoCreate(II)}
+    LocalVec=vec(0 , -sin((II/HoloNumber)*360*25+Sin*6)*5,-cos((II/HoloNumber)*360*25+Sin*6)*50)
+    LocalAng=ang(0,0,sin(II/HoloNumber)*360+Sin)
+    OldWorldVec=WorldVec
+    WorldVec=entity():pos() + vec( sin( (II/HoloNumber)*360+Sin)*50    ,    cos((II/HoloNumber)*360+Sin)*50   ,  200)
+    
+    WorldAng=(OldWorldVec-WorldVec):toAngle():setRoll(360*0*II/HoloNumber)
+    holoPos(II,toWorld(LocalVec,WorldAng,WorldVec,WorldAng))
+    Color=vec(Red,Grn,Blu)
+    holoColor(II,Color)
+    holoScale(II,vec(sin(Sin*8 + (II % 4)*90))*0.5+1)
+#[    if (II==1){
+        Target=holoEntity(HoloNumber)
+    }
+    else{
+        Target=holoEntity(II-1)
+    }
+        Target:pos()-holoEntity(II):pos()):toAngle():setRoll(100*sin(II/HoloNumber)*360+Sin
+ ]#
+   
+    II++
+}
+Sin+=0.5
+
+

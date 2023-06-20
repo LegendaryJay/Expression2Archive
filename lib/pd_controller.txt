@@ -1,0 +1,12 @@
+@name PD Controller
+@inputs
+@outputs
+@persist V:vector2 M:matrix2 TargetVal SenseVal
+
+if(first()){
+    local Kp = 0.2
+    local Td = 0.2
+    M = matrix2(Kp + Kp * Td / tickInterval(), Kp * -Td / tickInterval(), 1, 0)
+    runOnTick(1)
+}
+if(tickClk()){ V = M * V:setX(TargetVal - SenseVal), Out = V:x() }

@@ -1,0 +1,146 @@
+@name Theater Setup Spawner
+@outputs CurrLevel  CurrCol
+@persist HN I [E PropSeat]:entity CurrLevel Levels CurrCol Cols Mode HI PropSeatModel:string SeatI SeatArray:array LastSeat:entity
+
+if (first()){
+    propSpawnUndo(0)
+    enableConstraintUndo(0)
+    E = entity()
+    Levels = 4
+    Cols = 3
+    
+    
+    CurrLevel = 1
+    CurrCol = 1
+        
+    PropSeatModel = "models/props_trainstation/traincar_seats001.mdl"
+    
+    SeatI = 5
+}
+
+switch (Mode){
+    case 0,
+        runOnTick(1)
+        YOffSet = ((Cols + 1)/2 - CurrCol) * 192
+        while (holoRemainingSpawns() >= 5){
+            HN++
+            PropSeat = holoCreate(HN)
+            holoModel(HN, PropSeatModel)
+            holoPos(HN, E:toWorld(vec(0,YOffSet,0) + vec(-60,0,24) * (CurrLevel - 1)))
+            holoAng(HN, E:angles())
+            holoParent(HN, E)
+            
+            TempVec = vec(-32, 0, 12)
+            HN++
+            holoCreate(HN)
+            holoModel(HN, "models/sprops/cuboids/height24/size_2/cube_36x192x24.mdl")
+            holoPos(HN, PropSeat:toWorld(TempVec))
+            holoAng(HN, PropSeat:toWorld(ang(0,90,0)))
+            holoMaterial(HN, "models/props_combine/metal_combinebridge001")
+            holoParent(HN, E)
+            
+            HN++
+            holoCreate(HN)
+            holoModel(HN, "models/sprops/cuboids/height24/size_1/cube_24x192x24.mdl")
+            holoPos(HN, PropSeat:toWorld(TempVec + vec(-30, 0, 0)))
+            holoAng(HN, PropSeat:toWorld(ang(0,90,0)))
+            holoMaterial(HN, "models/props_combine/metal_combinebridge001")
+            holoParent(HN, E)
+            
+            HN++
+            holoCreate(HN)
+            holoModel(HN, "models/sprops/cuboids/height12/size_2/cube_24x36x12.mdl")
+            holoPos(HN, PropSeat:toWorld(vec(-2, 78, 6)))
+            holoAng(HN, PropSeat:toWorld(ang(0,90,0)))
+            holoMaterial(HN, "models/props_combine/metal_combinebridge001")
+            holoParent(HN, E)
+            
+            HN++
+            holoCreate(HN)
+            holoModel(HN, "models/sprops/cuboids/height12/size_2/cube_24x36x12.mdl")
+            holoPos(HN, PropSeat:toWorld(vec(-2, -78, 6)))
+            holoAng(HN, PropSeat:toWorld(ang(0,90,0)))
+            holoMaterial(HN, "models/props_combine/metal_combinebridge001")
+            holoParent(HN, E)
+                
+            CurrLevel++
+            if (CurrCol == Cols & CurrLevel > Levels){
+                Mode++
+            }
+            if (CurrLevel > Levels){
+                break
+            }
+        }
+        if (CurrLevel > Levels & CurrCol < Cols){  
+            CurrCol++
+            CurrLevel = 1
+        }
+        break
+    case 1,
+        K = owner():keyPressed("K")
+        if (changed(K) & K){
+            Mode++
+        }
+        break
+    case 2,
+        
+        if (propCanCreate()){
+            if (HI < HN){
+                HI++
+                
+                Holo = holoEntity(HI)
+                Model = Holo:model()
+                  
+                Prop = propSpawn(Model, Holo:pos(), Holo:angles(), 1)
+                Prop:setMaterial(Holo:getMaterial())
+                Prop:setColor(Holo:getColor())
+                #Prop:propPhysicalMaterial("crowbar")
+                if (Model == PropSeatModel){
+                    SeatArray:pushEntity(Prop)
+                }
+                holoDelete(HI)
+            } else {
+                
+                Mode++
+            }
+        }
+        break
+    case 3,
+        if (propCanCreate()){
+            if (SeatI > 4){
+                SeatI = 1
+                LastSeat = SeatArray:popEntity()
+            } elseif (LastSeat){
+                Seat = seatSpawn("", LastSeat:toWorld(vec(-2,(SeatI - 2.5 )* 27, 15)), LastSeat:toWorld(ang(0,-90,0)), 0)
+                Seat:setAlpha(0)
+                Seat:propShadow(0)
+                noCollideAll(LastSeat, 1)
+                weld(Seat, LastSeat)
+                SeatI++
+            } else {
+                hint("Done",4)
+                runOnTick(0)
+            }
+        }
+
+}
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

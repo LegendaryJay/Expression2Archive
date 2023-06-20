@@ -1,0 +1,26 @@
+@name 
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+interval(500)
+if (first()){\
+    holoCreate(1)
+}
+
+for (I<=HoloNumber & perf()){
+    Red=127*sin(Sin*0.15*I)+128
+    Grn=127*sin(Sin*0.15*I)+128
+    Blu=127*sin(Sin*0.15*I)+128
+    
+    
+    Color=vec(Red,Grn,Blu)
+    holoColor(1,Color)
+    I++
+}
+
+if (I>HoloNumber){I=1}
+if (ColorSin){ColorSin>50}
+ColorSin++
+Sin+=5

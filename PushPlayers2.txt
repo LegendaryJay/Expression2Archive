@@ -1,0 +1,47 @@
+@name Push Players
+@inputs 
+@outputs Timer
+@persist [Me Prop E]:entity Timer
+@model models/weapons/w_crowbar.mdl
+
+if(first()){ 
+    propSpawnUndo(0)
+    Me = owner()
+    E = entity()
+    
+    Prop = propSpawn("models/hunter/blocks/cube025x025x025.mdl", vec(), ang(),  0)
+    Prop:propGravity(0)
+    Prop:setMass(50000)
+    Prop:setTrails(100,100,0.2,"trails/laser",vec(255),255)
+    runOnKeys(Me, 1, array("mouse_left"))
+} elseif ( keyClk(Me) == 1 & Me:weapon():type() == "weapon_physcannon"){
+    Timer++ 
+    Prop:propFreeze(0)
+
+} 
+if (Timer){
+    interval(1)
+    Dir = (E:pos() - Me:pos()):normalized()
+    BoxSize = Me:boxSize()
+    Width = max(BoxSize:x(), BoxSize:y()) + 3
+    switch (Timer){
+        case 1,
+            Prop:setPos(Me:boxCenterW() + Dir:setZ(0) * Width)
+            Timer++
+            interval(1)
+            break
+        case 2,
+            Prop:applyForce(-Dir:setZ(0) * 50000 * Prop:mass())
+            Timer++
+            interval(1)
+            break
+        
+        case 3,
+            Prop:setPos(E:pos())
+            Prop:propFreeze(1)
+            Timer = 0
+            break            
+    }
+    Prop:setAng(ang())
+
+}

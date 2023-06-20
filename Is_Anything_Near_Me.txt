@@ -1,0 +1,15 @@
+@name 
+@inputs 
+@outputs Array:array
+@persist 
+@trigger 
+
+runOnTick(1)
+runOnChat(1)
+if(findCanQuery()){
+    findExcludePlayer(owner())
+    findExcludeClass("weapon")
+    findInSphere(owner():pos(),1200)
+    Array = findToArray()
+}
+#printTable(Array)

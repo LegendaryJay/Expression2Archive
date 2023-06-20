@@ -1,0 +1,150 @@
+@name Skybox Map
+@inputs
+@outputs DebugEnt:entity Origin:vector 
+@persist Scale Origin:vector [Me TargetPlayer]:entity [HoloIndArray ]:array LastHoloInd ArrowYaw
+@persist DebugEnt:entity Debug DebugSize
+@model models/props_trainstation/TrackSign02.mdl 
+
+if (first()){
+    runOnLast(1)
+    #include "lib/WatchPlayers"
+    Debug = 0
+    DebugSize = 40
+    
+    runOnTick(1)
+    runOnChat(1)
+    
+    Me = owner()
+    Me:setAlpha(0)
+    
+    
+    Map = map()
+    hint(Map,10)
+    switch( Map ){
+        case "gm_freespace_13",
+            Scale = 1/16
+            Origin = vec(0, 0, 12256)
+            break
+        case "gm_vyten",
+            Scale = 1/16
+            Origin = vec( 0, 0, 13176 )	
+            break
+        case "gm_ijwtb_b4",	
+            Scale = 1/16	
+            Origin = vec( 89.54, -64.16, 13165.91 )	
+            break
+        case "gm_excess_construct_13",	
+            Scale = 1/16	
+            Origin = vec( 11424, 11936, 480 )	
+            break	
+        case "gm_flatgrass",	
+            holoCreate(999, vec(32,0,-15837.964005481), vec(0.3368459375,0.3368459375,0.084188375), ang(), vec(), "models/hunter/blocks/cube8x8x8.mdl")
+            holoMaterial(999, "models/wireframe")
+            Scale = 1/16 
+            Origin = vec( 32, 0, -15040 )	
+            break	
+        case "gm_genesis",	
+            Scale = 1/16	
+            Origin = vec( 0, 0, 13140 )	
+            break	
+        case "gm_bigcity",	
+            Scale = 1/16	
+            Origin = vec( 0, 0, 5112 )	
+            break	
+        case "gm_functional_flatgrass3",	
+            Scale = 1/16	
+            Origin = vec( 0,0, 15360 )	
+            break	
+
+
+        default,
+            hint("Add world Info", 2)
+            EPos = entity():pos()
+            print("    case \"" + map() + "\",")
+            print("    Scale = 1/16")
+            print("    Origin = vec( " + round(EPos:x(),2) + ", " + round(EPos:y(),2) + ", " + round(EPos:z(),2) + " )")
+            print("    break")
+    }
+    
+    function makeHolo(Idx, Ply:entity){
+        holoCreate(Idx)
+        holoModel(Idx, Ply:model())
+        holoMaterial(Idx, "models/debug/debugwhite")
+    }
+    
+    concmd("say !size kinkyTug " + Scale )
+    
+    holoCreate(900)
+    holoModel(900, "models/sprops/misc/alphanum/alphanum_arrow_a.mdl")
+    holoMaterial(900, "debug/debugdrawflat")
+
+    
+    if (Debug){   
+        DebugEnt = holoCreate(901, vec())
+        holoCreate(1)
+        #DebugEnt = holoEntity(1)
+        holoAng(901, ang())
+        holoModel(901, "models/editor/axis_helper.mdl")
+        holoScale(901, vec(DebugSize))
+        Players = array(holoEntity(901))
+    } else {
+        DebugEnt = holoEntity(900)
+    }
+
+    holoVisible(900, Players, 0)
+    holoVisible(900, Me, 1)
+    
+}
+if (chatClk()){
+    Said = lastSaid()
+    if (Said:sub(1,6) == "!find "){
+        TargetPlayer = findPlayerByName(Said:sub(7))
+    }
+}
+
+if(ChangePlayer){
+    if (NewPlayer){
+        LastHoloInd++
+        HoloIndArray:pushNumber(LastHoloInd)
+        if (!holoEntity(LastHoloInd)){
+            makeHolo(LastHoloInd, Players[Players:count(), entity])
+        }
+    } else {
+        holoDelete(HoloIndArray[LeftPlayer, number])
+        HoloIndArray:remove(LeftPlayer)
+    }
+}
+ArrowYaw = (ArrowYaw + 1) % 360
+holoAng(900, ang(180,ArrowYaw,0))
+
+
+
+for(I = 1, Players:count()){
+    holoVisible(I, Players, 0)
+    holoVisible(I, Me, 1)
+    Player = Players[I, entity]
+    
+    if (Player == Me){
+        Players:remove(I)
+        HoloIndArray:remove(I)
+    }
+    
+    
+    if (Player == TargetPlayer){
+        holoPos(900, holoEntity(I):pos() + vec( 0, 0, holoScaleUnits(I):z() * 3))
+        
+    }
+    if(!holoEntity(I)){
+        makeHolo(I, Player)
+    }
+    holoModel(I,Player:model())
+    holoScale(I, vec(Scale * (Debug ? DebugSize : 1)))
+    holoColor(I, teamColor(Player:team()))
+    
+    holoAnim(I, Player:getAnimation())
+    holoAng(I, Player:angles())
+    holoPos(I, Player:pos() * Scale + Origin)
+}
+if (last()){
+    Me:setAlpha(255)
+}

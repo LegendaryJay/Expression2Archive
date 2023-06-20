@@ -1,0 +1,263 @@
+@name TrumpTweets 2
+@inputs 
+@outputs 
+@persist LetterProp:entity LetterY LineSpace Space Tab E:entity [String TestTweet Tweet]:string I Keming WordArray:array [TextBoxSize TextPos Padding]:vector2 StringArray:string
+@persist [MonthTable SpWidthTable SpCharTable WkDayTable]:table
+@trigger 
+
+function vector textToWorldPos(Vec2:vector2){
+    return E:toWorld(
+        vec(
+            0, 
+            Vec2:x() - TextBoxSize:x()/2,
+            -Vec2:y() + TextBoxSize:y()
+        )
+    )
+}
+function void newLine(){
+    TextPos = TextPos:setX(Keming) + vec2(Padding:x(),LetterY + LineSpace)
+}
+function void fixedHoloPlace(I, Box:vector){
+    local Scale = Box/vec(380.10003662109,380.10000610352,380.10000610352)
+    holoScale(I, Scale)
+    holoPos( I, entity():pos() + vec( -Box:x()/2, 0, Box:z()/2 - Box:z()*0.87384895752935/2 ) )
+}
+function number getWidthScale(Char:string){
+    return SpWidthTable[Char,number] ? SpWidthTable[Char,number] : 1
+}
+
+
+if (first()){
+    propSpawnUndo(0)
+    Keming = -2
+    Space = 8
+    Tab = Space * 4
+    TextBoxSize = vec2(600,150)
+    LineSpace = 3
+    Padding = vec2(10,5)
+        
+    propSpawnUndo(0)
+    runOnHTTP(1)
+    runOnTick(1)
+    runOnLast(1)
+    
+    E=entity()
+    
+    holoCreate(1)
+    holoMaterial(1,"sprops/textures/gear_metal")      
+    holoModel(1,"models/hunter/blocks/cube8x8x8.mdl")  
+    fixedHoloPlace(1,vec(5,TextBoxSize:x() + Padding:x(),TextBoxSize:y()+ Padding:y()))
+    holoAng(1,E:angles())
+    holoParent(1,entity())
+    
+    holoCreate(2,textToWorldPos(TextBoxSize))
+    
+    LetterY = 12.5
+    
+    MonthTable = table()
+    MonthTable["jan",string] = "January"
+    MonthTable["feb",string] = "February"
+    MonthTable["mar",string] = "March"
+    MonthTable["apr",string] = "April"
+    MonthTable["may",string] = "May"
+    MonthTable["jun",string] = "June"
+    MonthTable["jul",string] = "July"
+    MonthTable["aug",string] = "August"
+    MonthTable["sep",string] = "September"
+    MonthTable["oct",string] = "October"
+    MonthTable["nov",string] = "November"
+    MonthTable["dec",string] = "December"
+    
+    WkDayTable = table()
+    WkDayTable["sun",string] = "Sunday"
+    WkDayTable["mon",string] = "Monday"
+    WkDayTable["tue",string] = "Tuesday"
+    WkDayTable["wed",string] = "Wednesday"
+    WkDayTable["thu",string] = "Thursday"
+    WkDayTable["fri",string] = "Friday"
+    WkDayTable["sat",string] = "Saturday"
+    
+    SpCharTable = table()
+    SpCharTable["!",string] = "models/sprops/misc/alphanum/alphanum_xmark.mdl"
+    SpCharTable[":",string] = "models/sprops/misc/alphanum/alphanum_colon.mdl"
+    SpCharTable[".",string] = "models/sprops/misc/alphanum/alphanum_prd.mdl"
+    SpCharTable["?",string] = "models/sprops/misc/alphanum/alphanum_qmark.mdl"
+    SpCharTable["-",string] = "models/sprops/misc/alphanum/alphanum_min.mdl"
+    SpCharTable[",",string] = "models/sprops/misc/alphanum/alphanum_com.mdl"
+    SpCharTable["(",string] = "models/sprops/misc/alphanum/alphanum_lpar.mdl"
+    SpCharTable[")",string] = "models/sprops/misc/alphanum/alphanum_rpar.mdl"
+    SpCharTable["\"",string] = "models/sprops/misc/alphanum/alphanum_quote.mdl"
+    SpCharTable["=",string] = "models/sprops/misc/alphanum/alphanum_equal.mdl"
+    SpCharTable["@",string] = "models/sprops/misc/alphanum/alphanum_atsign.mdl"
+    SpCharTable["/",string] = "models/sprops/misc/alphanum/alphanum_div.mdl"
+    SpCharTable["#",string] = "models/sprops/misc/alphanum/alphanum_pdsign.mdl"
+    SpCharTable["&",string] = "models/sprops/misc/alphanum/alphanum_and.mdl"
+    SpCharTable["$",string] = "models/sprops/misc/alphanum/alphanum_dlsign.mdl"
+    SpCharTable["'",string] = "models/sprops/misc/alphanum/alphanum_apost.mdl"
+    SpCharTable[";",string] = "models/sprops/misc/alphanum/alphanum_scolon.mdl"
+    SpCharTable["+",string] = "models/sprops/misc/alphanum/alphanum_plu.mdl"
+    SpCharTable["<",string] = "models/sprops/misc/alphanum/alphanum_lessthan.mdl"
+    SpCharTable[">",string] = "models/sprops/misc/alphanum/alphanum_greaterthan.mdl"
+
+    SpWidthTable = table()
+    SpWidthTable["i",number] = 0.6
+    SpWidthTable[";",number] = 0.5
+    SpWidthTable[",",number] = 0.5
+    SpWidthTable[".",number] = 0.5
+    SpWidthTable["!",number] = 0.5
+    SpWidthTable["m",number] = 1.5
+    SpWidthTable[":",number] = 0.5
+    SpWidthTable["g",number] = 0.45
+    SpWidthTable["r",number] = 0.8
+    SpWidthTable["N",number] = 1.1
+    SpWidthTable["l",number] = 0.5
+    SpWidthTable["$",number] = 0.7
+    SpWidthTable["3",number] = 0.7
+    SpWidthTable["o",number] = 0.9
+    SpWidthTable["t",number] = 0.8
+    SpWidthTable["n",number] = 1.2
+    SpWidthTable["t",number] = 0.8
+    SpWidthTable["/",number] = 0.5
+    SpWidthTable["'",number] = 0.5
+    
+    
+    timer("getTweet",1)
+}
+    
+function string getCharModel(S:string){
+    local ReturnString = "models/sprops/misc/alphanum/alphanum_"
+    Byte = toByte(S)
+    if (S == " " | S == "\n" | S == "\t"){
+        return ""
+    } elseif ((Byte >= 48 & Byte <= 57) | Byte >= 65 & Byte <= 90){
+        return ReturnString + S + ".mdl"
+    } elseif (Byte >= 97 & Byte <= 122){
+        return "models/sprops/misc/alphanum/alphanum_l_" + S + ".mdl"
+    } elseif (SpCharTable[S,string]){
+        return SpCharTable[S,string]
+    } else {
+        return "models/sprops/misc/alphanum/alphanum_star_4.mdl"
+    }
+}
+
+if(clk("getTweet")){
+    runOnHTTP(1)
+    httpRequest("https://twitrss.me/twitter_user_to_rss/?user=realDonaldTrump")
+    hint("Tweet requested",2)
+}
+
+if (httpClk()){
+    local Data = httpData()
+    local TweetStart = Data:find(("<item>\n      <title>")) + 20
+    local TweetEnd = min(Data:find("</title>",TweetStart),Data:find("pic.twitter.com",TweetStart) ) -1
+    local TempTweet = Data:sub(TweetStart,TweetEnd)
+    
+    if (Data & TempTweet != TestTweet){
+        runOnHTTP(0)
+        
+        hint("Tweet Found!",2)
+        propDeleteAll()
+        
+        #Replace Special Chars
+        Tweet = TestTweet = TempTweet
+        ReplaceMe = Tweet:findRE("&#x%d%d;")
+        while(ReplaceMe){
+            local Hex = Tweet[ReplaceMe + 3] + Tweet[ReplaceMe + 4]
+            Tweet = Tweet:replaceRE("&#x%d%d;",toChar(Hex:toNumber(16)))
+            ReplaceMe = Tweet:findRE("&#x%d%d;")
+        }
+        ReplaceMe = Tweet:findRE("&#x%d%d;")
+        
+        #Parse Date
+        local DateString = Data:explode("<pubDate>")[2,string]:explode("</pubDate>")[1,string]:explode(" ")
+        
+        local Date = table()
+        Date["year",string] = DateString[4,string]
+        Date["month",string] = MonthTable[DateString[3,string]:lower(), string]
+        Date["day",string] = DateString[2,string]
+        
+        #Parse Time
+        local Time = DateString[5,string]:explode(":")
+        Date["hour",string] = Time[1,string]
+        Date["min",string] =  Time[2,string]
+        
+        #Time Zone Magic
+        local HourNumber = Date["hour",string]:toNumber()
+        HourNumber -= 6
+        if (HourNumber < 0){
+            HourNumber += 24
+        }
+        local Am = (HourNumber >= 12 ? 0 : 1)
+        
+        if(HourNumber > 12){
+            HourNumber -= 12
+        } elseif (HourNumber == 0){ 
+            HourNumber = 12
+        }
+        Date["hour",string] = HourNumber:toString()
+        
+        
+        String = (Tweet + " \n\t-Trump \n\nTweeted " + Date["wday",string] + " " + Date["month",string] + " " + Date["day",string] + ", " +  Date["year",string] + " (" + Date["hour",string] + ":" + Date["min",string] + (Am ? "am" : "pm") + " CST)")
+        
+        I=1
+        #print(String)
+        TextPos = vec2(Padding:x(),LetterY + LineSpace)
+    }
+    timer("getTweet",300000)
+}
+while(I <= String:length() & perf() & propCanCreate()){
+    Letter = String[I]
+    LetterProp = propSpawn(getCharModel(Letter), vec(), E:angles(), 1 )
+    LetterProp:setMaterial("models/debug/debugwhite")
+    WordArray:pushEntity(LetterProp)
+    StringArray += Letter
+    LetterProp:setAng(ang(0, -90,0))
+    I++
+    LastEntity = LetterProp
+    
+    if (Letter == " " | I == String:length() + 1 ){
+        TotalLength = 0
+        for(J = 1, WordArray:count()){
+            TotalLength += WordArray[J,entity]:boxSize():z()*getWidthScale(StringArray[J]) + Keming
+        }
+        if (TotalLength + TextPos:x() - Keming > TextBoxSize:x()){
+            newLine()
+        }
+        for(J = 1, WordArray:count()){
+            Entity = WordArray[J,entity]
+            LetterWidth = Entity:boxSize():z()*getWidthScale(StringArray[J])
+            Entity:setPos(textToWorldPos(TextPos + vec2(LetterWidth/2,0)))
+            #Entity:setAng(E:angles())
+            
+            
+            TextPos += vec2(LetterWidth + Keming,0) 
+        } TextPos += vec2(Space,0)
+        WordArray = array()
+        StringArray = ""
+        break
+    } elseif (Letter == "\n"){
+        newLine()
+    } elseif (Letter == "\t"){
+        TextPos += vec2(Tab, 0)
+    }
+}
+if (last()){
+    propDeleteAll()
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

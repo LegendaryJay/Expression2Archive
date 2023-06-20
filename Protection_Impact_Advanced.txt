@@ -1,0 +1,48 @@
+@name Protection Impact
+@outputs Explode:array
+@persist [Save Me]:entity Explode:array ProtectI
+runOnTick(1)
+runOnLast(1)
+if (first()){
+    Me=owner()
+    Save=propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl",entity():pos(),1)
+    Save:setAlpha(0)
+}
+if (findCanQuery()){
+    findIncludeClass("rpg_missile")
+    findIncludeClass("npc_grenade_frag")
+    findIncludeClass("prop_combine_ball")
+    findIncludeClass("crossbow_bolt")
+    findIncludeClass("npc_grenade_bugbait")
+    findIncludeClass("npc_satchel")
+    findIncludeModel("models/props_c17/oildrum001_explosive.mdl")
+#[    findIncludeModel("models/props_phx/torpedo.mdl")
+    findIncludeModel("models/props_phx/mk-82.mdl")
+    findIncludeModel("models/props_phx/oildrum001_explosive.mdl")
+    findIncludeModel("models/props_phx/torpedo.mdl")
+    findIncludeModel("models/props_phx/ww2bomb.mdl")
+    ]#
+    
+    findExcludePlayerProps(owner())
+    
+    
+    findInSphere(Me:boxCenterW(),500)
+    Explode=findToArray()
+
+}
+
+if (Explode:count()){
+    Boom=Explode[ProtectI,entity]
+    if (Boom:type()=="npc_satchel"){
+        Break=propSpawn("models/props_c17/oildrum001_explosive.mdl",Boom:boxCenterW()+Boom:vel()/30,1)
+        Break:propBreak()
+    }
+    Save:setPos(Boom:boxCenterW()+Boom:vel()/30)
+    ProtectI++
+}
+else{
+    Save:setPos(entity():pos() + vec(0,0,44))
+}
+
+if (ProtectI>Explode:count()){ProtectI=1}
+if (last()){Save:propDelete()}

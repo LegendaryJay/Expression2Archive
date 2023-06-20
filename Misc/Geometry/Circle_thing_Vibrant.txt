@@ -1,0 +1,51 @@
+@name Circle thing
+@inputs 
+@outputs II
+@persist II HoloNumber Sin WorldVec:vector
+@trigger 
+runOnTick(1)
+if (first()){
+    HoloNumber=100
+    II=1
+    holoCreate(900,entity():pos()+vec(0,0,0) +vec(0,0,1)*(1-0.43692448357374)*800*0.0026308863553119)
+    holoModel(900,"models/hunter/blocks/cube8x8x8.mdl")
+    holoAng(900,ang(0,0,180))
+    holoScale(900,vec(-800)*0.0026308863553119)
+    holoColor(900,vec())
+    holoMaterial(900,"models/debug/debugwhite")
+}
+
+if (II>HoloNumber){II=1}
+while (perf(80) & II<=HoloNumber){
+#[    Red=127*sin(360*(II/HoloNumber)+Sin)+128
+    Grn=127*sin(360*(II/HoloNumber)+85 + Sin)+128
+    Blu=127*sin(360*(II/HoloNumber)+170 + Sin)+128]#
+    
+    if (!holoEntity(II) & holoCanCreate()){
+        holoCreate(II)
+        holoEntity(II):setTrails(1,1,5,"trails/laser",hsv2rgb(vec((360*II/HoloNumber),1,1)),255)
+    }
+    
+    LocalVec=vec(0 , sin((II/HoloNumber)*360*3+Sin*6)*50,cos((II/HoloNumber)*360*3+Sin*6)*50)
+    LocalAng=ang(0,0,sin(II/HoloNumber)*360+Sin)
+    OldWorldVec=WorldVec
+    WorldVec=entity():pos() + vec( sin( (II/HoloNumber)*360+Sin)*200    ,    cos((II/HoloNumber)*360+Sin)*200   ,  200)
+    
+    WorldAng=(OldWorldVec-WorldVec):toAngle():setRoll(360*0*II/HoloNumber)
+    holoPos(II,toWorld(LocalVec,WorldAng,WorldVec,WorldAng))
+    #Color=vec(Red,Grn,Blu)
+    holoColor(II,hsv2rgb(vec((360*II/HoloNumber),1,1)))
+#[    if (II==1){
+        Target=holoEntity(HoloNumber)
+    }
+    else{
+        Target=holoEntity(II-1)
+    }
+        Target:pos()-holoEntity(II):pos()):toAngle():setRoll(100*sin(II/HoloNumber)*360+Sin
+ ]#
+   
+    II++
+}
+Sin+=0.5
+
+

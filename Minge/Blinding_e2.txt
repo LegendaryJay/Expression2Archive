@@ -1,0 +1,33 @@
+@name Blinding e2
+@inputs 
+@outputs 
+@persist Count Players:array
+@trigger 
+
+runOnTick(1)
+for (I=1,Count){
+    Target=Players[I,entity]
+    if (!holoEntity(I)){
+        holoCreate(I)
+        holoScale(I,vec(1,1,1)*-7)
+        holoModel(I,"hq_sphere")
+        holoMaterial(I, "engine/writez")
+        #holoAlpha(I,20)
+        holoShadow(I,0)
+    }
+    elseif (!Target){
+        Players:remove(I)
+        Count--
+        holoDelete(I)
+        
+    }
+    holoPos(I,Target:pos()+ vec(0,0,Target:boxSize():z()*0.75) + Target:vel()*0.2)
+}
+
+
+if (Count!=numPlayers())
+{
+    Players=players()
+    Count=numPlayers()
+}
+

@@ -1,0 +1,39 @@
+<dl class="panel-body dl-horizontal">
+                <dt class="key">steamID</dt>
+                <dd class="value short">
+                    <img class="cp" data-toggle="tooltip" data-placement="bottom" data-clipboard-text="STEAM_0:0:137948236" src="https://steamid.io/static/img/copy.png" alt="copy to clipboard" title="copy to clipboard">
+                    <a rel="nofollow" id="a" href="https://steamid.io/lookup/STEAM_0:0:137948236">STEAM_0:0:137948236</a>
+                </dd>
+                <dt class="key">steamID3</dt>
+                <dd class="value short">
+                    <img class="cp" data-toggle="tooltip" data-placement="bottom" data-clipboard-text="[U:1:275896472]" src="https://steamid.io/static/img/copy.png" alt="copy to clipboard" title="copy to clipboard">
+                    <a rel="nofollow" href="https://steamid.io/lookup/U:1:275896472">[U:1:275896472]</a>
+                </dd>
+                <dt class="key">steamID64</dt>
+                <dd class="value short">
+                    <img class="cp" data-toggle="tooltip" data-placement="bottom" data-clipboard-text="76561198236162200" src="https://steamid.io/static/img/copy.png" alt="copy to clipboard" title="copy to clipboard">
+                    <a href="https://steamid.io/lookup/76561198236162200">76561198236162200</a>
+                </dd>
+                <dt class="key">customURL</dt>
+                <dd class="value short"><a href="http://steamcommunity.com/id/keganpowers34" target="_blank">keganpowers34</a></dd>
+                                    <dt class="key">profile state</dt>
+                    <dd class="value"><span class="profile-state public">public</span></dd>
+                    <dt class="key">profile created</dt>
+                    <dd class="value short">June 26, 2015</dd>
+                    <dt class="key">name</dt>
+                    <dd class="value">keganpowers34</dd>
+                    <dt class="key">real name</dt>
+                    <dd class="value">kegan</dd>
+                    <dt class="key">location</dt>
+                    <dd class="value">
+                                                    <a href="https://www.openstreetmap.org/#map=10/37.09024/-95.71289099999998" title="view on OpenStreetMap" target="_blank">United States</a>                                                                        </dd>
+                                <dt class="key">status</dt>
+                <dd class="value">
+                                                                        <span class="in-game">in-game: <a href="http://store.steampowered.com/app/4000" target="_blank">Garry's Mod</a></span>
+                                                            <a class="btn btn-danger" style="float:right;" data-toggle="tooltip" data-connect="206.221.182.118" title="join keganpowers34's game">join</a>
+                                                           <a class="btn btn-danger"  style="float:right;" data-toggle="tooltip" title="watch keganpowers34's game" href="http://steamcommunity.com/broadcast/watch/76561198236162200" target="_blank">watch</a>
+                                                            </dd>
+
+                                <dt class="key">profile</dt>
+                <dd class="value"><a href="http://steamcommunity.com/profiles/76561198236162200" target="_blank">http://steamcommunity.com/profiles/76561198236162200</a></dd>
+            <

@@ -1,0 +1,33 @@
+@name Chat deliniator 
+@inputs 
+@outputs PreArgs:array Args:array
+@persist 
+@trigger 
+
+Prefix = "!"
+Me = owner()
+runOnChat(1)
+
+if (chatClk(Me)){
+    LastSaid = lastSaid()
+    
+    if (LastSaid:index(1) == Prefix){
+        PreArgs = LastSaid:sub(2):explode("\"")
+        for(I = 1, PreArgs:count()){
+            String = PreArgs[I, string]
+            
+            if (I % 2){
+                TempArray = String:explode(" ")
+                foreach (K, String2:string = TempArray){
+                    String3 = String2:trim()
+                    if (String3 != ""){
+                        Args:pushString(String3)
+                    }
+                }
+
+            } elseif (String != ""){
+                Args:pushString(String)
+            }
+        }     
+    }
+}

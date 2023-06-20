@@ -1,0 +1,831 @@
+@name Diag EGP
+@model models/maxofs2d/companion_doll.mdl
+@inputs Hud:wirelink
+#Core + Target
+@persist [Me E Target]:entity LockMode
+#Freeze
+@persist FreezeTrig
+#Core
+@persist DeleteTrig DeleteConfirm
+#Copy
+@persist CopyTrig CopyTarget:entity [CopyModel CopyMat]:string CopyColor:vector CopySkin CopyHightOffset CopyAlpha CopyReady
+#Paste
+@persist PasteMode PasteTrig
+#ChatCommands
+@persist LS:string
+#Holo
+@persist UIMode
+#EGP
+@persist Hud:wirelink UIText:string HudEnt:entity
+
+
+if (first()){
+    runOnTick(1)
+    runOnChat(1)
+    
+    Me=owner()
+    Target=entity()
+    E=entity()
+    
+    E:setColor(vec(110,20,140))
+}
+
+    
+
+Prop=Me:aimEntity()
+MePos=Me:pos()
+AimPos=Me:aimPos()
+AimEnt=Me:aimEntity()
+
+Name=Target:name()
+SteamID=Target:steamID()
+TeamID=Target:team()
+Team=TeamID:teamName()
+TeamColor=teamColor(TeamID)
+Tool=Target:tool()
+Weapon=Target:weapon()
+
+MySteamID=Me:steamID()
+MyModel=Me:model()
+MyTool=Me:tool()
+MyWeapon=Me:weapon()
+
+MyPos=Me:pos()
+MyAng=Me:angles()
+
+ID=Target:id()
+Owner=Target:owner()
+Model=Target:model()
+Class=Target:type()
+Mat=Target:getMaterial()
+Color=Target:getColor()
+Alpha=Target:getAlpha()
+Weight=Target:mass()
+
+Pos=Target:pos()
+Ang=Target:angles()
+
+
+LS=Me:lastSaid()
+Chat = owner():lastSaid():explode(" ") 
+
+function array allProp(){
+    findIncludePlayerProps(Me)
+    findInSphere(MyPos,90000)   
+    
+    return findToArray()
+}
+
+#[Light=Me:isFlashlightOn()
+if (Light){
+    lightCreate(1,Me:boxCenterW())
+    lightColor(1,vec(10,10,30))
+    lightCreate(2,Me:boxCenterW())
+    lightColor(2,vec(10,10,30))
+    lightParent(1,Me)
+    
+}
+else {
+    lightRemoveAll()
+}
+LightRange=400
+LightDist= Me:pos():distance(AimPos)
+LightScale= LightDist>LightRange ? (LightRange / LightDist) : 1
+LightPos = Me:toWorld(Me:toLocal(AimPos) * LightScale)
+lightPos(2,LightPos)]#
+
+
+
+LockButton=Me:keyPressed("Backspace")
+FreezeButton=Me:keyPressed("Pad_Enter")
+DeleteButton=Me:keyPressed("Delete")
+CopyButton=Me:keyPressed("PageUp")
+PasteButton=Me:keyPressed("PageDown")
+PasteModeButton=Me:keyPressed("Home")
+UIModeButton=Me:keyPressed("End")
+StatButton=Me:keyPressed("pad_0")
+LSButton=Me:keyPressed("up")
+
+#Core + Target
+if (changed(LockButton) & LockButton){
+    if (LockMode==0){
+        LockMode=1
+        hint("Target Locked",2)
+    }
+    else{
+        LockMode=0
+        hint("FreeMode",2)
+    }
+}
+
+if (LockMode==0 & changed(Prop) & Prop) {
+    Target=Prop
+}
+
+############
+#freeze
+############
+if (changed(FreezeButton) & FreezeButton){
+    FreezeTrig=1
+}
+if (FreezeTrig){
+    if (FreezeButton){
+        if (FreezeTrig>15){
+            FreezeArray = allProp()
+            for (FreezeI=1, FreezeArray:count()){
+                FreezeArray[FreezeI,entity]:propFreeze(1)     
+            }
+            FreezeTrig=0
+            hint("All Props Frozen",2)
+        }
+        else{
+            FreezeTrig++
+        }
+    }
+    else{
+        if(Target:isFrozen()){
+            Target:propFreeze(0)
+            hint("Prop Unfrozen",2)
+        }
+        else{
+            Target:propFreeze(1)
+            hint("Prop Frozen",2)
+        }
+        FreezeTrig=0
+    } 
+
+}
+
+#######
+#Delete
+#######
+if (changed(DeleteButton) & DeleteButton){
+    DeleteTrig=1
+}
+if (DeleteTrig){
+    if (DeleteButton){
+        if(DeleteTrig >15){
+            DeleteArray= allProp()
+            for (DeleteI=1,DeleteArray:count()){
+                DeleteArray[DeleteI,entity]:propDelete()
+            }
+            DeleteTrig=0
+            hint("All Props Deleted!",2)
+        }
+        else{
+        DeleteTrig++
+        }
+    }
+    else{
+        if (!Target){}
+        elseif (Target==entity()){
+            if (DeleteConfirm==1){
+                hint("...Bastard",5)
+                selfDestruct()
+            }
+            else{
+                hint("Please Don't Kill Me!",2)
+                DeleteConfirm=1
+                timer("Suicide",4000)
+            }
+        }
+#[        elseif (Target:owner()!=owner()){
+            hint("That isn't Yours!",2)
+            DeleteConfirm=0
+        }]#
+        else{
+            Target:propDelete()
+            hint("Entity Deleted",2)
+            DeleteConfirm=0
+        }
+        
+        DeleteTrig=0
+    }
+        
+}
+
+if (clk("Suicide")){
+    DeleteConfirm=0
+    hint("Phew...",0.5)
+}
+
+######################
+#Copy and Paste
+####################
+if(changed(CopyButton) & CopyButton & Target & Target:type()!="player"){
+    CopyTrig=1
+}
+
+if (CopyTrig){
+    if (CopyButton){
+        if (CopyTrig>15){
+            holoDelete(3)
+            CopyTrig=0
+            hint("Copy Ghost Hidden",2)
+        }
+        else {
+            CopyTrig++
+        }
+    }
+    else {
+        CopyTarget=Target
+        
+        CopyModel=Model
+        CopyColor=Color
+        CopyMat=Mat
+        CopySkin=Target:getSkin()
+        CopyAlpha=Alpha
+        
+        CopyHightOffset=Target:boxSize():z()/2-Target:boxCenter():z()
+        
+        holoCreate(3)
+        holoModel(3,CopyModel)
+        holoAlpha(3,20)
+        holoMaterial(3,"models/debug/debugwhite")
+        holoAng(3,ang())        
+        
+        CopyReady=1
+        CopyTrig=0
+        if (!PasteMode){
+            hint("Prop Coppied",2)
+        }
+        else {
+            hint("Color and Material Copied",2)
+        }
+    }
+}
+holoPos(3,AimPos+vec(0,0,CopyHightOffset))
+
+#paste
+if (changed(PasteModeButton) & PasteModeButton){
+    if (!PasteMode){
+        PasteMode=1
+        hint("Color Paste Mode",10)
+    }
+    else{
+        PasteMode=0
+        hint("Prop Paste Mode",10)
+    }
+}
+
+if(changed(PasteButton) & PasteButton & CopyReady){
+    PasteTrig=1
+}
+
+
+if (PasteTrig){
+    if (PasteButton){
+        if (PasteTrig>15){
+            if (PasteMode){
+                Target:setColor(vec(255,255,255))
+                Target:setAlpha(255)
+                Target:setMaterial("")
+                hint("Color and Material Reset",2)
+            }
+            else {
+                CopyTarget:setPos(holoEntity(3):pos())
+                CopyTarget:setAng(ang())
+                CopyTarget:propFreeze(1)
+                hint("Prop Moved",2)
+            }
+        PasteTrig=0
+        }
+        else {
+            PasteTrig++
+        }
+    }
+    else {
+        if (PasteMode){
+            Target:setColor(CopyColor)
+            Target:setMaterial(CopyMat)
+            Target:setSkin(CopySkin)
+            Target:setAlpha(CopyAlpha)
+            hint("Color and Materials Pasted",10)
+        }
+        else {
+            PastedEnt=propSpawn(CopyModel,Me:aimPos()+vec(0,0,CopyHightOffset),ang(),1)
+            PastedEnt:setColor(CopyColor)
+            PastedEnt:setMaterial(CopyMat)
+            PastedEnt:setSkin(CopySkin)
+            hint("Prop Pasted",10)
+        }
+        PasteTrig=0
+    }
+}
+
+#############
+#ChatCommands
+#############
+
+White=vec(255,255,255)
+BlackBerry=vec(77,1,53)
+if (chatClk(Me)){
+    Chat = LS:explode(" ")
+    if (Chat:string(1)=="!stats"){
+        hideChat(1)
+        if (Chat:string(2)== "target" | !Chat:string(2)){
+            From=Target
+            FromS="Target "
+        }
+        elseif (Chat:string(2)== "aim"){
+            From=AimEnt
+            FromS="Aim Target "
+        }
+        elseif (Chat:string(2)== "copy"){
+            From=CopyTarget
+            FromS="Copy Target "
+        }
+        
+            if (From:type()=="player"){
+                printColor(BlackBerry, FromS + "Name: ",White, From:name())
+                printColor(BlackBerry, FromS + "SteamID: " ,White, From:steamID())
+                printColor(BlackBerry, FromS + "Team: ",teamColor(From:team()), teamName(From:team()) + " [" + From:team() + "]")
+                printColor(BlackBerry, FromS + "Model: " ,White, From:model())
+                if (Tool){
+                    printColor(BlackBerry, FromS + "Tool: " ,White, From:tool())
+                }
+                print("")
+                printColor(BlackBerry, FromS + "Position: " ,White, toString(round(From:pos(),2)))
+                printColor(BlackBerry, FromS + "Angle: " ,White, toString(round(From:angles(),2)))
+            }
+            elseif (From==entity()){
+                printColor(BlackBerry,"My SteamID: ",White, MySteamID)
+                printColor(BlackBerry,"My Model: ",White, MyModel)
+                if (MyTool){
+                    printColor(BlackBerry,"My Tool: ",White, MyTool)
+                }
+                printColor(BlackBerry,"My Position: " ,White, toString(round(MyPos,2)))
+                printColor(BlackBerry,"My Angle: " ,White, toString(round(MyAng,2)))
+            }
+            else{
+                printColor(BlackBerry, FromS + "Identity: " ,White, From:type() + " [" + From:id() + "]")
+                printColor(BlackBerry, FromS + "Owner: " ,teamColor(From:owner():team()), From:owner())
+                printColor(BlackBerry, FromS + "Model: " ,White, From:model())
+                if (From:getMaterial()){
+                    printColor(BlackBerry, FromS + "Material: " ,White, From:getMaterial())
+                }
+                printColor(BlackBerry, FromS + "Color: " ,White, From:getColor() + " [" + From:getAlpha() + "]")
+                printColor(BlackBerry, FromS + "Weight: " ,White, From:mass())            
+                
+                print("")
+                printColor(BlackBerry, FromS + "Position: " ,White, toString(round(From:pos(),2)))
+                printColor(BlackBerry, FromS + "Angle: " ,White, toString(round(From:angles(),2)))
+            }
+        }
+    elseif (Chat:string(1)=="!get"){
+        hideChat(1)
+        if (Chat:string(2)== "target"){
+            From=Target
+            FromS="Target "
+        }
+        elseif (Chat:string(2)== "aim"){
+            From=AimEnt
+            FromS="Aim Target "
+        }
+        elseif (Chat:string(2)== "copy"){
+            From=CopyTarget
+            FromS="Copy Target "
+        }
+        
+        if (From){
+            if (!Chat:string(4)){
+                if (Chat:string(3)=="color"){
+                printColor(BlackBerry,FromS + "Color: " ,White, From:getColor() + " [" + From:getAlpha() + "]")             
+                }
+                elseif (Chat:string(3)=="mat"){
+                    printColor(BlackBerry,FromS + "Material: " ,White, From:getMaterial())
+                }
+                elseif (Chat:string(3)=="ang"){
+                    printColor(BlackBerry,FromS + "Angle: " ,White, toString(round(From:angles(),2)))
+                }
+                elseif (Chat:string(3)=="pos"){
+                    printColor(BlackBerry,FromS + "Position: " ,White, toString(round(From:pos(),2)))
+                }
+                elseif (Chat:string(3)=="center"){
+                    printColor(BlackBerry,FromS + "Center Position: " ,White, toString(round(From:boxCenterW(),2)))
+                }
+                elseif (Chat:string(3)=="mass" | Chat:string(3)=="weight"){
+                    printColor(BlackBerry,FromS + "Weight: " ,White, From:mass() + "kg [" + toUnit("lb",From:mass()) + "lb]")
+                }
+                elseif (Chat:string(3)=="model"){
+                    printColor(BlackBerry,FromS + "Model: " ,White, From:model())
+                }
+            }
+            elseif (Chat:string(4)== "target"){
+                To=Target
+                ToS="Target "
+            }
+            elseif (Chat:string(4)== "aim"){
+                To=AimEnt
+                ToS="Aim Target "
+            }
+            elseif (Chat:string(4)== "copy"){
+                To=CopyTarget
+                ToS="Copy Target "
+            }
+            if (To){
+                if (Chat:string(3)=="color"){
+                    To:setColor(From:getColor())
+                    printColor(BlackBerry,ToS + "Color Set")
+                }
+                elseif (Chat:string(3)=="mat"){
+                    To:setMaterial(From:getMaterial())
+                    printColor(BlackBerry,ToS + "Material Set")     
+                }
+                elseif (Chat:string(3)=="ang"){
+                    To:setAng(From:angles())
+                    To:propFreeze(1)
+                    printColor(BlackBerry,ToS + "Angle Set")
+                }
+                elseif (Chat:string(3)=="pos"){
+                    To:setPos(From:pos())
+                    To:propFreeze(1)
+                    printColor(BlackBerry,ToS + "Position Set")
+                }
+                elseif (Chat:string(3)=="mass" | Chat:string(3)=="weight"){
+                    To:setMass(From:mass())
+                    printColor(BlackBerry,ToS + "Mass Set")
+                }
+                elseif (Chat:string(3)=="alpha"){
+                    To:setAlpha(From:getAlpha())
+                     printColor(BlackBerry,ToS + "Alpha Set")
+                }
+            }
+        }
+            
+                
+    }
+    elseif (Chat:string(1)=="!set"){
+        hideChat(1)
+        if (Chat:string(2)== "target"){
+            To=Target
+            ToS="Target "
+        }
+        elseif (Chat:string(2)== "aim"){
+            To=AimEnt
+            ToS="Aim Target "
+        }
+        elseif (Chat:string(2)== "copy"){
+            To=CopyTarget
+            ToS="Copy Target "
+        }
+        
+        if (To){
+            if (!Chat:string(4)){
+                if (Chat:string(3)=="color"){
+                    To:setColor(vec(255,255,255))
+                     printColor(BlackBerry,ToS + "Color Set")
+                }
+                elseif (Chat:string(3)=="mat"){
+                    To:setMaterial("")
+                    printColor(BlackBerry,ToS + "Material Set")     
+                }
+                elseif (Chat:string(3)=="ang"){
+                    To:setAng(ang())
+                    To:propFreeze(1)
+                    printColor(BlackBerry,ToS + "Angle Set")
+                }
+                elseif (Chat:string(3)=="alpha"){
+                    To:setAlpha(255)
+                    printColor(BlackBerry,ToS + "Alpha Set")
+                }
+            }
+            elseif (Chat:string(3)=="color"){
+                VecString=Chat:string(4):explode(",")
+                VecS=vec(VecString:string(1):toNumber(),VecString:string(2):toNumber(),VecString:string(3):toNumber())
+                To:setColor(VecS)
+                printColor(BlackBerry,ToS + "Color Set")
+            }
+            elseif (Chat:string(3)=="mat"){
+                To:setMaterial(Chat:string(4))
+                printColor(BlackBerry,ToS + "Material Set")     
+            }
+            elseif (Chat:string(3)=="ang"){
+                AngString=Chat:string(4):explode(",")
+                AngS=ang(AngString:string(1):toNumber(),AngString:string(2):toNumber(),AngString:string(3):toNumber())
+                To:setAng(AngS)
+                To:propFreeze(1)
+                printColor(BlackBerry,ToS + "Angle Set")
+            }
+            elseif (Chat:string(3)=="pos"){
+                VecString=Chat:string(4):explode(",")
+                VecS=vec(VecString:string(1):toNumber(),VecString:string(2):toNumber(),VecString:string(3):toNumber())
+                To:setPos(VecS)
+                To:propFreeze(1)
+                printColor(BlackBerry,ToS + "Position Set")
+            }
+            elseif (Chat:string(3)=="mass" | Chat:string(3)=="weight"){
+                To:setMass(Chat:string(4):toNumber())
+                printColor(BlackBerry,ToS + "Mass Set")
+            }
+            elseif (Chat:string(3)=="alpha"){
+                To:setAlpha(Chat:string(4):toNumber())
+                 printColor(BlackBerry,ToS + "Alpha Set")
+            }
+        }
+    }
+        elseif (Chat:string(1)=="!add"){
+        hideChat(1)
+        if (Chat:string(2)== "target"){
+            To=Target
+            ToS="Target "
+        }
+        elseif (Chat:string(2)== "aim"){
+            To=AimEnt
+            ToS="Aim Target "
+        }
+        elseif (Chat:string(2)== "copy"){
+            To=CopyTarget
+            ToS="Copy Target "
+        }
+        
+        if (To){
+            if (Chat:string(3)=="color"){
+                VecString=Chat:string(4):explode(",")
+                VecS=To:getColor() + vec(VecString:string(1):toNumber(),VecString:string(2):toNumber(),VecString:string(3):toNumber())
+                To:setColor(VecS)
+                printColor(BlackBerry,ToS + "Color Set")
+            }
+            elseif (Chat:string(3)=="ang"){
+                AngString=Chat:string(4):explode(",")
+                AngS=To:angles() + ang(AngString:string(1):toNumber(),AngString:string(2):toNumber(),AngString:string(3):toNumber())
+                To:setAng(AngS)
+                To:propFreeze(1)
+                printColor(BlackBerry,ToS + "Angle Set")
+            }
+            elseif (Chat:string(3)=="pos"){
+                VecString=Chat:string(4):explode(",")
+                VecS=To:pos() + vec(VecString:string(1):toNumber(),VecString:string(2):toNumber(),VecString:string(3):toNumber())
+                To:setPos(VecS)
+                To:propFreeze(1)
+                printColor(BlackBerry,ToS + "Position Set")
+            }
+            elseif (Chat:string(3)=="mass" | Chat:string(3)=="weight"){
+                To:setMass(To:mass() + Chat:string(4):toNumber())
+                printColor(BlackBerry,ToS + "Mass Set")
+            }
+            elseif (Chat:string(3)=="alpha"){
+                To:setAlpha(To:getAlpha() + Chat:string(4):toNumber())
+                 printColor(BlackBerry,ToS + "Alpha Set")
+            }
+        }
+    }
+}
+#Quick Stats
+if (changed(StatButton) & StatButton){
+    if (Target:type()=="player"){
+        printColor(BlackBerry, FromS + "Name: ",White, Name)
+        printColor(BlackBerry, FromS + "SteamID: " ,White, SteamID)
+        printColor(BlackBerry, FromS + "Team: ",TeamColor, Team + " [" + TeamID + "]")
+        printColor(BlackBerry, FromS + "Model: " ,White, Model)
+        if (Tool){
+            printColor(BlackBerry, FromS + "Tool: " ,White, Tool)
+        }
+        print("")
+        printColor(BlackBerry, FromS + "Position: " ,White, toString(round(Pos,2)))
+        printColor(BlackBerry, FromS + "Angle: " ,White, toString(round(Ang,2)))
+    }
+    elseif (Target==entity()){
+        printColor(BlackBerry,"My SteamID: ",White, MySteamID)
+        printColor(BlackBerry,"My Model: ",White, MyModel)
+        if (MyTool){
+            printColor(BlackBerry,"My Tool: ",White, MyTool)
+        }
+        printColor(BlackBerry,"My Position: " ,White, toString(round(MyPos,2)))
+        printColor(BlackBerry,"My Angle: " ,White, toString(round(MyAng,2)))
+    }
+    else {
+        printColor(BlackBerry, FromS + "Identity: " ,White, Class + " [" + ID + "]")
+        printColor(BlackBerry, FromS + "Owner: " ,TeamColor, Owner)
+        printColor(BlackBerry, FromS + "Model: " ,White, Model)
+        printColor(BlackBerry, FromS + "Material: " ,White, Mat)
+        printColor(BlackBerry, FromS + "Color: " ,White, Color + " [" + Alpha + "]")
+        printColor(BlackBerry, FromS + "Weight: " ,White, From:mass())            
+        
+        print("")
+        printColor(BlackBerry, FromS + "Position: " ,White, toString(round(Pos,2)))
+        printColor(BlackBerry, FromS + "Angle: " ,White, toString(round(Ang,2)))
+    }
+}
+LS=lastSaid()
+if (chatClk() &  (LS[1]=="!" | LS[1]=="/")){
+    Guy=lastSpoke()
+    printColor(teamColor(Guy:team()), Guy:name() ,vec(255), ": " + LS)
+}
+
+#######################################################################################################################
+########################                          UI                                            #######################
+#######################################################################################################################
+
+#Turn Off Holos
+if (first()){UIText="Active"}
+if (changed(UIModeButton)& UIModeButton) {
+    UIMode++
+    if (UIMode==4){UIMode=0}
+    if (UIMode==0){UIText="Active"}
+    if (UIMode==1){UIText="EGP Only"} 
+    if (UIMode==2){UIText="Holos Only"} 
+    if (UIMode==3){UIText="All UI Disabled"}  
+    hint(UIText,2)
+}
+
+holoVisible(0,players(),0)
+holoVisible(1,players(),0)
+holoVisible(2,players(),0)
+holoVisible(3,players(),0)
+
+if (UIMode==2 | UIMode==0){ 
+    holoVisible(0,Me,1)
+    holoVisible(1,Me,1)
+    holoVisible(2,Me,1)
+    holoVisible(3,Me,1)
+}
+
+#Facer and Bounding Box
+if (!holoEntity(1)) {
+    holoCreate(1,Pos)
+    holoModel(1,"models/sprops/misc/origin.mdl")#"models/beer/wiremod/gate_e2.mdl")
+    holoAlpha(1, 200)
+    holoDisableShading(1,1)
+
+    holoCreate(2,Pos)    
+    holoAlpha(2,30)
+    holoMaterial(2,"models/debug/debugwhite")
+    holoModel(2,"models/hunter/blocks/cube8x8x8.mdl")
+    holoDisableShading(2,1)
+}
+
+holoPos(1,Target:toWorld(Target:boxCenter()+vec(Target:boxSize():x()/2+2,0,0)))
+holoAng(1,Target:toWorld(ang()))
+holoParent(1,Target)
+
+BoundScale=Target:boxSize()*0.0026308863553119
+OverBoundScale=1.005
+holoAng(2,Target:angles())
+holoScale(2,BoundScale*OverBoundScale)
+holoPos(2,Target:toWorld(Target:boxCenter()-vec(0,0,Target:boxSize():z()*0.43692448357374*OverBoundScale)))
+holoParent(2,Target)
+
+#Paste Holo
+
+if (!PasteMode) {
+    PastePos=Me:aimPos()+vec(0,0,CopyHightOffset)
+    PasteScale=1
+    PasteAng=ang()
+    }
+else{
+    PastePos=CopyTarget:pos()
+     PasteScale=1.1
+    PasteAng=CopyTarget:angles()
+}
+
+
+holoPos(3,PastePos)
+holoAng(3,PasteAng)
+holoScale(3,vec(1,1,1)*PasteScale)
+
+#########
+#Hud
+#########
+if (changed(UIMode) & UIMode==0){
+    findIncludeClass("gmod_wire_egp_hud")
+    findInSphere(entity():pos(),50)
+    HudEnt=find()
+    hint(toString(HudEnt),1)
+    if (HudEnt) {
+        Hud:egpBox(100,vec2(300,300), vec2(100,987))
+        Hud:egpSize(100,100)
+        Hud:egpColor(100,vec4(0,0,0,100))
+        
+        timer("egp",1)
+        #Hud=HudEnt:wirelink()
+        Hud:egpClear()
+        
+        Hud:egpBox(100,vec2(200,293), vec2(390,185))
+        Hud:egpColor(100,vec4(0,0,0,70))
+        
+        Hud:egpBox(101,vec2(105,445), vec2(200,100))
+        Hud:egpColor(101,vec4(0,0,0,70))
+        
+        Hud:egpBox(102,vec2(105,555), vec2(200,100))
+        Hud:egpColor(102,vec4(0,0,0,70))
+        
+        Hud:egpBox(103,vec2(105,955), vec2(200,100))
+        Hud:egpColor(103,vec4(0,0,0,70))
+                    
+        Hud:egpText(1,"General", vec2(10,200))        
+        Hud:egpText(2,"General", vec2(40,215))        
+        Hud:egpText(3,"General", vec2(10,230))        
+        Hud:egpText(4,"General", vec2(40,245))        
+        Hud:egpText(5,"General", vec2(10,260))        
+        Hud:egpText(6,"General", vec2(40,275))        
+        Hud:egpText(7,"General", vec2(10,290))       
+        Hud:egpText(8,"General", vec2(40,305))        
+        Hud:egpText(9,"General", vec2(10,320))       
+        Hud:egpText(10,"General", vec2(40,335))        
+        Hud:egpText(11,"General", vec2(10,350))      
+        Hud:egpText(12,"General", vec2(40,365))
+    }
+    
+    Hud:egpText(13,"Location", vec2(10,400))   
+    Hud:egpText(14,"Location", vec2(40,415))
+    Hud:egpText(15,"Location", vec2(10,430))
+    Hud:egpText(16,"Location", vec2(40,445))
+    Hud:egpText(17,"Location", vec2(10,460))
+    Hud:egpText(18,"Location", vec2(40,475))
+    
+    Hud:egpText(19,"MyInfo", vec2(10,510))
+    Hud:egpText(20,"MyInfo", vec2(40,525))
+    Hud:egpText(21,"MyInfo", vec2(10,540))
+    Hud:egpText(22,"MyInfo", vec2(40,555))
+    Hud:egpText(23,"MyInfo", vec2(10,570))
+    Hud:egpText(24,"MyInfo", vec2(40,585))
+    
+    Hud:egpText(25,"ModeInfo", vec2(10,910))
+    Hud:egpText(26,"ModeInfo", vec2(40,925))
+    Hud:egpText(27,"ModeInfo", vec2(10,940))
+    Hud:egpText(28,"ModeInfo", vec2(40,955))
+    Hud:egpText(29,"ModeInfo", vec2(10,970))
+    Hud:egpText(30,"Active", vec2(40,985))   
+    
+    for (HudI=1,30){
+        Hud:egpSize(HudI,15)
+        if (HudI % 2){
+            Hud:egpColor(HudI,BlackBerry)
+        }
+        else {
+             Hud:egpColor(HudI,White)
+        }
+    }
+}
+
+
+if (clk("egp")){
+    timer("egp",250)
+    if (UIMode==0 | UIMode==1){
+        if (Target){
+            if (Target:type()=="player"){      
+                Hud:egpSetText(1,"Name")        
+                Hud:egpSetText(2,"[" + ID + "] " + Name)
+                    Hud:egpColor(2,TeamColor)
+                Hud:egpSetText(3,"SteamID")        
+                Hud:egpSetText(4,SteamID) 
+                    Hud:egpColor(4,White)        
+                Hud:egpSetText(5,"Team")        
+                Hud:egpSetText(6,"[" + TeamID + "] " + Team)       
+                     Hud:egpColor(6,TeamColor)
+                Hud:egpSetText(7,"Tool")        
+                Hud:egpSetText(8, Tool=="" ? "Not Using Toolgun" : Target:tool())        
+                Hud:egpSetText(9,"Model")        
+                Hud:egpSetText(10,Model)        
+                Hud:egpSetText(11,"")        
+                Hud:egpSetText(12,"")  
+            }
+            else {
+                Hud:egpSetText(1,"Type")        
+                Hud:egpSetText(2,"[" + ID + "] " + Class)
+                    Hud:egpColor(2,White)        
+                Hud:egpSetText(3,"Owner")        
+                Hud:egpSetText(4, Owner==noentity() ? "Unknown" : "[" + Owner:id() + "] " + Owner:name() )
+                    Hud:egpColor(4,teamColor(Owner:team()))   
+                Hud:egpSetText(5,"Model")        
+                Hud:egpSetText(6,Model) 
+                    Hud:egpColor(6,White)       
+                Hud:egpSetText(7,"Material")        
+                Hud:egpSetText(8,Mat=="" ? "Default" : Mat)        
+                Hud:egpSetText(9,"Color")        
+                Hud:egpSetText(10,toString(Color:x()) + ", " + toString(Color:y()) + ", " + toString(Color:z()) + " [" + Alpha + "]")       
+                Hud:egpSetText(11,"Weight")        
+                Hud:egpSetText(12,round(Weight,2) + "kg [" + round(toUnit("lb",Weight),2) + "lb]")
+            }
+        
+            Hud:egpSetText(13,"Position")   
+            Hud:egpSetText(14,toString(round(Pos:x())) + ", " + toString(round(Pos:y())) + ", " + toString(round(Pos:z())))
+            Hud:egpSetText(15,"Angle")
+            Hud:egpSetText(16,toString(round(Ang:pitch())) + ", " + toString(round(Ang:yaw())) + ", " + toString(round(Ang:roll())))
+            Hud:egpSetText(17,"Speed")
+            Hud:egpSetText(18,toString(round(Target:vel():length(),2)) + "units/s [" + toString(round(toUnit("mph",Target:vel():length()),2)) + "mph]"  )
+        }
+        else {
+            
+            for (I=2,18){Hud:egpSetText(I,"")}
+            Hud:egpSetText(1,"No Target")
+            Hud:egpSetText(13,"No Target")
+        }
+            
+        Hud:egpSetText(19,"My Position")   
+        Hud:egpSetText(20,toString(round(MyPos:x())) + ", " + toString(round(MyPos:y())) + ", " + toString(round(MyPos:z())))
+        Hud:egpSetText(21,"My Angle")
+        Hud:egpSetText(22,toString(round(MyAng:pitch())) + ", " + toString(round(MyAng:yaw())) + ", " + toString(round(MyAng:roll())))
+        Hud:egpSetText(23,"My Speed")
+        Hud:egpSetText(24,toString(round(Me:vel():length(),2)) + "units/s [" + toString(round(toUnit("mph",Me:vel():length()),2)) + "mph]"  )
+        
+        Hud:egpSetText(25,"Target Mode")
+        Hud:egpSetText(26, LockMode ? "Locked" : "Free")
+        Hud:egpSetText(27,"Paste Mode")
+        Hud:egpSetText(28, PasteMode ? "Color & Material" : "Prop")
+        Hud:egpSetText(29,"UI Mode")
+        Hud:egpSetText(30,UIText)
+    }
+    elseif (changed(UIMode)){Hud:egpClear()}
+}

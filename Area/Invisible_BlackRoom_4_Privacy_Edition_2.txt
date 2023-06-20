@@ -1,0 +1,137 @@
+@name Invisible BlackRoom 4 Privacy Edition 2
+@outputs PlayerArray:array [BoxSize]:vector
+@persist [NoClipProp Prop Me E Marker]:entity HoloSeperation EBottom [BoxSize BoxBoxCenter]:vector Whitelist:array TargetI Invis
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl
+
+if (first()){
+    runOnTick(1)   
+    E = entity()
+    Me = owner()
+    EBottom = E:boxSize():z()/2
+    propSpawnUndo(0)
+    
+    NoClipProp = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", 1)
+    Marker = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", E:toWorld( vec( 200, 200, 200)), 1)
+    Marker:setAlpha(0)
+    noCollideAll( Marker, 1)
+    
+    holoCreate(100)
+    holoColor(100, vec(105,0,75))
+    holoPos(100, Marker:boxCenterW())
+    holoAng(100, Marker:angles())
+    holoMaterial(100, "models/wireframe")
+    holoModel(100,"models/editor/axis_helper.mdl")
+    holoParent(100, Marker)
+    
+    Whitelist = array(owner())
+    WhitelistBySteam = array("STEAM_0:0:90656110", "STEAM_0:1:39301792")
+    #killer, Kinky
+    
+    for (I = 1, WhitelistBySteam:count()){
+        Player = findPlayerBySteamID(WhitelistBySteam[I, string])
+        if (Player){
+            hint("Whitelisted " + Player:name(),2)
+            Whitelist:pushEntity(Player)
+        }
+    }
+    
+    for(I = 1, 4){
+        holoCreate(I)
+        holoAng(I, ang())
+        holoModel(I, "models/hunter/blocks/cube8x8x8.mdl")
+    }
+    BoxBoxCenter = holoEntity(2):boxCenter()
+    holoMaterial(1,"models/wireframe")
+    holoColor(1,vec(20))
+    
+    holoMaterial(2,"engine/writez")
+    holoColor(2,vec(255))
+     
+    
+    holoMaterial(3,"lights/white")
+    holoColor(3,vec(0))
+    
+    holoMaterial(4,"models/wireframe")
+    holoColor(4,vec(50))
+
+    HoloSeperation = 0.644
+    
+    timer("changeTarget", 1)
+}
+
+if (Marker:isPlayerHolding() | E:isPlayerHolding() | first()){
+    holoAng(100, ang())
+    
+    BoxSize = toLocal( E:pos() - E:up() * EBottom, ang(), Marker:pos(), ang()) * vec(2, 2, 1)
+    BoxSize = vec(abs(BoxSize:x()), abs(BoxSize:y()), abs(BoxSize:z())) 
+    for(I = 1, 4){
+        HoloOffset = vec(HoloSeperation) * (I - 1)
+        holoScaleUnits(I, sign(2.5 - I) * (BoxSize - HoloOffset) * 1.0013)
+        holoPos(I, E:pos() + vec(0,0,BoxSize:z() * 0.5 - EBottom) - BoxBoxCenter * holoScale(I))
+    }
+} else {
+    Marker:propFreeze(1)
+    E:propFreeze(1)
+}
+if (findCanQuery()){
+    Pos = E:pos() + vec(0,0,BoxSize:z() * 0.5 - EBottom)
+    findIncludeClass("player")
+    findExcludeEntities(Whitelist)
+    findInBox(Pos + BoxSize * 0.5, Pos - BoxSize * 0.5)
+    PlayerArray = findToArray()
+}
+PlayerCount = PlayerArray:count()
+TargetShift = clk("changeTarget")
+if (PlayerCount){
+    if (!Prop){
+        Prop = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", 0)
+    }
+    if (!NoClipProp){
+        NoClipProp = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", 1)
+    }
+    TargetI = (TargetI + clk("changeTarget")) % PlayerCount + 1
+    ApplyTarget = PlayerArray[TargetI, entity]:boxCenterW()
+    
+    if (TargetShift){ 
+        NoClipProp:setPos(PlayerArray[TargetI, entity]:boxCenterW())
+        Prop:setPos( (E:pos() + vec(0,0,50) - PlayerArray[TargetI, entity]:boxCenterW()):normalized() * 10)
+    } else {
+        Prop:applyForce(((ApplyTarget - Prop:pos()) * 50 - Prop:vel()) * Prop:mass())
+    }
+} else {
+    PlayerArray[TargetI, entity]
+    ApplyTarget = E:pos() + vec(0,0,25)
+    Prop:setPos( ApplyTarget )
+    NoClipProp:setPos(ApplyTarget + vec(0,0,25))
+}
+
+if (TargetShift){ 
+    timer("changeTarget", 300)
+}
+InvisBtn = Me:keyPressed("up")
+if (changed(InvisBtn) & InvisBtn){
+    Invis = !Invis
+    holoAlpha(3, Invis ? 100 : 255)
+}
+Prop:applyAngForce(-Prop:angles() * 10 - Prop:angVel())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

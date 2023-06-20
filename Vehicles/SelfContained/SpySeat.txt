@@ -1,0 +1,108 @@
+@name SpySeat
+@inputs 
+@outputs 
+@persist [Holo E Me Seat Target]:entity Vel:vector Mode Dist
+@trigger 
+
+if (first()){
+    runOnTick(1)
+    propSpawnUndo(0)
+    Seat = seatSpawn("", 1)
+    Me = owner()
+    E = entity()
+    
+    Holo = holoCreate(1)
+    Holo:setAlpha(0)
+    
+    holoCreate(2)
+    holoModel(2, "models/holograms/hq_sphere.mdl")
+    holoMaterial(2, "hlmv/debugmrmwireframe")
+    holoScale(2, vec(0.1))
+    holoColor(2, vec(255, 0, 0))
+    
+    cameraCreate(1)
+    cameraPos(1, Holo:pos())
+    cameraToggle(1, 1, Seat)
+    cameraParent(1, Holo)
+    
+    
+}
+
+Driver = Seat:driver()
+holoVisible(2, players(), 0)
+holoVisible(2, Driver, 1)
+
+if (changed(Driver)){
+    Vel = vec()
+    Dist = -50
+    holoPos(1,Seat:toWorld(vec(0,0,Seat:boxSize():z() + 5)))
+    holoAng(1, Seat:forward():toAngle())
+}
+    
+
+if(Driver){ 
+    rangerFilter(array(Seat, Holo, E, Me))
+    rangerDefaultZero(0)
+    Ranger = rangerOffset(Holo:pos(), Holo:pos() + Holo:forward()*1000)
+    W = Driver:keyPressed("W")
+    S = Driver:keyPressed("S")
+    A = Driver:keyPressed("A")
+    D = Driver:keyPressed("D")
+    R = Driver:keyPressed("R")
+    Mouse1 = Driver:keyAttack1()
+    Mouse2 = Driver:keyAttack2()
+    Shift = Driver:keyPressed("LShift")
+    Space = Driver:keyPressed("Space")
+    Alt = Driver:keyPressed("LAlt")
+    Ctrl = Driver:keyPressed("LCONTROL")
+    
+    if (changed(Mouse1) & Mouse1){
+        if (!Mode){
+            Target = noentity()
+            findExcludeEntities(array(Seat, Holo, E, Me))
+            findInSphere(Holo:pos(), 20)
+            findClosest(Holo:pos())
+            Target = Ranger:entity()
+            if (Target){
+                Seat:hintDriver(Target:toString(),2)
+                Mode = 1
+                Dist = -Target:boxSize():length()
+            } else {
+                Seat:hintDriver("No Entity Found", 2)
+            }
+        }else {
+            Mode = !Mode
+            Seat:hintDriver("FreeMovement",2)
+        }
+        
+    }
+    if (changed(Mouse2) & Mouse2){
+        Vel = vec()
+        holoPos(1, Holo:pos() + Driver:eye() * (rangerOffset(Holo:pos(), Holo:pos() + Holo:forward()*100000):distance() - 20))
+    }
+    
+    switch (Mode){
+        case 0, 
+            Vel = Vel*0.95 + 2.5 * (1 + (Shift - Alt) * 0.5 ) * ((W - S) * Holo:forward() + (A - D) * -Holo:right() + ((Space - Ctrl) * Holo:up() ))
+            holoAng(1, Driver:eye():toAngle())
+            holoPos(1, Holo:pos() + Vel)
+            holoPos(2, Ranger:pos())
+            break
+        case 1,
+            Dist += (1 + (Shift - Alt) * 0.5) * (W - S) * (Holo:pos():distance(Target:pos())/20)
+            holoPos(1, Target:boxCenterW() + Driver:eye()*Dist)
+            holoAng(1, Driver:eye():toAngle())
+            cameraAng(1, Driver:eye():toAngle())
+            
+            holoPos(2, Target:boxCenterW())
+            break
+        }
+    
+    cameraToggle(1, 1, Seat)
+    
+}
+
+if(changed(R) & R){
+    Seat:setPos(Holo:pos())
+    Seat:setAng(ang():setYaw(Driver:eye():toAngle():yaw()))
+}

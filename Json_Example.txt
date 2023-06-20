@@ -1,0 +1,30 @@
+@name Json Example
+@inputs 
+@outputs Table:table Json:string Error:string
+@persist 
+@trigger 
+if (first()){
+    runOnFile(1)
+    Table = table()
+    ValueTable = table()
+    Waypoints = table()
+    ValueTable["name", string] = map()
+    
+    Waypoints["spawn", vector] = randvec(-1,1) * 1000
+    Waypoints["skybox", vector] = randvec(-1,1) * 1000
+    Waypoints["1", vector] = randvec(-1,1) * 1000
+    Waypoints["2", vector] = randvec(-1,1) * 1000
+    
+    ValueTable["waypointlist", table] = Waypoints   
+    
+    Table["maplist",table] = table(ValueTable,ValueTable)
+    
+    Json = jsonEncode(Table, 1)
+}
+if (fileCanWrite()){
+    runOnTick(0)
+    hint("wrote",2)
+    fileWrite("DeleteMe.txt",Json)
+    
+}
+hint(fileStatus():toString(),2)

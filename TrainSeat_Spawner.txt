@@ -1,0 +1,34 @@
+@name TrainSeat Spawner
+@inputs 
+@outputs 
+@persist I Prop:entity
+@model models/props_trainstation/traincar_seats001.mdl 
+
+if (first()){
+    E = entity()
+    runOnTick(1)
+    enableConstraintUndo(0)
+    #propSpawnUndo(0)
+    Prop = propSpawn("models/props_trainstation/traincar_seats001.mdl", E:pos(), E:angles(), 1)
+    noCollide(E, Prop)
+}
+
+while(propCanCreate() & I < 4){
+    Seat = seatSpawn("", Prop:toWorld(vec(-2,(I - 1.5 )* 27, 15)), Prop:toWorld(ang(0,-90,0)), 0)
+    Seat:setAlpha(0)
+    Seat:propShadow(0)
+    weld(Seat, Prop)
+    I++
+    if (I > 3){
+        selfDestruct()
+    }
+}
+
+#[
+    Documentation and examples are available at:
+    https://github.com/wiremod/wire/wiki/Expression-2
+
+    Discord is available at https://discord.gg/cqJ45CT
+    Reddit is available at https://www.reddit.com/r/wiremod
+    Report any bugs you find here https://github.com/wiremod/wire/issues
+]#

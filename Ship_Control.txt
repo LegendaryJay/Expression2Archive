@@ -1,0 +1,107 @@
+@name Ship Control
+@inputs [Pod Cam]:wirelink EyePod:vector2 E:entity
+@outputs DesiredSpeed Speed KMH MPH
+#Variables
+@persist [Quat DesiredQuat]:quaternion DesiredSpeed Speed Mul1 Mul2
+#Options #Speed
+@persist MaxSpeed AccSpeed DeaccSpeed DesiredSpeedMul
+@persist PitchSpeed YawSpeed RollSpeed
+    #Mouse
+@persist InvertMousePitch InvertMouseYawRoll MousePitchSpeed MouseYawSpeed MouseRollSpeed BaseSpeedMul BaseSpeedPow
+    #Misc 
+@persist InvertPitch InvertYawRoll Zoom Scroller AproxShipSize
+
+if (first()|clk("dupe")) {
+    
+    ##### Ship Control# Made by Divran (With help from Techni with quaternions)# http://www.wiremod.com/forum/custom-gates/16081-divrans-e2-contraptions-thread.html####
+    #concmd("say Ship Control - Made by Divran (And Techni)")
+    
+    
+    #Multipliers - NOTE: You will have to change these if you use a different prop than a PHX 4x4 plate.
+    Mul1 = 1000
+    Mul2 = 20#Speed options
+    MaxSpeed = 100#This is not in units or anything. It's just a multiplier. (must be positive) #(I made it 100 to make it work good for percentages and stuff.)
+    BaseSpeedMul = 0.25#Base Speed Multiplier
+    BaseSpeedPow = 2#Speed to the power of...#Note that the speed formula is..#(Speed / BaseSpeedMul ) ^ BaseSpeedPow#I did this so that the speed increases exponentially as you increase DesiredSpeed. If you don't want the speed to increase exponentially, just change BaseSpeedPow to 1
+    AccSpeed = 0.25#How fast the speed multiplier rises (must be positive)
+    DeaccSpeed = -0.25#How fast the speed multiplier drops (must be negative)
+    DesiredSpeedMul = 10#How much the Desired Speed changes when you use the scroller on your mouse
+    
+    PitchSpeed = 1.4#Pitch multiplier
+    YawSpeed = 1.4#Yaw multiplier
+    RollSpeed = 1.4#Roll Multiplier#Inverting options
+    InvertPitch = 1#If this is 0, W is up and S is down. If this is 1, it's inverted.
+    InvertYawRoll = 0#If this is 0, A/D controls roll, and Shift+A/D controls yaw. If this is 1, it's inverted.#Mouse Aim Options
+
+    InvertMousePitch = 0#Invert up/down
+    InvertMouseYawRoll = 0#If this is 1, moving the mouse left/right will control yaw. If this is 0, it will control roll.
+    MousePitchSpeed = 0.2#Pitch multiplier
+    MouseYawSpeed = 0.2#Yaw multiplier
+    MouseRollSpeed = 0.2#Roll multiplier#Camera Options
+    Zoom = 500#The bigger this is, the further away the camera is.
+    AproxShipSize = 100#Change this to the aproximate ship size, or else #the camera might get stuck inside the ship (!!!)#It is used for the E2 Ranger which checks for walls behind the camera#so that your camera does not get stuck under the ground if you fly around in enclosed spaces.#No Scroller?
+    Scroller = 0#If this is 1, use the scroller to accelerate and decelerate. If this is 0, use Mouse1 and Mouse2 instead.#    Instructions:#        How to spawn:#        1: Spawn a prop#        2: Spawn a chair, Adv Pod Controller, Cam Controller, Entity marker, and the E2 on the prop.#        3: Link the Adv Pod Controller and the Cam Controller to the chair, and the Entity Marker to the prop.#        4: Get the "Expression 2 - Wirelink" tool.#        5: Left click the Adv Pod controller and Cam Controller with the Wirelink tool.#        6: Wire "Pod" and "Cam" of the E2 to the new Wirelink outputs which you created with the Wirelink tool in step 5.#        7: Wire "E" of the E2 to the entity marker.#        8: Change the multipliers and options if necessary.#        #        Controls:#        WASD to move#        Space to fly up#        Alt to fly down#        Hold R for free camera#        Use the scroller on your mouse to accelerate and decelerate. (Have no scroller? Can be changed to use Mouse1 and Mouse2 in Options above)#        Shift changes Yaw and Roll temporarily.# DON'T CHANGE ANYTHING BELOW THIS LINE UNLESS YOU KNOW WHAT YOU'RE DOING.##########################################################################
+    runOnTick(1)
+    
+    #Starting Variables
+    DesiredQuat = quat(E) 
+    Cam["Parent",entity] = E
+    
+
+    #Message
+    if (E) {
+        print("READY FOR USE.")
+        E:setMass(50000)
+    } else {
+        print("Invalid entity.")
+        timer("dupe",5000)
+    }
+}
+if (duped()) {timer("dupe",1000)}
+Active = Pod["Active",number]
+if (changed(Active)) {Cam["Activated",number] = Active}
+if (Active) {
+    #WASD Controls
+    W = Pod["W",number]
+    A = Pod["A",number]
+    S = Pod["S",number]
+    D = Pod["D",number]
+    Shift = Pod["Shift",number]
+    R = Pod["R",number]
+    Space = Pod["Space",number]
+    NextWeapon = Pod["NextWeapon",number]
+    PrevWeapon = Pod["PrevWeapon",number]
+    Mouse1 = Pod["Mouse1",number]
+    Mouse2 = Pod["Mouse2",number]
+    Alt = Pod["Alt",number]
+    
+    #Quaternions
+    Pitch = qRotation(DesiredQuat:right(),((InvertPitch ? S-W : W-S))*PitchSpeed+EyePod:y()*MousePitchSpeed*(InvertMousePitch ? -1 : 1))
+    Yaw = qRotation(DesiredQuat:up(),((InvertYawRoll ? !Shift : Shift) ? (A-D)*YawSpeed : 0)+(InvertMouseYawRoll ? -EyePod:x() : 0)*MouseYawSpeed)
+    Roll = qRotation(DesiredQuat:forward(),((InvertYawRoll ? Shift : !Shift) ? (D-A)*RollSpeed : 0)+(!InvertMouseYawRoll ? EyePod:x() : 0)*MouseRollSpeed)
+    DesiredQuat = (Pitch*Yaw*Roll) * DesiredQuat
+    if (Shift & R) {DesiredQuat = quat(-E:angles())}
+    V = E:toLocal(rotationVector(DesiredQuat/quat(E))+E:pos())
+    E:applyTorque((V*Mul1-E:angVelVector()*Mul2)*E:inertia())
+    
+    #Flight
+    SpeedChange = (Scroller ? (changed(PrevWeapon) & PrevWeapon)-(changed(NextWeapon) & NextWeapon) : (changed(Mouse1) & Mouse1) - (changed(Mouse2) & Mouse2))
+    DesiredSpeed=clamp(DesiredSpeed+SpeedChange*DesiredSpeedMul,0,MaxSpeed)
+    Speed=clamp(Speed+clamp((DesiredSpeed-Speed),DeaccSpeed,AccSpeed),0,MaxSpeed)
+    E:applyForce((E:forward()*(Speed*BaseSpeedMul)^BaseSpeedPow+E:up()*(Space-Alt)*20-E:vel()*0.1)*E:mass())
+    
+    #Camera Controller
+    Ply = Pod["Entity",entity]:driver()
+    Position = E:toWorld(E:boxCenter()) - DesiredQuat:forward() * Zoom + DesiredQuat:up() * Zoom/4
+    CamRanger = rangerOffset(E:toWorld(E:boxCenter())+(Position-E:toWorld(E:boxCenter())):normalized()*AproxShipSize,Position)
+    if (CamRanger:hit()) {Position = CamRanger:position() + CamRanger:hitNormal() * 50}
+    Cam["Position",vector] = Position
+    Cam["Angle",angle] = (R ? Ply:eyeAngles() : DesiredQuat:toAngle())
+    
+    #Misc 
+    KMH = toUnit("km/h",E:vel():length())
+    MPH = toUnit("m/h",E:vel():length())
+} else {
+    Speed = DesiredSpeed = 0
+    E:applyForce(-E:vel()*0.1*E:mass())
+}

@@ -1,0 +1,120 @@
+@name anti-Missile 2
+@persist [Me PushProp StopProp PushTarget]:entity ShieldI ShieldMode PropShield:array ShieldHint BreakMode PushMode  PushI Anti
+@persist [Me]:entity [WallProps ExplosiveProps Missiles]:array
+if (first()){
+    propSpawnUndo(0)
+    runOnTick(1)
+    Me = owner()
+}
+if (findCanQuery()){
+    findClearBlackList()
+    findClearWhiteList()
+    findIncludeClass("rpg_missile")
+    findIncludeClass("crossbow_bolt")
+    
+    findIncludeClass("npc_grenade")
+    findIncludeClass("prop_combine_ball")
+    findIncludeClass("bb_thrown")
+    findIncludeClass("grenade_ar2")
+    
+    findIncludeClass("npc_satchel")
+    findIncludeClass("npc_tripmine")
+    findIncludeClass("acf_missile")
+
+    #findExcludePlayerProps(owner())
+    findInSphere(Me:boxCenterW(),800)
+
+    Missiles = findToArray()    
+}
+
+while (WallProps:count() < 8 & propCanCreate()){
+    WallProps:pushEntity(propSpawn("models/sprops/cuboids/height12/size_1/cube_12x12x12.mdl", 1))
+}
+while (ExplosiveProps:count() < 8 & propCanCreate()){
+    ExplosiveProps:pushEntity(propSpawn("models/props_junk/gascan001a.mdl", 1))
+}
+
+if (Missiles:count()){
+    for(I = 1, Missiles:count()){
+        Missile = Missiles[I,entity]
+        Type = Missile:type()
+        if (Type == "npc_satchel" |Type == "npc_tripmine" ){
+            
+    }
+    
+if (!StopProp | !PushProp){
+    timer("!Shield",400)
+    for (ShieldI=1,Missiles:count()){
+        Boom=Missiles[ShieldI,entity]
+        if ((Boom:type()=="npc_satchel" | Boom:type()=="npc_tripmine") & !BreakMode){
+            Break=propSpawn("models/props_junk/gascan001a.mdl",Boom:boxCenterW()+Boom:vel()/30,1)
+            Break:propBreak()
+            BreakMode=1
+            stoptimer("Break")
+            timer("Break",100)
+        }
+        elseif (Boom:type()=="acf_missile" | Boom:type()=="rpg_missile" | Boom:type()=="crossbow_bolt" | Boom:type()=="npc_grenade_bugbait" | Boom:type()=="grenade_ar2"){
+            hint(Boom:type(), 2)
+            StopProp:setPos(Boom:boxCenterW() + Boom:vel()/30)
+        }
+        elseif (!PushMode){
+            PushMode=1
+            StopProp:setPos(Boom:boxCenterW()+Boom:vel()/30)
+            PushTarget=Boom
+        }
+        Cancel=1
+    }
+}
+
+if (!StopProp){
+    StopProp=propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl",entity():pos(),1)
+    StopProp:setAlpha(0)
+}
+if (!PushProp){
+    PushProp=propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl",entity():toWorld(vec(0,0,50)),1)
+    PushProp:propNotSolid(1)
+    PushProp:setAlpha(0)
+}
+
+
+
+
+
+if (PushMode == 1){
+    PushDist=(owner():boxCenterW()-PushTarget:pos()):length()
+    if (PushTarget & PushDist<600){
+        PushI++
+        if (PushI<5){
+            StopProp:setPos(entity():toWorld(vec(0,0,44)))
+            PushProp:propNotSolid(0)
+            PushProp:setMass(PushTarget:mass())
+            PushProp:propFreeze(0)
+        }
+        elseif (PushI<10){
+            PushProp:setPos(PushTarget:nearestPoint(owner():boxCenterW()))
+        }
+        elseif (PushI<15){
+            PushProp:applyForce((-PushProp:pos()+PushTarget:boxCenterW()+PushTarget:vel()/25)*5000)
+        }
+        else {
+            PushI=0  
+        }
+    }
+    else {
+        PushMode=0
+        PushI=0   
+        PushProp:setPos(entity():toWorld(vec(0,0,50)))
+        PushProp:propNotSolid(1)
+        PushProp:setMass(1)
+        PushProp:propFreeze(1)
+        PushProp:setAng(ang())
+    }
+}
+
+    
+if (clk("Break")){BreakMode=0}
+if(!Cancel){
+    StopProp:setPos(entity():pos() + vec(0,0,44))
+}
+
+

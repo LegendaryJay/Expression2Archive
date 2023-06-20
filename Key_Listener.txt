@@ -1,0 +1,32 @@
+@name Key Listener
+@inputs 
+@outputs KeyTable:table
+@persist Me:entity KeyTable:table
+@trigger 
+
+if (clkName() == "key"){
+    foreach(K, ButtonInfo:array = KeyTable){
+        State = ButtonInfo[1,number]
+        if (State == 1){
+            KeyTable[K, array][2,number] = ButtonInfo[2,number] + 1
+        } else {
+            KeyTable:remove(K)
+        }
+    }
+} elseif (keyClk()){
+    Key = keyClkPressed()
+    KeyDirection = keyClk(Me)
+    KeyTable[Key, array] = array((KeyDirection == 1 ? 1 : 2), 0)
+    timer("key", 1) 
+} elseif(first()){
+    Me = owner()
+    function enableKeys( Keys:array){
+        runOnKeys(Me, 1, Keys)
+    }
+    function enableAllKeys(){
+        runOnKeys(Me, 1)
+    }
+    enableAllKeys()
+}
+
+

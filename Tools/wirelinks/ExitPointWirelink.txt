@@ -1,0 +1,17 @@
+@name ExitPointWirelink
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+#Inputs:	
+Point["Entity", entity]	
+Point["Entities", array]	
+Point["Position", vector]	
+Point["Local Position", vector]	
+Point["Angle", angle]	
+Point["Local Angle", angle]	
+	
+	
+#Outputs:	
+Point["wirelink", wirelink]	

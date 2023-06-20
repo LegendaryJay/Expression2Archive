@@ -1,0 +1,25 @@
+@name Me Party
+@inputs 
+@outputs 
+@persist Me:entity Run [Color NewColor]:vector
+@trigger 
+runOnTick(1)
+
+if (Run){
+    Color = mix(NewColor, Color, 0.4)
+    if (Color:distance(NewColor) < 0.5){
+        NewColor = hsv2rgb(random() * 360, 1, 1)
+    }
+    Me:setColor(Color)
+    lightColor(1, Color)
+} else {
+    Me = owner()
+    Me:setMaterial("lights/white")
+    NewColor = hsv2rgb(random() * 360, 1, 1)
+    lightCreate(1)
+    lightPos(1, Me:pos())
+    lightParent(1, Me)
+    lightBrightness(1, 1000)
+    Run = 1
+}
+

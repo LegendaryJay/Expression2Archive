@@ -1,0 +1,1164 @@
+@name Colorator
+@outputs MaterialList:array
+@persist [E Me]:entity  MaterialPropModel:string MaterialPropSize:vector
+@persist [PasteBtn CopyBtn ResetBtn PrintBtn ModeBtn]:string KeyTable:table
+#File
+@persist FileName:string Loaded
+#Memory
+@persist FuncDict:table [MaterialList MatPropsByIndex]:array 
+#Grid
+@persist MaterialCount 
+@persist Perimeter [GridCenter GridCenterLocal GridBoxSize]:vector
+@persist [MatPropSize MatPropCenter MatPropModSize]:vector PropMatsSpawned MatPropI GridReload
+#menu
+@persist Menu
+if (!Loaded){
+    if (first()){
+        MaterialPropModel = "models/holograms/hq_rcube.mdl"
+        MatListGapLength = 2
+        
+        ## Basic ##
+        E = entity()
+        Me = owner()
+        propSpawnUndo(0)
+        
+        TempTable = table()
+        TempTable["function",string] = "entity"
+        FuncDict[E:id(), table] = TempTable
+        
+        ## Keys ##
+        PasteBtn = "mouse_left"
+        CopyBtn =  "mouse_right"
+        ResetBtn = "r"
+        PrintBtn = "pad_enter"
+        ModeBtn = "pad_0"
+        
+        runOnKeys(Me, 1, array(PasteBtn, CopyBtn, ResetBtn, PrintBtn, ModeBtn))
+        
+        ## RunOn ##
+        runOnFile(1)
+        
+        ## File Stuff ##
+        FileName = "MaterialList.txt"
+        
+
+        ## Grid Setup ##
+        function vector getMatPropPos(Ind){
+            return E:toWorld(GridCenterLocal + vec(
+                0,
+                (Ind - 1) % Perimeter - Perimeter * 0.5 + 0.5,
+                0.5 * Perimeter - floor((Ind - 1) / Perimeter) - 0.5
+                         
+            ) * MatPropModSize)
+ 
+        }
+        
+        function generateGridProperties(){
+            GridCenter = E:toWorld(
+                E:boxCenter() + vec( 
+                    0, 
+                    0, 
+                    (E:boxSize():z() + MatPropModSize:z() * Perimeter) * 0.5
+                ) 
+            )
+            GridCenterLocal = E:toLocal(GridCenter)
+            GridBoxSize = MatPropModSize * vec(1,Perimeter, Perimeter)    
+        }
+        
+        function entity spawnMatProp(Ind){
+            Ent = propSpawn(MaterialPropModel,getMatPropPos(Ind), E:angles(), 1)
+            if (Ind == 1){
+                MatPropSize = Ent:boxSize()
+                MatPropCenter = Ent:boxCenter()
+                MatPropModSize = MatPropSize + vec(MatListGapLength)
+                generateGridProperties()
+            }
+            EntInfo = FuncDict[Ent:id(), table]
+            EntInfo["function", string] = "material"
+            EntInfo["material", string] = MaterialList[Ind, string]
+            EntInfo["id", number] = Ind
+            FuncDict[Ent:id(), table] = EntInfo
+            
+            #Ent:setColor(hsv2rgb(360 * Ind/MaterialCount, 1, 1))
+            Ent:setMaterial(MaterialList[Ind, string])
+            
+            Ent:propShadow(0)
+            noCollideAll(Ent, 1)
+            
+            MatPropsByIndex:pushEntity(Ent)
+            return Ent
+        }
+        
+        function reloadGrid(){
+            MatPropI = 0
+            GridReload = 1
+            interval(1)
+        }
+        
+        function movePropMat(Ind){
+            Prop = MatPropsByIndex[Ind, entity]
+            Prop:setPos(getMatPropPos(Ind))
+            Prop:setAng(E:angles())
+            
+        }
+        
+        function checkGrid(){
+            ## add stufff ##
+            Perimeter = ceil(sqrt(MaterialCount))
+            if (changed(Perimeter)){
+                reloadGrid()    
+            }
+        }
+        
+        ## Controls ##
+        function string entity:getFunction(){
+            return FuncDict[This:id(), table]["function", string]
+        }
+        
+    }
+
+    if (fileCanLoad()){
+        hint("Loading", 2)
+        fileLoad(FileName)
+    }
+
+    if (fileClk(FileName)){
+        switch(fileStatus()){
+            case _FILE_UNKNOWN, 
+                print("File Unknown")
+                break
+            case _FILE_OK, 
+                FileString = fileRead()
+                MaterialList = FileString:explode("\n")
+                MaterialCount = MaterialList:count()
+                Loaded = 1
+                checkGrid()
+                break
+            case _FILE_TIMEOUT, 
+                print("File Timeout")
+                break
+            case _FILE_404,
+                fileWrite(FileName,"")
+                hint("New file Created",2)
+                MaterialList = array()
+                MaterialCount = 0
+                Loaded = 1
+                checkGrid()
+                break
+            case _FILE_TRANSFER_ERROR,
+                print("file transfer error")
+                break
+        }
+    }
+    
+} else {
+    if(GridReload){
+        interval(1)
+        while (PropMatsSpawned < MaterialCount & propCanCreate()){
+            PropMatsSpawned++
+            spawnMatProp(PropMatsSpawned)
+        }
+        while (MatPropI < PropMatsSpawned ){
+            MatPropI++
+            movePropMat(MatPropI)    
+        }
+        if (MatPropI == MaterialCount){
+            GridReload = 0 
+        }  
+    } 
+    if (keyClk()){
+            Key = keyClkPressed()
+            KeyTable[Key, number] = KeyTable[Key, number] + abs(keyClk(Me))
+            timer("key", 1)
+    }   
+}
+if (clkName() == "key" | keyClk()){
+    AimEnt = Me:aimEntity()
+    ChangedAimEnt = changed(AimEnt)
+    foreach(Key, ButtonState:number = KeyTable){
+        Cannon = Me:weapon():type() == "remotecontroller" 
+        #hint(Key + " | " +  KeyTable[Key, number], 2)
+        if (Menu){
+            if (Cannon){
+
+            } else {
+            
+            }
+        } else {
+            if (Cannon){
+                Func = AimEnt:getFunction() 
+                switch(Key){
+                    case PasteBtn,
+                        
+                        break
+                    case CopyBtn,
+                        break
+                    case ResetBtn,
+                        break
+                    case PrintBtn,
+                        break
+                    case ModeBtn,
+                        break
+                    
+                }
+            }
+            
+        }
+        #globalButton(Key, ButtonState)
+        if (ButtonState >= 3){
+            KeyTable:remove(Key)
+        } else {
+            timer("key", 1)
+            if (ButtonState == 1){
+                KeyTable[Key, number] = 2 
+            }
+        }
+    } 
+}
+
+#[@name Colorator
+@outputs KeyTable:table
+
+
+#Selection Circle
+@persist [Eye]:vector EyeAngs:angle
+@persist CircleRadius SelCircleForward SelCirclePropScale HoloScaleUnits:vector CenterPos:vector    
+@persist SelectedMatIdxFromCircle LastSelectedMatIdxFromCircle Menu SelectedMaterial:string
+@persist CircleHoloI CircleTarget:entity CircleMats:array CircleMatCount
+#Material Grid
+@persist MatCount Materials:array Props:array
+@persist SpacedMaterialPropSize:vector Perimeter HN
+@persist SkipSelection
+
+@outputs Holos:array Hue Saturation Value Alpha Idx DebugString:string DebugString2:string
+@persist [Holos Slider]:array [BoxCenter BoxSize]:vector RGB:vector Hue Saturation Value Alpha [Target]:entity Idx
+@persist WildCard:entity 
+
+@persist ColorMatTable:table MinRange GridCenter:vector
+@persist LookupTable:table FocusedEnt:entity PN StartHeight
+
+@persist MatMode ColorMode [DisplayProp MatToggle ColorToggle]:entity 
+
+
+#@model models/sprops/misc/alphanum/alphanum_arrow_a.mdl
+@model models/props_phx/mechanics/mech1.mdl
+#models/sprops/misc/domes/size_4/dome_48x24.mdl
+#models/props_phx/construct/metal_wire1x2b.mdl
+if (!Loaded){
+    if (first()){
+#########################################################           
+        #How spaced apart each prop on the grid is
+        PropGap = 2
+        
+        #What model most of the props are
+        MaterialPropModel = "models/holograms/hq_rcube.mdl"
+        
+        #Select Material Menu Size
+        CircleRadius = 5
+        
+        #How far from your face the menu is
+        SelCircleForward = 20
+#########################################################
+        
+
+        Me = owner()
+
+        PasteBtn = "mouse_left"
+        CopyBtn =  "mouse_right"
+        ResetBtn = "r"
+        PrintBtn = "pad_enter"
+
+        StartHeight = 0
+
+        #Run on
+        runOnKeys(Me, 1, array(PasteBtn, CopyBtn, ResetBtn, PrintBtn))
+        enableConstraintUndo(0)
+        runOnTick(1)
+        runOnChat(1)
+        runOnFile(1)
+        propSpawnUndo(0)
+        
+        
+        #Define Common Entities
+        E = entity()
+        E:setMaterial("debug/debugdrawflat")
+        E:propShadow(0)
+        local TempTable = table()
+        TempTable["function",string] = "entity"
+        LookupTable[E:id(),table] = TempTable
+        
+        
+        
+        
+        
+        #Grid Selection Holo
+        holoCreate(300)
+        holoModel(300, "models/sprops/cuboids/height12/size_1/cube_12x12x12.mdl")
+        holoMaterial(300, "models/wireframe")
+        holoColor(300, vec4(255))
+        holoAng(300, E:toWorld(ang(0,0,0)))
+        
+        #Circle Selector Cursor
+        holoCreate(100)
+        holoAlpha(100,0)
+        holoMaterial(100, "debug/debugdrawflat")
+        
+        #Circle Color Display
+        holoCreate(200)
+        holoAlpha(200,0)
+        holoModel(200, "models/holograms/hq_torus_thin.mdl")
+        holoMaterial(200, "debug/debugdrawflat")
+        
+        # Holo used now to measure size, but later used in circle menu
+        holoCreate( 
+            1,
+            vec(),
+            vec(),
+            ang(),
+            vec(255),
+            MaterialPropModel
+        )
+        holoDisableShading(1, 1)
+        #measuring holo size
+        MaterialPropSize = holoEntity(1):boxSize()
+        #same thing but with spacing
+        SpacedMaterialPropSize = MaterialPropSize + vec(PropGap)
+
+        #############################
+        #                           #
+        #        Functions!!        #
+        #                           #
+        #############################
+        ### Print Function
+        function fancyPrint(TextA:string, TextB:string){
+            printColor(vec(77,1,53),TextA, vec(255), TextB)
+        }
+        
+        function void printMaterial(MatString:string){
+            if (MatString != ""){
+                fancyPrint("Material: ", "\"" + MatString + "\"")
+            }
+        }
+        
+        #Color Slider
+        function void updateColor(){
+            E:setColor(hsv2rgb(Hue,Saturation,Value),Alpha)
+            Slider[1, entity]:setColor(hsv2rgb(Hue,1,1))
+            Slider[2, entity]:setColor(hsv2rgb(Hue,Saturation,1))
+            Slider[3, entity]:setColor(hsv2rgb(Hue,1,Value))
+            Slider[4, entity]:setColor(hsv2rgb(Hue,Saturation,Value),Alpha)
+            RGB = round(hsv2rgb(Hue,Saturation,Value))
+            E:setName("HSV( " + round(Hue) + ", " + round(Saturation,2) + ", " + round(Value,2) + " ) \n RGB( " + RGB:x() + ", " + RGB:y() + ", " + RGB:z() + " )\nAlpha: " + round(Alpha))
+        }
+        
+        function void updateSliders(InputColor:vector4){
+            local TempColor = rgb2hsv(vec(InputColor))
+            Hue = TempColor:x()
+            Saturation = TempColor:y()
+            Value = TempColor:z()
+            Alpha = InputColor:w()
+            holoPos(901, Slider[1,entity]:toWorld(vec(BoxSize:x() * (Hue/360 - 0.5) ,0,BoxSize:z() * 0.5)))
+            holoPos(902, Slider[2,entity]:toWorld(vec(BoxSize:x() * (1 - Saturation - 0.5) ,0,BoxSize:z() * 0.5)))
+            holoPos(903, Slider[3,entity]:toWorld(vec(BoxSize:x() * (1 - Value - 0.5) ,0,BoxSize:z() * 0.5)))
+            holoPos(904, Slider[4,entity]:toWorld(vec(BoxSize:x() * (0.5 - Alpha/255) ,0,BoxSize:z() * 0.5)))
+            updateColor()
+        }
+        ## DisplayProp
+#[        function setDisplayMat(String:string){
+            E:setMaterial(String)
+            E:setColor(Color)
+        }
+        function setDisplay(String:string){
+            E:setMaterial(String)
+        }
+        function setDisplay(Color:vector4){
+            E:setMaterial("")
+            E:setColor(Color)
+        }
+        function setWildCard(String:string){
+            WildCard:setMaterial(String)
+        }]#
+#[        ##Selection Circle Stuff
+        function void closeSelCircle(){
+            for(I = 1, CircleMatCount){
+                holoAlpha( I, 0)
+            }
+            holoAlpha(100, 0)
+            holoAlpha(200, 0)
+        }
+        function string returnSelectionRingMaterial(SelectedIndex){
+            if (SelectedIndex == 0){return ""}
+            return CircleMats[SelectedIndex, string] 
+        }
+        function void table:makeCircleSelection(SelectedIndex){
+            Menu = 0
+            TempMaterial = This["materials",array][SelectedIndex,string]
+            if (TempMaterial != ""){
+                E:setMaterial(TempMaterial)
+                WildCard:setMaterial(TempMaterial)
+            } 
+            if (This:exists("color")){
+                hint(This["color",vector4]:toString(),4)
+                updateSliders(This["color",vector4])
+            }
+            closeSelCircle()
+        }
+        
+        function table:displayCircleMenu(){
+            Eye = Me:eye()
+            EyeAngs = Me:eyeAngles()
+            CenterPos = Me:shootPos() + Eye * SelCircleForward
+            
+            MinRange = CircleRadius * 0.8 - HoloScaleUnits:z() * 0.5
+            
+            CircleMats = This["materials", array]
+            
+            closeSelCircle()
+            
+            CircleMatCount = CircleMats:count()
+            
+#[            if (CircleMatCount == 1){
+                holoAlpha(1, 255)
+                holoScale(1, vec(0.5))
+                holoPos(1, CenterPos)
+                holoAng(1, EyeAngs)
+                holoMaterial(1, CircleMats[1,string])
+            } elseif (CircleMatCount > 1) {
+            if(CircleMatCount){
+                SizeModifier = CircleRadius/20
+                SelCirclePropScale = min(SizeModifier * 7/(CircleMatCount), SelCircleForward/100)
+                HoloScaleUnits = MaterialPropSize * SelCirclePropScale
+                
+                while(CircleMatCount > CircleHoloI & holoCanCreate()){
+                    CircleHoloI++
+                    holoCreate(CircleHoloI)
+                    holoModel(CircleHoloI,MaterialPropModel )
+                    holoColor(CircleHoloI, vec(255))
+                    holoAlpha(CircleHoloI, 0)
+                    holoDisableShading(CircleHoloI, 1)
+                    
+                } 
+                for(I = 1, CircleMatCount){    
+                    Percent = (I - 1)/CircleMatCount
+                    Ang = 360 * Percent
+                    
+                    VecAng = toWorldPosAng( 
+                        vec( 0, 0, CircleRadius), 
+                        ang(), 
+                        CenterPos, 
+                        EyeAngs:setRoll(Ang)
+                    )
+                    
+                    holoPos(I, VecAng[ 1, vector])
+                    holoAng(I, VecAng[ 2, angle] )
+                    holoMaterial(I, CircleMats[I, string])
+                    holoAlpha(I, 255)
+                    holoScale(I, vec(SelCirclePropScale))
+                }
+            }
+            if (This:exists("color")){
+                holoPos(200, CenterPos)
+                holoAng(200, quat(EyeAngs):up():toAngle())
+                holoColor(200, vec(This["color",vector4]))
+                holoScaleUnits(200, vec(MinRange * 2))
+                holoAlpha(200, 255)    
+            } 
+            
+        }
+        
+        ## Make Prop
+        function makeProp(Idx){
+            
+            Ang = 360 * Idx/MatCount
+            StartR = max(E:boxSize():x(),E:boxSize():y())*0.5 + 15
+            Prop = Props[Idx,entity] = propSpawn(
+                MaterialPropModel,  
+                E:toWorld(E:boxCenter() + vec(
+                    sin(Ang)* StartR,
+                    cos(Ang)* StartR, 
+                    0
+                )  ), 
+                E:toWorld(ang(0,-Ang,0)),
+                1
+            )
+            noCollideAll(Prop, 1)
+            noCollide(Prop, E)
+            
+            if (Idx == MatCount){
+                WildCard = Prop
+            }
+            local TempTable = table()
+            TempTable["function",string] = "materials"
+            LookupTable[Prop:id(),table] = TempTable
+            
+            Prop:propShadow(0)
+        }
+        
+        
+        ## Grid Functions
+#[        function updateGridSelection(){
+            CircleTargetProp = Props[PosVal, entity]
+            local TempMat = CircleTargetProp:getMaterial()
+            holoPos(300, CircleTargetProp:pos())
+            holoAng(300, CircleTargetProp:angles())
+            holoParent(300, CircleTargetProp)
+            setDisplay(TempMat)
+            
+        }
+        
+        function void reloadGrid(){
+            for(I = 1, MatCount){
+  
+                Prop = Props[I, entity]
+                
+                if (!Prop){
+                    makeProp(I)
+                }
+                
+                Prop:propManipulate(
+                    E:toWorld( E:boxCenter() + 
+                        vec(
+                            0, 
+                            -((I - 0.5) % Perimeter - Perimeter * 0.5) * SpacedMaterialPropSize:y(), 
+                            (floor((I - 1) / Perimeter) + 1) * SpacedMaterialPropSize:z() + 0
+                            
+                        )
+                    ),
+                    E:angles(),
+                    1,
+                    0,
+                    0
+                )
+                Prop:setMaterial(Materials[I, string])
+            }
+            
+            #updateGridSelection()
+            
+        }
+        function table getEntColorMaterial(Ent:entity){
+            local Table = table()
+            Table["ent",number] = Ent:id()
+            Lookup = LookupTable[Ent:id(),table]
+            if (Lookup){
+                Func = Lookup["function", string]
+                Table["is_choice_needed", number] = 0
+                switch(Func){
+                    case "materials",
+                        Table["materials", array] = array(Ent:getMaterial())
+                        break
+                    case "colors",
+                        break
+                    case "entity",
+                        Table["materials", array] = array(E:getMaterial())
+                        Table["color", vector4] = E:getColor4()
+                        break
+                }
+            } else {
+                TempMat = Ent:getMaterial()
+                TempSubMats = Ent:getMaterials()
+                if (TempMat){
+                    TempSubMats:unshiftString(TempMat)
+                }
+                
+                if (TempSubMats:count() == 1){
+                    Table["is_choice_needed", number] = 0
+                    Table["materials", array] = TempSubMats
+                } else {
+                    Table["is_choice_needed", number] = 1
+                    Table["materials",array] = TempSubMats
+                }
+                Table["color",vector4] = Ent:getColor4()
+            }
+            return Table
+        }
+        
+        function table getWorldMat(){
+            local Table = table()
+            Ranger = Me:eyeTrace()
+            Table["is_choice_needed", number] = 0
+            Table["materials", array] = array(Ranger:hitTexture())
+            return Table
+        }
+        function string getFunction(Ent:entity){
+            return LookupTable[Ent:id(),table]["function",string]
+        }
+        
+        
+        
+        function display(Mat:string, Col:vector4){
+            
+            if (MatMode){
+                DisplayProp:setMaterial(Mat)
+            }
+            if (ColorMode){
+                DisplayProp:setColor(Col)
+            } 
+            
+        }
+        
+        function toggleColor(){
+            ColorMode = !ColorMode
+        }
+        
+        function toggleMaterial(){
+            MatMode = !MatMode
+        }
+        
+
+        
+        
+        function void reloadMaterialArray(){
+            for (I = 1, Materials:count()){
+                if (Materials[I, string] == ""){
+                    Materials:remove(I)
+                }
+            }
+            Materials:pushString("")
+            MatCount = Materials:count()
+            Perimeter = ceil(sqrt(MatCount))
+        }
+        
+        
+        
+        function void paste(Ent:entity){
+            if (!getFunction(Ent)){
+                Ent:setMaterial(E:getMaterial())
+                Ent:setColor(E:getColor4())
+            }    
+        }
+        function void resetColorMat(Ent:entity){
+            Func = getFunction(Ent)
+            if (Func == "colors"){
+                updateSliders(vec4(255))
+            } elseif (!Func){
+                Ent:setMaterial("")
+                Ent:setColor(vec4(255))
+            }
+        }
+
+        
+        function helpMenu(Num:number){
+            Grey = vec(190)
+            White = vec(255)
+            BlackBerry = vec(77,1,53)
+            Gold = hsv2rgb(40,1,1)
+            
+            HelpMax = 2
+            print(" ")
+            Num = Num?:1
+            printColor(Gold, "Help Menu " + Num + "/" + HelpMax)
+            if (!Num | Num == 1){
+                printColor(BlackBerry,"Must be using Wiremod Remote Control!", Grey, " Weapons > Wiremod > Remote Control")
+                fancyPrint("Copy Material: ", "Right Click")
+                fancyPrint("Paste Material: ", "Left Click")
+                fancyPrint("Reset Material: ", "R")
+                fancyPrint("Print Material Name: ", "Numpad Enter")
+                printColor(Grey, "Say !help 2 for more information!")
+            } elseif (Num == 2){
+                printColor("Chat Commands:")
+                fancyPrint("Save Material:", " !save")
+                fancyPrint("Display Material: ","[Material Name]\\")
+                printColor(Grey, "    example: models/debug/debugwhite\\")
+            }
+        }
+        
+        function menuButton(Key:string, State){
+            
+            
+        }
+        
+        function toolButton(Key:string, State){
+            
+        }
+        
+        function globalButton(Key:string, State){
+            if (Key == PrintBtn){
+                if (State = 1){
+                    
+                }
+            }
+        }
+        
+        
+        
+        #File stuff
+        FileName = "FavoriteMaterials.txt"
+        fileLoad(FileName)
+
+        HN = 1
+    } #End First
+    
+    if (fileClk(FileName)){
+        FileString = fileRead()
+        Materials = FileString:explode("\n")
+        reloadMaterialArray()
+    }
+    ## Makes a prop for every material
+    
+    if (MatCount){
+        while (propCanCreate()){
+            PN++
+            XLeftRight = 60
+            if (PN <= 4){
+                Prop = Slider[PN, entity] = propSpawn("models/sprops/rectangles_thin/size_1_5/rect_6x60x1_5.mdl", 
+                    E:toWorld(ang(90,0,0)), 1
+                )
+                Prop:propShadow(0)
+                if (PN== 1){
+                    BoxSize = Slider[PN, entity]:boxSize() 
+                    BoxCenter = Slider[PN, entity]:boxCenter()
+                }
+                
+                Prop:setPos(
+                    E:toWorld(
+                        E:boxCenter() +
+                        vec(
+                            0,
+                            -(BoxSize:y() * (-PN + 2.5) * 0.92 + 11 + 0.5 * SpacedMaterialPropSize:x() * Perimeter + 11),
+                            max(SpacedMaterialPropSize:x() * Perimeter * 0.5, BoxSize:x() * 0.6)
+                        ) + E:boxCenter()
+                    )
+                )
+                
+                Prop:setMaterial("debug/debugdrawflat")
+                noCollideAll(Prop, 1)
+                #noCollide(E, Prop)
+                local TempTable = table()
+                TempTable["function",string] = "colors"
+                TempTable["idx", number] = PN
+                LookupTable[Prop:id(),table] = TempTable
+                
+                
+                
+                Holo = Holos[PN, entity] = holoCreate(PN + 900)
+                holoAng(PN + 900, Prop:angles())
+                holoMaterial(PN + 900, "debug/debugdrawflat")
+                holoModel(PN + 900, "models/holograms/hq_rcube.mdl")
+                holoScaleUnits(PN + 900, vec(1,BoxSize:y() * 0.92,1))
+                holoColor(PN + 900, vec((PN % 2)*35+220))
+                holoParent(PN + 900,Prop)
+            } elseif (PN ==  5){
+                
+                #Half Circle Prop
+                DisplayProp = propSpawn("models/sprops/misc/domes/size_4/dome_48x24.mdl", E:toWorld( E:boxCenter() + 
+                        vec(
+                            0, 
+                            (0.5 * SpacedMaterialPropSize:x() * Perimeter + 30), 
+                            0.5 * SpacedMaterialPropSize:z() * Perimeter + E:boxSize():z() * 0.5
+                            
+                        )
+                    ), E:toWorld(ang(90,-90,90)), 1)
+                    DisplayProp:setPos(DisplayProp:toWorld(vec(0,0,-DisplayProp:boxSize():z() * 0.5)))
+                noCollideAll( DisplayProp,1)
+                TempTable = table()
+                TempTable["function",string] = "displayProp"
+                LookupTable[Prop:id(),table] = TempTable
+            } elseif (PN <= 7){
+                propSpawn(  
+                    MaterialPropModel, 
+                    DisplayProp:toWorld(
+                        vec(
+                            sign(PN - 6.5) * MaterialPropSize:z() * 0.8,
+                            -DisplayProp:boxSize():y() * 0.5 - MaterialPropSize:y(),
+                            0
+                            )
+                        ), 
+                        E:toWorld(ang(90,0,90)), 
+                        1
+                    )
+                    TempTable["function",string] = 6 ? "toggleColor" : "toggleMat"
+                    LookupTable[Prop:id(),table] = TempTable
+            } else {
+                if(HN <= MatCount & propCanCreate()){
+                    makeProp(HN)
+                    HN++
+                } else {
+                    Loaded = 1
+                    updateSliders(vec4(255))
+                    reloadGrid()
+                    KeyTable = table()
+                    helpMenu(1)
+                    break
+                }
+            }
+        } 
+    }
+} else {#If files is loaded
+    if (keyClk()){
+        Key = keyClkPressed()
+        KeyTable[Key, number] = KeyTable[Key, number] + abs(keyClk(Me))
+    } elseif (fileClk(FileName)){
+        if (fileCanWrite()){
+            hint("Saved!", 4)
+        } else {
+            fileWrite(FileName,FileString)
+        }
+            
+    }
+    foreach(Key, ButtonState:number = KeyTable){
+        hint(Key + " | " +  KeyTable[Key, number], 2)
+        Cannon = Me:weapon():type() == "remotecontroller" 
+        if (Menu){
+            if (Cannon){
+                 menuButton(Key, ButtonState)
+            } else {
+            
+            }
+        } else {
+            if (Cannon){
+                toolButton(Key, ButtonState)
+            }
+            
+        }
+        globalButton(Key, ButtonState)
+        if (ButtonState == 1){
+               KeyTable[Key, number] = 2 
+        }
+        if (ButtonState >= 3){
+            KeyTable:remove(Key)
+        }
+    }  
+    runOnTick( KeyTable:count() ? 1 : 0)
+    
+        
+        
+    
+    
+    #if E2 is moved, reload grid.
+    EHeld = E:isPlayerHolding()
+    if(changed(EHeld) & !EHeld){
+        reloadGrid()
+        E:propFreeze(1)
+    }
+}
+#[    
+    
+    
+    #Print stuff
+    Print = Me:keyPressed("pad_enter")
+    if (changed(Print) & Print){
+        fancyPrint("Material: ", E:getMaterial())
+        fancyPrint("HSV: ", "(" + round(Hue) + ", " + round(Saturation,2) + ", " + round(Value,2) + ")")
+        fancyPrint("RGB: ", "(" + RGB:x() + ", " + RGB:y() + ", " + RGB:z() + ")")
+        fancyPrint("Alpha: ", round(Alpha):toString())
+    }
+    
+
+    if (Cannon){
+        AimEnt = Me:aimEntity()
+        AimEntChange = changed(AimEnt)
+        
+        PasteButton = Me:keyAttack1()
+        PasteButtonChange = changed(PasteButton)
+        
+        CopyButton = Me:keyAttack2()
+        CopyButtonChange = changed(CopyButton)
+        
+        ResetButton = Me:keyPressed("R")
+        ResetButtonChanged = changed(ResetButton)
+        
+        if (!ResetButtonChanged & ResetButton){
+            resetColorMat(AimEnt)
+            
+        }
+        
+        if (PasteButtonChange & !PasteButton){
+            paste(AimEnt)
+        }
+        
+        if (Menu){
+            Plane = rayPlaneIntersection(Me:shootPos(), Me:eye(), CenterPos, -Eye)
+            AimToPlaneVec2 = vec2( shiftL(toLocal(
+                Plane,
+                ang(),
+                CenterPos,
+                EyeAngs 
+            )))
+            
+            SelectionDistance = AimToPlaneVec2:length()
+    
+            MaxRange = CircleRadius * 2
+            
+            LastSelectedMatIdxFromCircle = SelectedMatIdxFromCircle
+            if ( inrange(SelectionDistance, MinRange, MaxRange)){
+                holoAlpha(100, 255)
+                SelectAng = AimToPlaneVec2:rotate(-90):toAngle()
+                SelectAng = SelectAng + (sign(SelectAng) == -1) * 360
+                
+                
+                SelectedMatIdxFromCircle = round(CircleMatCount * SelectAng/360) % CircleMatCount + 1
+                
+                SelectedEnt = holoEntity(SelectedMatIdxFromCircle )
+                
+                if (LastSelectedMatIdxFromCircle != SelectedMatIdxFromCircle){
+                    holoScale(LastSelectedMatIdxFromCircle, vec(SelCirclePropScale))
+                    holoScale(SelectedMatIdxFromCircle, vec(SelCirclePropScale * 1.3))
+                    #hint(returnSelectionRingMaterial(SelectedMatIdxFromCircle), 2)
+                    
+                    holoModel(100, "models/holograms/hq_cone.mdl")
+                    holoPos(100, SelectedEnt:toWorld(vec(0,0,-HoloScaleUnits:z() * 0.7)))
+                    holoAng(100, SelectedEnt:toWorld(ang(0,90,0)))
+                    holoScale(100, vec(SelCirclePropScale * 0.3))
+                }
+                
+                
+    
+            } else {
+                holoScale(LastSelectedMatIdxFromCircle, vec(SelCirclePropScale))
+                SelectedMatIdxFromCircle = 0
+                
+                
+                if (SelectionDistance < MinRange){
+                    holoAlpha(100, 100)
+                    holoModel(100, "models/holograms/hq_sphere.mdl")
+                    holoPos(100, Plane)
+                    holoScale(100, vec(SelCirclePropScale * 0.1))
+                } elseif (SelectionDistance > MaxRange){
+                    holoScale(LastSelectedMatIdxFromCircle, vec(SelCirclePropScale))
+                    holoAlpha(100, 0)
+                }
+            }  
+            if (!CopyButton & CopyButtonChange ){  
+                if (!SkipSelection){
+                    ColorMatTable:makeCircleSelection(SelectedMatIdxFromCircle)
+                }
+            }
+        } else {
+            if (CopyButton){
+                if (CopyButton & CopyButtonChange){
+                    Idx = LookupTable[ AimEnt:id(),table]["idx", number]
+                } elseif (Idx) {
+                    Prop = Slider[Idx,entity]
+                    WorldVec = rayPlaneIntersection(
+                        Me:shootPos(), 
+                        Me:eye(), 
+                        Prop:toWorld(
+                            vec(0,0,BoxSize:z() * 0.5)
+                        ), 
+                        Prop:up() 
+                    )
+                    ClampVal = BoxSize:x() * 0.5
+                    RawVal =  clamp(Prop:toLocal(WorldVec):x(), -ClampVal, ClampVal),  
+                    Percent = RawVal/BoxSize:x() + 0.5
+                    holoPos(900 + Idx, Prop:toWorld(vec(RawVal,0,BoxSize:z() * 0.5)))
+                    
+                    switch (Idx){
+                        case 1,
+                            Hue = 360 * Percent
+                            
+                            break
+                        case 2,
+                            Saturation = 1-Percent
+                            
+                            break
+                        case 3,
+                            Value = 1-Percent
+                            
+                            break
+                        case 4,
+                            Alpha = 255 * (1 - Percent)
+                            break
+                    }
+                    updateColor()      
+                } else{
+                    if (AimEnt){
+                        ColorMatTable = getEntColorMaterial(AimEnt):clone()
+                    } else {
+                        ColorMatTable = getWorldMat()
+                    }
+                    ColorMatTable:displayCircleMenu()
+                    
+                }   
+            } elseif (CopyButtonChange){
+                if (!ColorMatTable["is_choice_needed", number]){
+                    ColorMatTable:makeCircleSelection(1)
+                } else {
+                    Menu = 1
+                }
+            }
+        
+        }
+
+    }
+}
+
+        
+        
+        ]#
+        
+#[        if (changed(AimEnt) & AimEnt){
+            #PropFuncArr = returnPropFunction(AimEnt)
+            PropFunc = PropFuncArr[1, number]
+            Idx = PropFuncArr[2, number]
+            
+            switch(PropFuncArr[1, number]){
+                
+                case 0,
+                    hint("No Function",2)
+                    break
+                case 1,
+                    hint("Function: Materials",2)
+                    break
+                case 2,
+                    hint("Function: Color",2)
+                    break
+                }
+        }
+    }
+        
+    
+}    
+]#
+
+#}
+#[} else { #If files is loaded
+    
+    
+    
+
+    
+    
+        
+        PasteButton = Me:keyAttack1()
+        PasteButtonChange = changed(PasteButton)
+        
+        CopyButton = Me:keyAttack2()
+        CopyButtonChange = changed(CopyButton)
+        
+        ResetButton = Me:keyPressed("R")
+        ResetButtonChanged = changed(ResetButton)
+        
+        if (!ResetButtonChanged & ResetButton){
+            AimEnt:setMaterial("")
+        }
+        
+        if (PasteButtonChange & !PasteButton){
+            if (!returnPropFunction(AimEnt)[1, number]){
+                AimEnt:setMaterial(DisplayProp:getMaterial())
+            }
+        }
+        
+        if (SelectMode){
+            
+            
+            
+        } else {
+            if (CopyButton){
+                closeSelCircle()
+
+                #Get list of materials
+                local ChangedMat = changed(returnSelectionRingMaterial(1))
+
+                if (AimEnt){  
+                    
+                    if (AimEnt != CircleTarget & !changed(CircleTarget:getMaterial())){
+                        CircleTarget = AimEnt
+                        GridEnt = returnPropFunction(AimEnt)
+                        if (GridEnt[1, number] == 2){
+                            CircleMaterialList = array(returnSelectionRingMaterial(GridEnt[2, number]))
+                            setGridSelection(GridEnt[2, number])
+                            SkipSelection = 1
+                            CircleMatCount = 1
+                        } else {
+                            SkipSelection = 0
+                            CircleMaterialList = CircleTarget:getMaterials()
+                            TempMat = CircleTarget:getMaterial()
+                            
+                            if (TempMat){
+                                CircleMaterialList:unshiftString(TempMat)
+                            }
+                            CircleMatCount = CircleMaterialList:count()
+                            #hint(CircleTarget:toString() + " { " + CircleMatCount + " } ", 4)
+                        }
+                            
+                        
+                        
+                        
+                        
+                        while(CircleMatCount > CircleHoloI & holoCanCreate()){
+                            CircleHoloI++
+                            holoCreate(CircleHoloI)
+                            holoModel(CircleHoloI,MaterialPropModel )
+                            holoColor(CircleHoloI, vec(255))
+                            holoAlpha(CircleHoloI, 0)
+                            
+                        } 
+                    }
+                } else {
+                    SkipSelection = 0
+                    CircleTarget = noentity()
+                    Ranger = Me:eyeTrace()
+                    CircleMaterialList = array(Ranger:hitTexture())
+                    CircleMatCount = CircleMaterialList:count()
+                }              
+                
+                
+                if (!SkipSelection){
+                    
+                    
+                    
+                    
+                
+                    #Display Materials
+                    
+                    
+
+            } elseif (CopyButtonChange){
+                if(CircleMatCount == 1){
+                    makeCircleSelection(1)
+                    hintGridSelectedProp()
+                } elseif (CircleMatCount > 1) {
+                    SelectMode = 1
+                }
+            }
+        }
+    } elseif (changed(Cannon)){
+        closeSelCircle()
+    }
+    
+    
+    if (chatClk(Me)){
+        Prefix = "!"
+        Said = lastSaid()
+        if (Said:sub(1,1) == Prefix){
+            SaidArr = Said:sub(2):lower():trim():explode(" ")
+            switch (SaidArr[1, string]){
+                case "save",
+                    hideChat(1)
+                    TempString = Props[MatCount, entity]:getMaterial()
+                    if (TempString){
+                        for(I = 1, MatCount){
+                            if (TempString == Materials[I, string]){
+                                Skip = 1
+                                hint(TempString + " Already Added", 4)
+                                break
+                            }
+                        }
+                        if (!Skip){
+                            FileString = FileString + Props[MatCount, entity]:getMaterial() + "\n"
+                            Materials = FileString:explode("\n")
+                            hint("Saving...", 1)
+                            fileWrite(FileName,FileString)
+                            reloadMaterialArray()
+                            reloadGrid()
+                            setGridSelection(MatCount)
+                        }
+                    } else {
+                        hint("No Material Present", 4)
+                    }
+                    break
+                case "help",
+                    hideChat(1)
+                    helpMenu(SaidArr[2, string]:toNumber())
+                    break
+            }
+        } elseif (Said[Said:length()] == "\\"){
+            hideChat(1)
+            SaidBit = Said:sub(1, Said:length() - 1)
+            print(SaidBit)
+            Props[MatCount,entity]:setMaterial(SaidBit)
+            setGridSelection(0)
+        }
+    }
+}
+]#

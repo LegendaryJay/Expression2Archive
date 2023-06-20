@@ -1,0 +1,434 @@
+@name Diag (remake)
+@inputs EGP:wirelink
+@outputs Test:entity BoxCenter:vector
+@persist DeleteBtn DeleteBtnVal LockBtn LockBtnVal FreezeBtn FreezeBtnVal
+@persist LockTar HideHolos
+@persist [Me Target E Prop]:entity Players:array [BlackBerry HoloOriginalBox]:vector 
+@persist ButtonTime HoloCount SuicideMode  OverlayScale
+@persist EGP:wirelink NumEnterVal HintTime ButtonHoldTime
+@persist ID Skin Owner:entity [Model]:string [BoxCenter BoxSize]:vector Stats
+@persist HoloBoxChange:vector HoloBoxTime HoloBoxChangeCount HoloBoxSize:vector BoxSizeDebug:vector  TargetHoloSize:vector HoloBoxSpeed
+@persist Ticker
+@trigger 
+@model models/maxofs2d/cube_tool.mdl
+@autoupdate
+
+BoxSize = Target:boxSize()
+BoxCenter = Target:boxCenter()
+    
+#########
+# Stats #
+#########
+Prop = Me:aimEntity()
+NumPlayers = numPlayers()
+
+function void updateStats(){
+    
+    MyPos = Me:pos()
+    MyAng = Me:angles()
+    AimPos = Me:aimPos()
+    
+    Name = Target:name()
+    SteamID = Target:steamID()
+    TeamID = Target:team()
+    Team = TeamID:teamName()
+    TeamColor = teamColor(TeamID)
+    Tool = Target:tool()
+    Weapon = Target:weapon()
+    
+    MySteamID = Me:steamID()
+    MyModel = Me:model()
+    MyTool = Me:tool()
+    MyWeapon = Me:weapon()
+    
+     
+    Class = Target:type()
+    Mat = Target:getMaterial()
+    Color = Target:getColor()
+    Alpha = Target:getAlpha()
+    Weight = Target:mass()
+    
+    Pos=Target:pos()
+    Ang=Target:angles()
+}
+
+#######################
+# Targeting and Stats #
+#######################
+function vector holoToTarget(Scale){
+    return Target:toWorld(
+        vec(
+            0,
+            0,
+            -BoxSize:z()*((0.87384895752935)/2)*Scale
+        ) + BoxCenter
+    )
+}
+
+function void fixedHoloScale(I, Vector:vector){
+    holoScale(I, Vector/HoloOriginalBox)
+}
+
+function void setTarget(Thing:entity) {
+    Target = Thing
+    
+    ID = Target:id()
+    Owner = Target:owner()
+    Model = Target:model()
+    Skin = Target:getSkin()
+    
+    BoxSize = Target:boxSize()
+    BoxCenter = Target:boxCenter()
+    
+    TargetHoloSize = BoxSize * OverlayScale
+    
+    HoloSizeDiff = (TargetHoloSize - HoloBoxSize)
+    HoloBoxChange = HoloSizeDiff:normalized()
+    HoloSizeDiffLength = HoloSizeDiff:length()
+    
+    HoloBoxSpeed = HoloSizeDiff:length()/25
+    
+    HoloBoxChangeCount = HoloBoxTime
+    Ang = Target:angles()
+    
+    holoPos(1, holoToTarget(OverlayScale))
+    holoAng(1,Ang)
+    
+    holoPos(2,holoToTarget(OverlayScale))
+    holoAng(2,Ang)
+    
+    holoPos(3, Target:boxCenterW() + Target:forward()*(BoxSize:x()*0.5 + 2.5))
+    holoAng(3,Ang)
+    
+    holoPos(4, Target:pos())
+    holoAng(4, Ang)
+    
+    holoPos(5, Target:boxCenterW())
+    holoAng(5, Ang)
+    
+    for (HoloI = 1,HoloCount){
+        holoParent(HoloI,Target)
+        holoVisible(HoloI,Me,1)
+    }
+    
+    holoScale(6, vec(BoxSize:x() + BoxSize:y() + BoxSize:z())*0.01)
+    holoScale(7, vec(BoxSize:x() + BoxSize:y() + BoxSize:z())*0.01)
+    holoScale(8, vec(BoxSize:x() + BoxSize:y() + BoxSize:z())*0.01)
+    
+    timer("holoChangeScale",5)
+}
+BoxSize = Target:boxSize()
+BoxCenter = Target:boxCenter()
+if (changed(BoxSize)){
+    timer("holoChangeScale",5)
+}
+if (clk("holoChangeScale")){
+    local Distance = (TargetHoloSize):distance(HoloBoxSize)
+    if (Distance > 0.3) {
+        for (I=1,2){
+            HoloBoxSize += clamp((TargetHoloSize - HoloBoxSize) * 0.07, -HoloBoxSpeed, HoloBoxSpeed)
+            fixedHoloScale(I,HoloBoxSize)
+        }
+        timer("holoChangeScale",1)
+    } else {
+        for (I=1,2){
+            HoloBoxSize = TargetHoloSize
+            fixedHoloScale(I,HoloBoxSize)
+        }
+    }
+
+    BoxSizeDebug = HoloBoxSize
+}
+
+function void resetHolos(){
+    for (CreateI = 1, HoloCount){
+        if (!holoEntity(CreateI)){
+            holoCreate(CreateI)
+            holoShadow(CreateI,0)
+            holoDisableShading(CreateI,1)
+            holoVisible(CreateI, Players, 0)
+        }
+    }
+    RefreshI = 1
+    HoloBoxSize = Target:boxSize() * OverlayScale
+    holoMaterial(RefreshI,"models/debug/debugwhite")      
+    holoModel(RefreshI,"models/hunter/blocks/cube8x8x8.mdl")  
+    fixedHoloScale(RefreshI,HoloBoxSize)
+    holoAlpha(RefreshI,10)
+    RefreshI++
+    
+    holoMaterial(RefreshI,"hlmv/debugmrmwireframe")
+    holoModel(RefreshI,"models/hunter/blocks/cube8x8x8.mdl")
+    fixedHoloScale(RefreshI,HoloBoxSize)
+    holoAlpha(RefreshI,50)
+    RefreshI++
+    
+    holoModel(RefreshI,"models/sprops/misc/origin.mdl")
+    holoScale(RefreshI,vec(1.5))
+    holoAlpha(RefreshI,150)
+    RefreshI++
+    
+    holoMaterial(RefreshI,"hlmv/debugmrmwireframe")
+    holoModel(RefreshI,"models/editor/axis_helper.mdl")
+    holoColor(RefreshI, vec(255, 160, 160))
+    holoScale(RefreshI,vec(0.7))
+    holoAlpha(RefreshI,170)
+    RefreshI++
+    
+    holoMaterial(RefreshI,"hlmv/debugmrmwireframe")
+    holoModel(RefreshI,"models/editor/axis_helper_thick.mdl")
+    holoColor(RefreshI, vec(160, 160, 255))
+    holoScale(RefreshI,vec(0.75))
+    holoAlpha(RefreshI,170)
+    RefreshI++
+    
+    #PitchYawRoll
+    holoMaterial(RefreshI,"models/debug/debugwhite")      
+    holoModel(RefreshI,"models/sprops/misc/alphanum/alphanum_p.mdl")  
+    holoColor(RefreshI, vec(255, 0, 0))
+    holoScale(RefreshI,vec(2))
+    holoAlpha(RefreshI,30)
+    RefreshI++
+    
+    holoMaterial(RefreshI,"models/debug/debugwhite")      
+    holoModel(RefreshI,"models/sprops/misc/alphanum/alphanum_y.mdl")  
+    holoColor(RefreshI, vec(0, 0, 255))
+    holoScale(RefreshI,vec(2))
+    holoAlpha(RefreshI,30)
+    RefreshI++
+    
+    holoMaterial(RefreshI,"models/debug/debugwhite")      
+    holoModel(RefreshI,"models/sprops/misc/alphanum/alphanum_r.mdl")  
+    holoColor(RefreshI, vec(0, 255, 0))
+    holoScale(RefreshI,vec(2))
+    holoAlpha(RefreshI,30)
+    RefreshI++
+    
+    
+    stoptimer("holoChangeScale")
+}
+Ticker += 0.7
+Cos = cos(Ticker)
+Sin = sin(Ticker)
+
+Yaw = vec(Cos,Sin,0)
+Pitch = vec(Sin,0,Cos)
+Roll = vec(0, Cos, Sin)
+
+AngleThing = -vec2(Sin, Cos):toAngle()
+
+Test = holoEntity(6)
+holoPos(6, Target:toWorld((Pitch)*BoxSize*0.7 + BoxCenter))
+holoAng(6, Target:toWorld(ang(0,90,AngleThing)))
+
+holoPos(7, Target:toWorld((Yaw)*BoxSize*0.7 + BoxCenter))
+holoAng(7, Target:toWorld(ang(0, AngleThing, 0)))
+
+holoPos(8, Target:toWorld((Roll)*BoxSize*0.7+ BoxCenter))
+holoAng(8, Target:toWorld(ang(0,0, 90 + AngleThing)))
+########
+# Misc #
+########
+function array allProps(){
+    findIncludePlayerProps(Me)
+    findInSphere(Me:pos(),90000)   
+    
+    return findToArray()
+}
+
+function string successHint(Test:number, True:string, False:string){
+    hint( (Test ? True : False), HintTime)
+}
+
+
+##########
+# First #
+#########
+if (first()|dupefinished()){
+    
+    runOnTick(1)
+    runOnChat(1)
+    
+    runOnPlayerConnect(1)
+    runOnPlayerDisconnect(1)
+    Me = owner()
+    E = entity()
+    
+    BlackBerry = vec(77,1,53)
+    HoloCount = 8
+    OverlayScale = 1.005
+    HintTime = 2
+    ButtonHoldTime = 25
+    HoloBoxTime = 20
+    
+    
+    HoloOriginalBox = vec(380.10003662109,380.10000610352,380.10000610352)
+    
+    Players = players()
+    
+    
+    Target = E
+    resetHolos()
+    setTarget(E)
+    
+}
+
+#Updatea every Tick
+if (!holoEntity(1)){
+    resetHolos()
+}
+
+if (playerConnectClk()){
+    local NewPlayer = lastConnectedPlayer()
+    hint(NewPlayer:name() + " Connected", 20)
+    Players = players()
+}
+if (playerDisconnectClk()){
+    local LastPlayer = lastDisconnectedPlayer()
+    hint(LastPlayer:name() + " Disconnected", 20)
+    Players = players()
+}
+
+############
+# Controls #
+############
+LockBtn = Me:keyPressed("backspace")
+DeleteBtn = Me:keyPressed("Delete")
+FreezeBtn = Me:keyPressed("pad_Enter")
+PrintBtn = Me:keyPressed("pad_0")
+
+#Delete
+if (DeleteBtnVal){
+    DeleteBtnVal++
+    if (DeleteBtnVal > ButtonHoldTime){
+        successHint(0,"All Props Deleted", "All Props not Deleted")
+        DeleteBtnVal = 0
+    }
+}
+if(changed(DeleteBtn)){
+    if (DeleteBtn){
+        DeleteBtnVal = 1
+    } elseif (DeleteBtnVal){
+        if(Target != E){
+            for (HoloI = 1,HoloCount){
+                holoUnparent(HoloI)
+                holoVisible(HoloI,Me,0)
+            }
+            Target:propDelete()
+            successHint(!Target, "Prop Deleted", "Prop Not Deleted")
+        } elseif (SuicideMode == 0) {
+            hint("Don't kill me!",HintTime)
+            SuicideMode = 1
+            timer("suicide",1000)
+        } else {
+            hint("Bastard!",HintTime)
+            Target:propDelete()
+        }
+        DeleteBtnVal = 0
+    }
+}
+if (clk("suicide")){
+    SuicideMode=0
+    hint("Phew",HintTime)
+}   
+
+#Lock
+if (LockBtnVal){
+    LockBtnVal++
+    if (LockBtnVal > ButtonHoldTime){
+        HideHolos = !HideHolos
+        for (I=1,HoloCount){
+            holoVisible(I, Me, !HideHolos)
+        }
+        successHint(!HideHolos,"All Holos Hidden", "Holos Shown")
+        LockBtnVal = 0
+    }
+}
+if(changed(LockBtn)){
+    if (LockBtn){
+        LockBtnVal = 1
+    } elseif (LockBtnVal){
+        LockTar = !LockTar
+        LockBtnVal = 0
+    }
+}
+if (!LockTar & Prop & Prop != Target) {
+        setTarget(Prop)
+}
+
+# Freeze
+if (FreezeBtnVal){
+    FreezeBtnVal++
+    if (FreezeBtnVal > ButtonHoldTime){
+        FreezeArray = allProps()
+        foreach (K, Item:entity = FreezeArray){
+            Item:propFreeze(1)
+        }
+        hint("Freeze All",HintTime)
+        FreezeBtnVal = 0
+    }
+}
+if(changed(FreezeBtn)){
+    if (FreezeBtn){
+        FreezeBtnVal = 1
+    } elseif (FreezeBtnVal){
+        Target:propFreeze(!Target:isFrozen())
+        successHint(Target:isFrozen(), "Target Frozen", "Target Not Frozen")
+        FreezeBtnVal = 0
+    }
+}
+if (changed(PrintBtn) & PrintBtn){
+    White=vec(255,255,255)
+    BlackBerry=vec(77,1,53)
+    updateStats()
+    if (Target:type()=="player"){
+        printColor(BlackBerry, "Player Name: ",White, Name)
+        printColor(BlackBerry, "Player SteamID: " ,White, SteamID)
+        printColor(BlackBerry, "Player Team: ",TeamColor, Team + " [" + TeamID + "]")
+        printColor(BlackBerry, "Player Model: " ,White, Model)
+        if (Tool){
+            printColor(BlackBerry,"Player Tool: ",White, Tool)
+        } elseif ( Weapon ) {
+            printColor(BlackBerry,"Player Weapon: ",White, Weapon:toString())
+        }
+        print("")
+        printColor(BlackBerry, "Player Position: " ,White, toString(round(Pos,2)))
+        printColor(BlackBerry, "Player Angle: " ,White, toString(round(Ang,2)))
+        printColor(BlackBerry, "Player Eyes: " ,White, toString(round(Target:eye(),4)))
+    }
+    elseif (Target==entity()){
+        printColor(BlackBerry,"My SteamID: ",White, MySteamID)
+        printColor(BlackBerry,"My Model: ",White, MyModel)
+        if (MyTool){
+            printColor(BlackBerry,"My Tool: ",White, MyTool)
+        } elseif ( MyWeapon ) {
+            printColor(BlackBerry,"My Weapon: ",White, MyWeapon:toString())
+        }
+            
+        printColor(BlackBerry,"My Position: " ,White, toString(round(MyPos,2)))
+        printColor(BlackBerry,"My Angle: " ,White, toString(round(MyAng,2)))
+        printColor(BlackBerry,"My Eyes: " ,White, toString(round(Me:eye(),4)))
+    }
+    else {
+        printColor(BlackBerry,"Target Identity: " ,White, Class + " [" + ID + "] \"" + Model + "\"")
+        printColor(BlackBerry,"Target Owner: " ,TeamColor, Owner)
+        if (Mat){
+            printColor(BlackBerry,"Target Material: " ,White, Mat)
+        }
+        printColor(BlackBerry,"Target Color: " ,White, Color + " [" + Alpha + "]")
+        printColor(BlackBerry,"Target Weight: " ,White, Weight)            
+        
+        printColor(BlackBerry, "Target Box Size: " ,White, toString(round(BoxSize,4)))
+        if (BoxCenter != vec()){
+            printColor(BlackBerry, "Target Box Center: " ,White, toString(round(BoxCenter,4)))
+        }
+        printColor(BlackBerry, "Target Position: " ,White, toString(round(Pos,2)))
+        printColor(BlackBerry, "Target Angle: " ,White, toString(round(Ang,2)))
+    }
+}
+
+LastSaid = lastSaid()
+if (chatClk() & changed(LastSaid) & LastSaid[1] == "!" | LastSaid[1] == "/"){
+    Guy=lastSpoke()
+    printColor(teamColor(Guy:team()), Guy:name() ,vec(255), ": " + LastSaid)
+}

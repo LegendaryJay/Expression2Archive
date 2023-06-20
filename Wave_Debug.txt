@@ -1,0 +1,50 @@
+@name Wave Debug
+@inputs 
+@outputs PropHeight PropVel
+@persist Run Ticker [Prop E DebugProp]:entity Origin:vector PropHeight Decay 
+@trigger 
+
+if (Run){
+    
+    Holding = Prop:isPlayerHolding()
+    HoldChange = changed(Holding)
+    PropHeight = Prop:pos():z() - Origin:z()
+    
+    if (Holding){
+        Prop:propFreeze(0)
+        Prop:setPos(Origin:setZ(Prop:pos():z()))
+    } elseif (HoldChange) {
+        PropVel = 0
+        Prop:propFreeze(1)
+    } else {
+        PropVel = PropVel * Decay - PropHeight * 0.005
+        Prop:setPos( Origin + vec( 0, 0,PropHeight + PropVel) )
+    }
+    HoloVel = PropVel * Decay - PropHeight * 0.005
+    holoPos(2, Origin + vec( 0, 0,PropHeight + PropVel))
+} else {
+    if (first()){
+        Decay = 0.99
+        
+        runOnTick(1)
+        E = entity()
+        E:propFreeze(1)
+        
+        Origin = E:pos() + vec(0,0,100)
+        
+        propSpawnUndo(0)
+        Prop = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", Origin, ang(), 1)
+        slider(Prop, vec(), E, vec(), 0)
+        
+        DebugProp = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl",1)
+        
+        holoCreate(1)
+        holoModel(1,"models/sprops/rectangles/size_2_5/rect_18x18x3.mdl")
+        holoScale(1, vec(1, 1, 0))
+        holoPos(1, Origin)
+        
+        holoCreate(2)
+        
+        Run++
+    }
+}

@@ -1,0 +1,46 @@
+@name 
+@inputs 
+@outputs Thing:entity I Dist
+@persist [Thing Push]:entity I
+@trigger 
+runOnTick(1)
+runOnLast(1)
+if (!Push){
+    Push= propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl",owner():toWorld(vec(0,0,100)),0)
+    Push:propNotSolid(1)
+}
+if (findCanQuery()){
+    findIncludeModel("models/props_c17/FurnitureWashingmachine001a.mdl")
+    findIncludeClass("vehicle")
+    findInSphere(owner():boxCenterW(),400)
+    Thing=find()
+}
+Dist=(owner():boxCenterW()-Thing:pos()):length()
+if (Thing & Dist<400){
+    I++
+    if (I<5){
+        Push:propNotSolid(0)
+        Push:setMass(Thing:mass())
+    }
+    elseif (I<10){
+        Push:setPos(Thing:nearestPoint(owner():boxCenterW()))
+        hint("!",2)
+    }
+    elseif (I<15){
+        Push:applyForce((-Push:pos()+Thing:boxCenterW())*5000-Push:vel())
+    }
+    else {
+        I=0
+        
+        
+    }
+}
+else {
+    hint("Fail",1)
+    I=0   
+    Push:applyForce((owner():toWorld(vec(0,0,100))-Push:pos())*50-Push:vel()*Push:mass())
+    Push:propNotSolid(1)
+    Push:setMass(1)
+}
+    
+if (last()){Push:propDelete()}

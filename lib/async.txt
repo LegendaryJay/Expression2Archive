@@ -1,0 +1,26 @@
+if(first()){
+    function void async(T, F:string)            { timer(vonEncode(array(randint(1e9), F)), T) }
+    function void async(T, F:string, X:number)  { timer(vonEncode(array(randint(1e9), F, "n", X)), T) }
+    function void async(T, F:string, X:vector2) { timer(vonEncode(array(randint(1e9), F, "xv2", X)), T) }
+    function void async(T, F:string, X:vector)  { timer(vonEncode(array(randint(1e9), F, "v", X)), T) }
+    function void async(T, F:string, X:vector4) { timer(vonEncode(array(randint(1e9), F, "xv4", X)), T) }
+    function void async(T, F:string, X:entity)  { timer(vonEncode(array(randint(1e9), F, "e", X)), T) }
+    function void async(T, F:string, X:string)  { timer(vonEncode(array(randint(1e9), F, "s", X)), T) }
+    function void async(T, F:string, X:array)   { timer(vonEncode(array(randint(1e9), F, "r"):add(X)), T) }
+}
+
+if(clkName():match("^n%d+;"):count()){
+    local R = vonDecode(clkName())
+    local F = R[2, string]
+    switch(R[3, string]){
+        case "",    F(), break
+        case "n",   F(R[4, number]), break
+        case "xv2", F(R[4, vector2]), break
+        case "v",   F(R[4, vector]), break
+        case "xv4", F(R[4, vector4]), break
+        case "e",   F(R[4, entity]), break
+        case "s",   F(R[4, string]), break
+        case "r",   for(I = 1, 3){ R:remove(1) }, F(R), break
+    }
+    exit()
+}

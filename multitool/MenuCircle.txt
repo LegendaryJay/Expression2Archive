@@ -1,0 +1,162 @@
+@persist DefaultModel:string MenuContents:table MenuLength MenuRadius ElementCount
+
+if (first()){
+    DefaultModel = ""
+    
+    function setDefaultModel(ModelStr:string){
+        DefaultModel = ModelStr
+    }
+    function setMenuLength( Num:number){
+        MenuLength = Num
+    }
+    
+    function setMenuRadius( Num:number){
+        MenuRadius = Num
+    }
+    
+    
+    
+    
+    
+    function clearMenu(){
+        for(I = 1, ElementCount){
+            holo    
+        }
+    }
+    
+    function addMenuElement( Table:table){
+        
+    }
+    
+    function setMenuElements(Table:table){
+        
+    }
+    
+    function displayMenu(){
+        
+    }
+}
+
+
+MenuElements = table()
+TempTable = table()
+TempTable["material", string]
+TempTable["color", vector]
+TempTable["model", string]
+
+#[
+@name Control Circle
+@inputs 
+@outputs MaxCount Selected AimToPlaneVec2:vector2 EyeDiff:angle VecAng2:angle  EyeAngs:angle 
+@persist MaxCount R Forward [HoloScaleUnits Eye]:vector EyeAngs:angle Scale Selected
+@trigger 
+
+if(first()){
+    runOnTick(1)
+    holoCreate(100)
+    
+    MaxCount = ceil(random() * 20)
+    R = 15
+    Forward = 50
+}
+
+Me = owner()
+LClick = Me:keyAttack1()
+LClickChange = changed(LClick)
+
+StartPress = LClickChange & LClick 
+Hold = !LClickChange & LClick
+Release = LClickChange & !LClick
+
+NowEye = Me:eyeAngles() 
+
+if (Hold){
+    EyePos = Me:shootPos()
+    CenterPos = EyePos + Eye * Forward
+
+    Plane = rayPlaneIntersection(EyePos, Me:eye(), CenterPos, -Eye)
+    AimToPlaneVec2 = vec2( shiftL(toLocal(
+        Plane,
+        ang(),
+        CenterPos,
+        EyeAngs 
+    )))
+    
+    SelectionDistance = AimToPlaneVec2:length()
+    
+    if (SelectionDistance > R * 0.8 - HoloScaleUnits:z() * 0.5){
+        SelectAng = AimToPlaneVec2:rotate(-90):toAngle()
+        SelectAng = SelectAng + (sign(SelectAng) == -1) * 360
+    
+        Selected = round(MaxCount * SelectAng/360) % MaxCount + 1
+        
+        SelectedEnt = holoEntity(Selected)
+        
+        
+        holoModel(100, "models/holograms/hq_cone.mdl")
+        holoPos(100, SelectedEnt:toWorld(vec(0,0,-HoloScaleUnits:z() * 1.05)))
+        holoAng(100, SelectedEnt:toWorld(ang(0,90,0)))
+        holoScale(100, vec(Scale * 0.8))
+        
+    } else {
+        holoModel(100, "models/holograms/hq_sphere.mdl")
+        holoPos(100, Plane)
+        holoScale(100, vec(Scale * 0.6))
+        Selected = 0
+
+    }
+
+    for(I = 1, MaxCount){
+        
+
+        Percent = (I - 1)/MaxCount
+        Ang = 360 * Percent
+        
+        VecAng = toWorldPosAng( 
+            vec( 0, 0, R), 
+            ang(), 
+            CenterPos, 
+            EyeAngs:setRoll(Ang)
+        )
+
+        holoPos( I, VecAng[ 1, vector])
+        holoAng( I, VecAng[ 2, angle] )
+        holoScale(I, vec(Scale * (1 + 0.1 * (I == Selected))))
+    }
+} elseif (StartPress){
+    MaxCount = ceil(random() * 20)
+    
+    Eye = Me:eye()
+    EyeAngs = Me:eyeAngles()
+    
+    Scale = min(6/MaxCount, 1)
+    HoloScaleUnits = holoEntity(1):boxSize() * Scale
+    for(I = 1, MaxCount){
+        Percent = (I - 1)/MaxCount
+        Ang = 360 * Percent
+        
+        if (!holoEntity(I)){
+            holoCreate( 
+                I,
+                vec(),
+                vec(Scale),
+                ang(),
+                hsv2rgb(Ang, 1, 1),
+                "models/holograms/hq_rcube.mdl"
+                
+            )
+            HoloScaleUnits = holoEntity(I):boxSize() * Scale
+        } 
+        holoAlpha(I, 255)
+        holoColor(I, hsv2rgb(Ang, 1, 1))
+    }
+    holoAlpha(100, 255)
+
+    
+} elseif (Release){
+    for(I = 1, MaxCount){
+        holoAlpha(I,0)
+    }
+    holoAlpha(100, 0)
+    print(holoEntity(Selected):getColor():toString())
+}]#

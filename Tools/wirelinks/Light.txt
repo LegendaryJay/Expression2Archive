@@ -1,0 +1,15 @@
+@name Light
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+#Inputs:	
+Light["Red", number]	
+Light["Green", number]	
+Light["Blue", number]	
+Light["RGB", vector]	
+	
+	
+#Outputs:	
+Light["wirelink", wirelink]	

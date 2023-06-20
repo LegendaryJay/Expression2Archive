@@ -1,0 +1,84 @@
+@name Garage 2
+@inputs 
+@outputs Inc GHeight Radius
+@persist Segments Gpad SegHgt BtwnSegPad GHeigt BuildNum Run FullTrack Curc Radius SegArray:array [StartPos Point]:vector StartAng:angle Inc
+@trigger 
+@model models/wingf0x/isasocket.mdl
+if (first()){
+    Segments = 10
+    Gpad = 0
+    
+    BtwnSegPad = 0
+    RadAmp = 0.25
+    
+    
+    
+    SegArray = array()
+    
+    
+    
+    
+    
+    FullTrack
+    
+    runOnTick(1)
+    runOnLast(1)
+    timer("Build",1)
+    entity():setMaterial("phoenix_storms/trains/track_plate")
+    BuildNum=0
+    SegHgt = 6
+    StartPos=entity():pos() + vec(0,0,SegHgt/2)
+    StartAng = ang(0,0,90)
+    
+    GHeight = Segments*(SegHgt + BtwnSegPad) - BtwnSegPad + Gpad
+    Radius = GHeight*RadAmp
+    Curc = Radius * pi()/2
+    FullTrack = GHeight*2 + Curc
+    Point= StartPos + vec(0,Radius,GHeight)
+}
+
+if (clk("Build")){
+    SegArray[BuildNum,entity] = propSpawn("models/sprops/rectangles_thin/size_1_5/rect_6x24x1_5.mdl",StartPos + vec(0,0,SegHgt*BuildNum + BtwnSegPad * BuildNum ), StartAng,1)
+    SegArray[BuildNum,entity]:setMaterial("Phoenix_storms/Fender_white")
+    SegArray[BuildNum,entity]:setColor(vec(51,27,77),255)
+    BuildNum++
+    if (BuildNum < Segments){
+         timer("Build",400)
+    }
+    else {
+        Run=1 
+        hint("Done",2)
+    }       
+}
+if (Run){
+    if (owner():pos():distance(entity():pos())<100 & Inc < FullTrack - GHeight + Gpad){
+        Inc+=1.5
+    }
+    elseif ( owner():pos():distance(entity():pos())>100 & Inc > 0){
+        Inc-=2
+    }
+    for(I=0,Segments-1){
+        SegArray[I,entity]:propFreeze(1)
+        TrackLoc= SegHgt*I + BtwnSegPad * I + Inc
+        if (TrackLoc  < GHeight){
+            SegArray[I,entity]:setPos(StartPos + vec(0,0,TrackLoc))
+            SegArray[I,entity]:setAng(StartAng)
+        }
+        elseif (TrackLoc> GHeight + Curc){
+            SegArray[I,entity]:setPos(StartPos + vec(0,TrackLoc - GHeight - Curc + Radius, GHeight + Radius))
+            SegArray[I,entity]:setAng(StartAng + ang(0,0,-90))
+        }
+        elseif (TrackLoc > GHeight){
+            TurnAng = ((TrackLoc - GHeight)/Curc)*90 - 90
+            SegArray[I,entity]:setPos(Point + vec(0,Radius*cos(90 - TurnAng),Radius*sin(90 - TurnAng)))
+            SegArray[I,entity]:setAng(ang(0,0,-TurnAng))
+            
+        }
+    }
+}
+if (Run &!SegArray[Segments - 1,entity]){selfDestruct()}
+if (last()){
+    for (I=0,Segments-1){
+        SegArray[I,entity]:propDelete()
+    }
+}

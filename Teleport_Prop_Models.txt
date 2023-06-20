@@ -1,0 +1,61 @@
+@name Replace Props
+@inputs 
+@outputs Props:array
+@persist [Me E]:entity
+@model models/sprops/misc/tubes/size_5/tube_96x6.mdl
+
+function void entity:moveTo(){
+    This:applyForce(  (-This:vel() / 3) * This:mass())
+}
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+if(first()){
+    
+runOnTick(1)
+    propSpawnUndo(0)
+    E = entity()
+    #noCollideAll(E, 1)
+    Me = owner()
+    E:setMaterial("models/wireframe")
+}
+E:setAng(ang(0,E:angles():yaw() + 1,0))
+
+
+if(findCanQuery()){
+    findIncludePlayerProps(Me)
+    findExcludePlayer(Me)
+    findInSphere(E:boxCenterW(), E:boxSize():z()/2)
+    NewProps = findToArray()
+    Props = Props:add(NewProps)
+    
+    if(!Props:count()){
+        E:setColor(vec(0,255,0))
+    } else {
+        E:setColor(vec(255,0,0))
+        I = 1
+        while(propCanCreate() & Props:count() & perf()){
+            PropThing = Props:popEntity()
+            if(PropThing){
+                I = 1
+                while (I <= Props:count()){
+                    if (Props[I, entity] == PropThing){
+                        Props:remove(I)
+                    } else {
+                        I++
+                    }
+                }
+                propSpawn(PropThing:model(), vec():setZ(Me:pos():z() + 50), PropThing:angles(), 0)
+                PropThing:propDelete()
+                I++
+            }
+        }
+    }
+    
+}
+#E:propNotSolid(!Me:isFlashlightOn())

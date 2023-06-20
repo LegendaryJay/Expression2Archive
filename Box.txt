@@ -1,0 +1,44 @@
+@name Sizes
+@inputs 
+@outputs 
+@persist [E Me Prop]:entity
+@trigger 
+runOnTick(1)
+
+if (first()){
+    Me=owner()
+    E=entity()
+    
+    holoCreate(1)
+    holoCreate(2)
+    holoCreate(3)
+    holoCreate(4)
+    holoCreate(5)
+    holoCreate(6)
+    holoCreate(7)
+    holoCreate(8)
+}
+MePos=Me:pos()
+EPos=E:pos()
+Aim=Me:aimEntity()
+if (Me:keyAttack1()){Prop=Aim}
+
+function vector corner(Dir:vector){
+    Size=Prop:boxSize()/2
+    Center=Prop:boxCenter()
+    return vec(Center:x()+Size:x()*Dir:x(),Center:y()+Size:y()*Dir:y(),Center:z()+Size:z()*Dir:z())
+}
+
+
+holoPos(1,Prop:toWorld(corner(vec(1,1,1))))
+holoPos(2,Prop:toWorld(corner(vec(-1,1,1))))
+holoPos(3,Prop:toWorld(corner(vec(1,-1,1))))
+holoPos(4,Prop:toWorld(corner(vec(-1,-1,1))))
+holoPos(5,Prop:toWorld(corner(vec(1,1,-1))))
+holoPos(6,Prop:toWorld(corner(vec(-1,1,-1))))
+holoPos(7,Prop:toWorld(corner(vec(1,-1,-1))))
+holoPos(8,Prop:toWorld(corner(vec(-1,-1,-1))))
+
+    
+    
+

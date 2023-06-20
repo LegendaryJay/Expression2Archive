@@ -1,0 +1,21 @@
+@name Spawn Custom Chair
+@inputs 
+@outputs 
+@persist 
+@trigger 
+runOnChat(1)
+runOnLast(1)
+if(last()){
+    propDeleteAll()
+}
+
+if(chatClk()){
+    Said = lastSaid()
+    if(Said[1] == "$"){
+        propDeleteAll()
+        Model = lastSaid():sub(2)
+        Seat = seatSpawn(Model, 1)
+        hint(Seat ? "Success" : "Failed", 2)
+    }
+}
+

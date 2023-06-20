@@ -1,0 +1,31 @@
+@name Actual golden spiral
+@inputs 
+@outputs 
+@persist I Max Mode Angle Gold
+@trigger 
+if (first()){
+    I=1
+    Max = holoMaxAmount()
+    Gold = 	1.6180339887498948482
+    runOnTick(1)
+}
+if (!Mode){
+    
+    while (holoCanCreate()){
+        R = Gold ^ (toRad(Angle) ^ (2/pi()))
+        
+        holoCreate(I, entity():pos() + vec( R * sin(Angle), R * cos(Angle),10))
+        holoColor(I,hsv2rgb(200,1,1))
+        holoAng(I,ang(0, -Angle, 0))
+        holoScale(I,vec(0.01 * R))
+        interval(1000)
+        I++
+        Angle += 10
+        if (I > Max){
+            Mode = 1
+        }
+        
+    }
+    
+}
+

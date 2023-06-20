@@ -1,0 +1,28 @@
+@name Siren (Craig)
+@inputs On
+@persist Pitch Direction Max Min
+@trigger all
+
+if (first()){
+    soundPlay(1, 0, "synth/square.wav")
+    Direction = 1
+    Max = 200
+    Min = 100
+}
+if (On) {
+    soundVolume(1,1)
+    Int = 10
+    
+    Pitch = clamp(Pitch + 3 * Direction, Min, Max)
+    if (Pitch == Min | Pitch == Max){
+        Direction = -Direction
+    }
+    
+    soundPitch(1, Pitch)
+    Go = 1
+} else {
+    soundVolume(1,0)
+    Int = 1000
+}
+
+interval(Int)

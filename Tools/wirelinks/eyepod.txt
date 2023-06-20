@@ -1,0 +1,20 @@
+@name EyePod
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+#Inputs:	
+Eyepod["Enable", number]	
+Eyepod["SetPitch", number]	
+Eyepod["SetYaw", number]	
+Eyepod["SetViewAngle", angle]	
+Eyepod["UnfreezePitch", number]	
+Eyepod["UnfreezeYaw", number]	
+	
+	
+#Outputs:	
+Eyepod["X", number]	
+Eyepod["Y", number]	
+Eyepod["XY", vector2]	
+Eyepod["wirelink", wirelink]	

@@ -1,0 +1,61 @@
+@name Grow Ray
+@inputs 
+@outputs 
+@persist [Me Target]:entity Aim:vector CanShoot I
+@trigger 
+runOnTick(1)
+if (first()){
+    Me=owner()
+    CanShoot=1
+    holoCreate(1)
+    holoCreate(2)
+    holoScale(1,vec())
+}
+LClick=Me:keyAttack1()
+
+if (changed(LClick) & LClick & CanShoot){
+
+    holoEntity(1):setTrails(3,3,1,"trails/laser",vec(255,100,20),255)
+    holoDisableShading(2, 1)
+    timer("pew",3)
+    Aim=Me:aimPos()
+    AimEnt=Me:aimEntity()
+    if (AimEnt & AimEnt!= Target){
+        Target=AimEnt
+        holoModel(2,Target:model())
+        holoColor(2,Target:getColor4())
+        holoMaterial(2,Target:getMaterial())
+        holoSkin(2,Target:getSkin())
+        holoScale(2,vec(1))
+        I=1
+    }
+    # else {Target=noentity()}
+
+    
+    
+    CanShoot=0
+
+}
+elseif (clk("pew")){
+    holoPos(1,Aim)
+    timer("no pew",1000)
+}
+elseif (clk("no pew")){
+    holoDelete(1)
+    timer("pew?",10)
+
+}
+elseif (clk("pew?")){
+    CanShoot=1
+    holoCreate(1,Me:toWorld(vec(0,-10,50)))
+    holoScale(1,vec())
+    holoAlpha(1,0)
+}
+if (I<100){
+    I+=0.1
+}
+if (CanShoot==0){holoPos(1,Me:toWorld(vec(0,-10,50)))}
+holoScale(2,vec(I))    
+holoPos(2,Target:boxCenterW())
+holoAng(2,Target:angles())
+    

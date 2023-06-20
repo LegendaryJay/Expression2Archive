@@ -1,0 +1,205 @@
+@name HoverTank 2017
+@inputs 
+@outputs ThrusterCreate:table
+@persist [E Rod]:entity Phase [ThrusterCreate ThrusterTable PropTable HoloTable]:table ThrustPropI ThrustI PI HI PriorProp:entity
+@model models/sprops/cylinders/size_5/cylinder_12x84.mdl
+
+
+if (first()){
+    runOnLast(1)
+    runOnTick(1)
+    
+    MainColor = vec(170)
+    Accent = vec(220)
+    DarkAccent = vec(90)
+    
+    
+    E = entity()
+    E:setMaterial("!phoenix_storms/iron_rails+1+1+0+0")
+    E:setColor(vec(170, 170, 220))
+    
+    local ThrusterForward = 47.5
+    PN = 0
+    PN++,PropTable[PN,array] = array(vec( 0, 0, ThrusterForward),ang(90,0,0),"models/maxofs2d/thruster_projector.mdl","!phoenix_storms/iron_rails+1+1+0+0",DarkAccent, "weld" )
+    PN++,PropTable[PN,array] = array(vec( 0, 0, ThrusterForward),ang(-90,0,0),"models/maxofs2d/thruster_projector.mdl","!phoenix_storms/iron_rails+1+1+0+0",DarkAccent, "weld" )
+    PN++,PropTable[PN,array] = array(vec( 0, 0, -ThrusterForward),ang(-90,0,0),"models/maxofs2d/thruster_projector.mdl","!phoenix_storms/iron_rails+1+1+0+0",DarkAccent, "weld" )
+    PN++,PropTable[PN,array] = array(vec( 0, 0, -ThrusterForward),ang(90,-0,0),"models/maxofs2d/thruster_projector.mdl","!phoenix_storms/iron_rails+1+1+0+0",DarkAccent, "weld")
+    
+    ThrN = 0
+    ThrN++, ThrusterCreate[ThrN, array] = array()
+    ThrN++, ThrusterCreate[ThrN, array] = array(1,vec(0,0,41), ang(180, 0, 0), "models/sprops/misc/tubes/size_72/h_tube_72x12.mdl", "!phoenix_storms/iron_rails+1+1+0+0", vec(255), 1)
+    ThrN++, ThrusterCreate[ThrN, array] = array(1,vec( 0, 0, -18),ang(0,0,0),"models/sprops/misc/tubes/size_60/tube_60x12.mdl","!phoenix_storms/iron_rails+1+1+0+0",vec4(182,182,182,255), 2)
+    
+    
+    HN=0
+    HN++,HoloTable[HN,array] = array(HN, vec(3,16,32), ang(17,90,90), "models/sprops/rectangles/size_2/rect_12x30x3.mdl","!phoenix_storms/iron_rails+1+1+0+0", vec(170, 170, 220))	
+    HN++,HoloTable[HN,array] = array(HN, vec(-3,16,32), ang(17,90,90), "models/sprops/rectangles/size_2/rect_12x30x3.mdl","!phoenix_storms/iron_rails+1+1+0+0", vec(170, 170, 220))	
+    HN++,HoloTable[HN,array] = array(HN, vec(0,16,32), ang(17,90,0), "models/sprops/cuboids/height06/size_2/cube_12x18x6.mdl","!phoenix_storms/iron_rails+1+1+0+0", DarkAccent)
+    HN++,HoloTable[HN,array] = array(HN, vec(0,17,33.5), ang(17,90,90), "models/sprops/cuboids/height06/size_2/cube_12x30x6.mdl","!phoenix_storms/iron_rails+1+1+0+0", DarkAccent)
+    
+    HN++,HoloTable[HN,array] = array(HN,vec(0,-12,29),ang(90,90,0),"models/props_combine/combine_interface001a.mdl","",vec(255))
+    
+    HN++,HoloTable[HN,array] = array(HN,vec(-0,-0,-5),ang(0,90,0),"models/props_combine/combine_mortar01b.mdl","!phoenix_storms/iron_rails+1+1+0+0",DarkAccent)
+    HN++,HoloTable[HN,array] = array(HN,vec(0,0,-7),ang(0,90,180),"models/props_combine/combine_mortar01b.mdl","!phoenix_storms/iron_rails+1+1+0+0",DarkAccent) 
+    
+    HN++,HoloTable[HN,array] = array(HN,vec(7, 0,-13),ang(0,0,0),"models/props_combine/combine_light002a.mdl","!phoenix_storms/iron_rails+1+1+0+0",DarkAccent)
+    HN++,HoloTable[HN,array] = array(HN,vec(-7, 0,-13),ang(0,180,0),"models/props_combine/combine_light002a.mdl","!phoenix_storms/iron_rails+1+1+0+0",DarkAccent)
+    HN++,HoloTable[HN,array] = array(HN,vec(0, 7, -13),ang(0,90,0),"models/props_combine/combine_light002a.mdl","!phoenix_storms/iron_rails+1+1+0+0",DarkAccent)
+    HN++,HoloTable[HN,array] = array(HN,vec(0, -7, -13),ang(0,-90,0),"models/props_combine/combine_light002a.mdl","!phoenix_storms/iron_rails+1+1+0+0",DarkAccent)
+        
+    HN++,HoloTable[HN,array] = array(HN,vec(0,0,-38.25),ang(-0,0,-90),"models/sprops/misc/tubes/size_3/tube_36x6.mdl","!phoenix_storms/iron_rails+1+1+0+0",MainColor)
+    HN++,HoloTable[HN,array] = array(HN,vec(0,0,-14.25),ang(0,0,90),"models/sprops/misc/tubes/size_3/tube_36x6.mdl","!phoenix_storms/iron_rails+1+1+0+0",MainColor)
+    
+    HN++,HoloTable[HN,array] = array(HN,vec(16.25,0,-27.5),ang(90,0,0),"models/sprops/rectangles_thin/size_1_5/rect_6x24x1_5.mdl","!phoenix_storms/iron_rails+1+1+0+0",Accent)
+    
+    HN++,HoloTable[HN,array] = array(HN,vec(0, -11, -19.5),ang(0,0,90),"models/sprops/rectangles_thin/size_1_5/rect_6x24x1_5.mdl","sprops/textures/sprops_wood1", vec(100))
+    HN++,HoloTable[HN,array] = array(HN,vec(0, -11, -26.5),ang(0,0,90),"models/sprops/rectangles_thin/size_1_5/rect_6x24x1_5.mdl","sprops/textures/sprops_wood1", vec(100))
+    HN++,HoloTable[HN,array] = array(HN,vec(0, -11, -33.5),ang(0,0,90),"models/sprops/rectangles_thin/size_1_5/rect_6x24x1_5.mdl","sprops/textures/sprops_wood1", vec(100))
+    HN++,HoloTable[HN,array] = array(HN,vec(-5, -12.5, -26.5),ang(90,0,90),"models/sprops/rectangles_thin/size_1_5/rect_6x24x1_5.mdl","sprops/textures/sprops_wood1", vec(100))
+    HN++,HoloTable[HN,array] = array(HN,vec(5, -12.5, -26.5),ang(90,0,90),"models/sprops/rectangles_thin/size_1_5/rect_6x24x1_5.mdl","sprops/textures/sprops_wood1", vec(100))
+    
+    HN++,HoloTable[HN,array] = array(HN,vec(-16.25,0,-27.5),ang(90,0,0),"models/sprops/rectangles_thin/size_1_5/rect_6x24x1_5.mdl","!phoenix_storms/iron_rails+1+1+0+0",Accent)
+    HN++,HoloTable[HN,array] = array(HN,vec(-1.656248,1.437499,-24.750000),ang(0,90,0),"models/props_c17/trappropeller_engine.mdl","",vec(255))
+    
+    
+     #HN++,HT[HN,array] = array(HN,vec( 0, 0,-20.5),ang(0,90,0),"models/sprops/misc/tubes/size_72/h_tube_72x12.mdl","!phoenix_storms/iron_rails+1+1+0+0",vec4(218,218,218,255))
+    
+    #TN++, ThrusterCreate[TN, array] = array(vec(), ang(), "models/sprops/cylinders/size_5/cylinder_12x6.mdl","sprops/textures/gear_metal",vec4(182,182,182,255))
+    
+#[    #HN++,HT[HN,array] = array(HN,vec(),ang(90,90,0),"models/sprops/cylinders/size_5/cylinder_12x6.mdl","sprops/textures/gear_metal",vec4(182,182,182,255))
+    HN++,HT[HN,array] = array(HN,vec( 0, 0,-20.5),ang(0,90,0),"models/sprops/misc/tubes/size_72/h_tube_72x12.mdl","!phoenix_storms/iron_rails+1+1+0+0",vec4(218,218,218,255))
+    HN++,HT[HN,array] = array(HN,vec( 0,31.5,-38.5),ang(-45,0,90),"models/sprops/cylinders/size_5/cylinder_12x6.mdl","sprops/textures/gear_metal",vec4(218,218,218,255))
+    HN++,HT[HN,array] = array(HN,vec( 0,-31.5,-38.5),ang(45,0,-90),"models/sprops/cylinders/size_5/cylinder_12x6.mdl","sprops/textures/gear_metal",vec4(218,218,218,255))
+    HN++,HT[HN,array] = array(HN,vec( 0,0,-38.5),ang(-45,90,90),"models/sprops/cylinders/size_5/cylinder_12x3.mdl","!phoenix_storms/iron_rails+1+1+0+0",vec4(145,145,145,255))
+    HN++,HT[HN,array] = array(HN,vec( 0, 0,-38.5),ang(90,90,0),"models/sprops/misc/tubes/size_60/tube_60x12.mdl","!phoenix_storms/iron_rails+1+1+0+0",vec4(182,182,182,255))
+    HN++,HT[HN,array] = array(HN,vec( 0, 0,-38.5),ang(-45,-90,-90),"models/sprops/rectangles_thin/size_0/rect_1_5x54x1_5.mdl","!phoenix_storms/iron_rails+1+1+0+0",vec4(109,109,109,255))
+    HN++,HT[HN,array] = array(HN,vec(4, 0,-38.5),ang(-0,0,180),"models/xqm/jetenginepropellermedium.mdl","",vec4(255,255,255,255))
+    
+    HN++,HT[HN,array] = array(HN,vec( 0, 0,-38.5),ang(0,90,0),"models/sprops/geometry/fring_36.mdl","!phoenix_storms/iron_rails+1+1+0+0",vec4(182,182,182,255))
+    HN++,HT[HN,array] = array(HN,vec( 0,0,-38.5),ang(-45,90,90),"models/sprops/rectangles_thin/size_0/rect_1_5x54x1_5.mdl","!phoenix_storms/iron_rails+1+1+0+0",vec4(109,109,109,255))
+    ]#
+    HI = 1
+    PI=1
+    TI = 1
+    TLoop = 1
+    Phase = 1
+}
+
+function entity array:createProp(){
+    local Parent = This[6,entity] ? This[6,entity] : E
+    local Prop = propSpawn(This[3, string], Parent:toWorld(This[1, vector]), Parent:toWorld(This[2, angle]), 1)
+    Prop:setColor(This[5, vector])
+    Prop:setMaterial(This[4, string])
+    noCollideAll(Prop, 1)
+    
+    return Prop
+}
+
+function entity array:createHolo(){
+    local Index = This[ 1, number]
+    local Parent = This[ 7, entity] ? This[ 7, entity] : E
+    holoCreate(Index)
+    holoPos(Index, Parent:toWorld(This[ 2, vector]))
+    holoAng(Index, Parent:toWorld(This[ 3, angle]))
+    holoModel(Index, This[ 4, string])
+    holoMaterial(Index, This[ 5, string])
+    holoColor(Index, This[ 6, vector])
+    holoParent(Index, Parent)
+}
+function entity array:createThruster(I){
+    local Array = This:clone()
+    local Parent = ThrusterTable[I, array][This[7,number],entity]
+    Array[7, entity] = Parent
+    if (!This[1, number]){
+        Array[1,number] = HI
+        HI++
+        return Array:createHolo()
+    } else {
+        Array:shift()
+        return Array:createProp()
+    }  
+}
+
+if (Phase){
+    switch (Phase) {
+        case 1,
+            while(propCanCreate() & PI <= 4){
+                ThrusterTable[PI, array] = array(PropTable[PI,array]:createProp())
+                PI++
+            }
+            if (PI > 4){
+                for (I=1,4){
+                    weld(ThrusterTable[I,array][I,entity], E)
+                }
+                Phase++
+            }
+            break
+        case 2,
+            Seat = seatSpawn("models/nova/jeep_seat.mdl", E:toWorld(vec(0,5,9)), E:toWorld(ang(0,-180,90)),1)
+            weld(Seat, E)
+            if (Seat) {
+                Phase++
+            }
+            break
+        case 3,
+            while (propCanCreate() & PI < PropTable:count() + 1){
+                PropTable[PI,array]:createProp()
+                PI++
+            }
+            if (PI >= PropTable:count()){
+                Phase++
+            }
+            break
+        case 4,
+            while (HI <= HoloTable:count()){
+                if (holoCanCreate() & HI < HoloTable:count() + 1){
+                    HoloTable[HI, array]:createHolo()
+                    HI++
+                }
+            }
+            if (HI > HoloTable:count()){
+                Phase++
+                ThrustPropI = 2
+                ThrustI = 1
+            }
+            break
+        case 5,
+            while (propCanCreate()){
+                ThrusterTable[ThrustI, array][ThrustPropI, entity] = ThrusterCreate[ThrustPropI, array]:createThruster(ThrustI)
+                ThrustPropI++
+                if (ThrustPropI > ThrusterCreate:count()){
+                    ThrustI++
+                    hint("Prop: " + (ThrustPropI - 1), 2)
+                    ThrustPropI = 2
+                    
+                    if (ThrustI > ThrusterTable:count()){
+                        hint("Thrust: " + (ThrustI - 1), 2)
+                        Phase++
+                        E:setAng(ang(0,180,90))
+                        break
+                    }
+                    
+                }
+            }
+            break
+        case 6,
+            for(I = 1,ThrusterTable:count()){
+                local Array = ThrusterTable[I,array]
+                weld(Array[1,entity], E)
+                axis(Array[2,entity], vec(), Array[1,entity], vec())
+                axis(Array[3,entity], vec(0, 0, 0), Array[2,entity], vec(36,0,-17.395263671875))
+            }
+            Phase = 0
+            break
+    }
+}
+
+
+if (last()){
+    propDeleteAll()
+}
+
+#[  
+    
+    ]#
+

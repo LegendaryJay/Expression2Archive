@@ -1,0 +1,61 @@
+@name View SubMaterials
+@inputs 
+@outputs 
+@persist Me:entity Target:entity HI MatList:array MatCount Run
+@trigger 
+
+TargetBtn = Me:keyPressed("k")
+if (changed(TargetBtn) & TargetBtn){
+    AimEnt = Me:aimEntity()
+    
+    if (AimEnt){
+        Run = 1
+        Target = AimEnt
+        hint("" + Target:toString(), 4)
+    }
+}
+if (Run){
+    if (Run == 1){
+        MatList = Target:getMaterials()
+        TempMat = Target:getMaterial()
+        if (TempMat){
+            MatList:unshiftString(TempMat)
+        }
+        MatCount = MatList:count()
+        hint("" + MatCount, 4)
+        Run++
+    }
+    if (Run == 2){
+        while (holoCanCreate() &  HI <= MatCount){
+            holoCreate(HI)
+            HI++
+        }
+        if (HI > MatCount){
+            for(I = 1, MatCount){
+                holoPos(I, toWorld(
+                    vec(
+                        0,
+                        0,
+                        holoScaleUnits(I):z() * (I - 0.5) + Target:boxSize():z() * 0.5
+                    ),
+                    ang(),
+                    Target:boxCenterW(),
+                    Target:angles()
+                              
+                ))
+                holoMaterial(I, MatList[I, string])
+                holoParent(I, Target)
+                holoAng(I, Target:angles())
+            }
+            Run = 0
+            HI = 1
+        }
+    }
+} else {
+    if (first()){
+        runOnTick(1)
+        Me = owner()
+        HI = 1
+    }
+    
+}

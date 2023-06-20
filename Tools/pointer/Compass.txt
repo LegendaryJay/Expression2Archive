@@ -1,0 +1,72 @@
+@name Compass
+@inputs Ent:entity Vec:vector
+@outputs [Compass Target]:entity  Direction:vector
+@persist [Compass Target E Me]:entity [CompassCenter TargetPos]:vector IrisScale
+@trigger 
+@model models/sprops/geometry/sphere_18.mdl
+
+if (first()){
+    runOnTick(1)
+    
+    White = "models/debug/debugwhite"
+    Light = "lights/white"
+    Wire = "models/wireframe"
+    Clear = ""
+    
+    IrisColor = vec(100, 0, 100)
+    
+    CompassScale = vec( 0.7, 0.7, 2.65) * 0.21
+    
+    E = entity()
+    E:setMaterial(Light)
+    E:setColor(vec(100, 0, 100) + vec(180))
+    
+    Me = owner()
+    
+    #index, position, scale, angle, color, model)
+    Compass = holoCreate( 1, vec(), CompassScale, ang(), IrisColor, "models/mechanics/wheels/wheel_extruded_48.mdl")
+    CompassCenter = CompassScale * Compass:boxCenter()
+    holoParent(1, E)
+    holoMaterial(1, Light)
+    
+    # XYZ Coords
+    holoCreate(2, E:boxCenterW(), vec(1.025), ang(), vec4(vec(255), 100), "models/sprops/misc/origin.mdl")
+    holoParent(2, E)
+    
+    #Iris
+    holoCreate(3, vec(0,0,-9.05), vec(1, 1, 1) * 0.3, ang(180,0,0), IrisColor, "models/Mechanics/gears/gear12x6_small.mdl")
+    holoMaterial(3, Light)
+    holoParent(3, 1)
+}
+
+ECenter = E:boxCenterW()
+if (~Ent & Ent){
+    Target = Ent
+}
+
+
+E:propNotSolid(E:isPlayerHolding())
+
+TargetKey = Me:keyPressed("m")
+if (changed(TargetKey) & TargetKey){
+    Target = BackupTarget = Me:aimEntity()
+    hint(Target:type() + " | " + Target:model(), 2)
+}
+
+if (Vec) {
+    if (~Vec){
+        TargetPos = Vec
+    }
+} else {
+    TargetPos = Target:boxCenterW()
+}
+
+Direction = (TargetPos - ECenter):normalized()
+
+Ang = Direction:toAngle()
+Pos = toWorld(-CompassCenter, Ang, E:boxCenterW() - Direction * 1, Compass:angles())
+
+holoAng(1, toWorldAng(vec(), ang(-90,0,0), Pos, Ang))
+holoPos( 1, Pos)
+holoAng(2, ang())
+holoScale(3, vec(vec2(0.1 + 1.5 * min(1, ECenter:distance(TargetPos)/1000)),1) * 0.3)

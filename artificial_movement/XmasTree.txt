@@ -1,0 +1,74 @@
+@name XmasTree
+@inputs 
+@outputs Top Bottom
+@persist Ticker E:entity StarSides LightsCount LightsMax LastIndex DecorMax DecorCount SetUp Top Bottom Radius
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl 
+
+if (first()){
+    E = entity()
+    E:setAlpha(0)
+    StarSides = 2
+    TreeParts = 5
+    for(I = 1, StarSides){
+        Color = 255 - 100 * (I-1)/StarSides
+        holoCreate(I)
+        holoModel(I,"models/sprops/misc/alphanum/alphanum_star_3.mdl")
+        holoMaterial(I,"lights/white")
+        holoColor(I, vec(Color, Color, 0))
+        holoAng(I, E:toWorld(ang(0,90 * I,0)))
+        holoParent(I, E)
+        holoScale(I, vec(1, 0, 1) * 6)
+        
+    }
+    LastIndex = StarSides
+    for(I = 1, TreeParts){
+        
+        Scale = 1.5 * ( I + 2 )
+        Color = 125 - 10 * (I-1)/StarSides
+        holoCreate(I + StarSides)
+        holoPos(I + StarSides, E:toWorld(vec(0,0,-I * 100 - 60)) - vec(0,0,18 * Scale))
+        holoModel(I + StarSides,"models/sprops/misc/cones/size_3/cone_36x36.mdl")
+        holoMaterial(I + StarSides,"lights/white")
+        holoColor(I + StarSides, vec(0, Color, 0))
+        holoAng(I + StarSides, E:toWorld(ang(0,90 * I,0)))
+        holoParent(I + StarSides, E)
+        holoScale(I + StarSides, vec(Scale))
+        LastIndex = StarSides + I
+        if (I == 1){
+            Top = (E:toLocal(holoEntity(I + StarSides):boxMax()):z())
+        }
+        if (I == TreeParts){
+            Bottom = (E:toLocal(holoEntity(I + StarSides):boxMin()):z())
+            Radius = 18 * Scale + 2
+        }
+    }
+    LightsMax = 100
+    DecorMax = 100
+    SetUp = 1
+}
+runOnTick(1)
+
+if (SetUp){
+#[    while(holoCanCreate() & LightsCount <= LightsMax){
+        LastIndex++
+        LightsCount++
+    }]#
+    
+    while(holoCanCreate() & DecorCount <= DecorMax){
+        Height = random(Top, Bottom)
+        Ang = random() * 360
+        Ranger = rangerOffset( E:toWorld(vec(sin(Ang), cos(Ang), Height)), E:toWorld(vec(0, 0, Height))) 
+        
+        
+        LastIndex++
+        DecorCount++
+        holoCreate(LastIndex)
+        holoModel(LastIndex, "models/weapons/c_models/c_xms_festive_ornament.mdl")
+        holoPos(LastIndex, Ranger:position())
+    }
+}
+for(I = 1, 2){
+    holoAng(I, E:toWorld(ang(0,90 * I + Ticker,0)))
+    holoPos(I, E:toWorld(vec(0,0,sin(Ticker)*5)))
+    Ticker++
+}

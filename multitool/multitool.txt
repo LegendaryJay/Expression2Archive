@@ -1,0 +1,15 @@
+@name Multitool
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+if (first()){
+    
+    #basic libraries
+    #include "lib/fancyPrint"
+    
+    #modules
+    #include "multitool/modes"
+    
+}

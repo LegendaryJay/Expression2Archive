@@ -1,0 +1,12 @@
+@name Ranger
+@inputs 
+@outputs [RangerDistance RangerDistance2]:number
+@persist 
+@trigger 
+
+runOnTick(1)
+Ranger = rangerOffset(1000, entity():toWorld(vec(0,0,-80)),-ang(0,0,0):up())
+RangerDistance = Ranger:distance()
+
+Ranger2 = rangerOffset(1000, entity():toWorld(vec(0,0,0)),-ang(0,0,0):up())
+RangerDistance2 = Ranger2:distance()

@@ -1,0 +1,65 @@
+@name holo golden spiral 4
+@inputs 
+@outputs Ticker
+@persist I Max Run E:entity Ticker Radius
+@trigger 
+
+if (Run){
+    while(perf()){
+        IPerc = (( I + Ticker) % Max - Max * 0.5) / Max
+        
+        Pitch = 360 * IPerc
+        GoldenAngle = 137.508 * I + Ticker * 10
+        
+        R = Radius #Pitch < 0 ? Radius * 0.5 : Radius
+            
+        holoPos(
+            I, 
+            E:pos() + vec(
+                vec2(
+                    sin(GoldenAngle),
+                    cos(GoldenAngle) 
+                ) * sin(Pitch),
+                cos(Pitch)
+            ) * R
+        )
+        holoAng(I, ang(90 + Pitch, 90 - GoldenAngle, 0))
+        I++
+        
+        if (I > Max){
+            I = 1
+            Ticker += 0.1
+            break
+        }
+    }
+    
+} else {
+    interval(100)
+    if (first()){
+        runOnTick(1)
+        Max = 100
+        E = entity()
+        Radius = 100
+        I = 1
+    }
+    
+    IPerc = I / Max
+    Color = hsv2rgb(360 * IPerc , 1, 1)
+    holoCreate(I)
+    holoModel(I, "models/sprops/geometry/sphere_144.mdl")
+    holoMaterial(I, "lights/white")
+    holoColor(I,Color)
+    holoEntity(I):setTrails(5,5,10,"trails/laser",Color,255)
+    holoPos(I, E:pos() + vec(0,0, (1 - IPerc)) * 100)
+    holoScaleUnits(I,vec(10, 2, 2) * 3)
+    holoScaleUnits(I,vec(0) * 3)
+    #holoParent(I, E)
+    I++
+    if (I > Max){
+        I = 1
+        Run++
+        hint("done!", 3)
+        for(I = 1, Max){holoScale(I, vec())}
+        #runOnTick(1)
+    }
+}

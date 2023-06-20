@@ -1,0 +1,39 @@
+@name Logicless Key Listener
+@inputs 
+@outputs KeyTable:table
+@persist Me:entity KeyTable:table FunctionTable:table
+@trigger 
+
+
+KeyClk = keyClk(Me)
+if (keyClk()){
+    Key = keyClkPressed()
+    KeyTable[Key, number] = KeyTable[Key, number] + abs(KeyClk)
+    
+} elseif(first()){
+    Me = owner()
+    runOnKeys(Me, 1)
+    
+    function pressedKey(KeyString:string){
+        runOnTick(1)
+        KeyTable[KeyString, number] = 2
+        hint("pressed " + KeyString, 2)
+    }
+    function holdingKey(KeyString:string){
+        runOnTick(1)
+        #hint("holding " + KeyString, 2)
+    }
+    function removedKey(KeyString:string){
+        runOnTick(0)
+        KeyTable:remove(KeyString)
+        hint("released " + KeyString, 2)
+    }
+    FunctionTable[1, string] = "pressedKey"
+    FunctionTable[2, string] = "holdingKey"
+    FunctionTable[3, string] = "removedKey"
+    
+    KeyTable["mouse_left", number] = 1
+}
+foreach(K, ButtonState:number = KeyTable){
+    FunctionTable[ButtonState,string](K)
+}

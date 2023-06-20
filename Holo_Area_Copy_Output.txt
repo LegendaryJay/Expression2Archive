@@ -1,0 +1,45 @@
+@name Holo Area Copy Output
+@inputs 
+@outputs 
+@persist HoloTable:table MaterialsTable:table HI I E:entity
+@trigger 
+
+if (first()){
+    E = entity() 
+    Scale = 1
+    
+    HI++, HoloTable:pushArray( array( HI, E:toWorld(vec() * Scale), E:toWorld( ang()), vec4(255), "models/sprops/trans/wheel_b/wheel60.mdl", "") )
+    MaterialsTable:pushArray( array( "", "", "") )
+    
+    #HI++, HoloTable:pushArray(HI, E:toWorld(Pos11 * Scale), E:toWorld( Angle11), Color11, Model11, Mat11)
+
+}
+
+
+while(holoCanCreate()){
+    NewHoloArray = HoloTable[I, array]
+    Inx = NewHoloArray[1, number]
+    holoCreate( 
+        Inx, 
+        NewHoloArray[2, vector], 
+        vec(Scale), 
+        NewHoloArray[3, angle], 
+        vec(NewHoloArray[4, vector4]), 
+        NewHoloArray[5, string]
+    )
+    holoAlpha(Inx, NewHoloArray[4, vector4]:w())
+    holoMaterial(Inx, NewHoloArray[6,string])
+    
+    Materials = MaterialsTable[I, array]
+    Ent = holoEntity(I)
+    for (MatI = 1, Materials:count()){
+        Ent:setSubMaterial(MatI, Materials[MatI, string])
+    }
+    I++
+    if (I > HI){
+        break
+        runOnTick(0)
+    }
+    holoParent(Inx, E)
+}
+

@@ -1,0 +1,74 @@
+@name Protection_+_PropPush_
+@outputs Target:array GunPro:array
+@persist [Save Me]:entity GunPro:array ProtectI PFMode MingPro:array
+runOnTick(1)
+runOnLast(1)
+if (first()){
+    Me=owner()
+    Save=propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl",entity():pos(),1)
+    Save:setAlpha(0)
+}
+if (last()){Save:propDelete()}
+if (!Save){
+    Save=propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl",entity():pos(),1)
+    Save:setAlpha(0)
+}
+if (findCanQuery() & !DeleteTrig){
+    if (PFMode){  
+        findClearBlackList()
+        findClearWhiteList()
+        findIncludeClass("rpg_missile")
+        findIncludeClass("npc_grenade_frag")
+        findIncludeClass("prop_combine_ball")
+        findIncludeClass("crossbow_bolt")
+        findIncludeClass("npc_grenade_bugbait")
+        findIncludeClass("npc_satchel")
+        findIncludeModel("models/props_c17/oildrum001_explosive.mdl")
+    #[    findIncludeModel("models/props_phx/torpedo.mdl")
+        findIncludeModel("models/props_phx/mk-82.mdl")
+        findIncludeModel("models/props_phx/oildrum001_explosive.mdl")
+        findIncludeModel("models/props_phx/torpedo.mdl")
+        findIncludeModel("models/props_phx/ww2bomb.mdl")
+        ]#
+        
+        #findExcludePlayerProps(owner())
+        findInSphere(Me:boxCenterW(),500)
+    
+        GunPro=findToArray()    
+    }
+    else{
+        findClearBlackList()
+        findClearWhiteList()
+        findIncludeClass("prop_physics")
+        findInSphere(owner():boxCenterW(),100)
+        
+        #findExcludePlayerProps(owner())
+        findSortByDistance(owner():boxCenterW())
+        MingPro=findToArray()
+    }
+    PFMode=!PFMode
+}
+for (I=1,MingPro:count()){
+    NoClip=MingPro[I,entity]
+    if (NoClip:isPlayerHolding() & (NoClip:nearestPoint(Me:boxCenterW())-Me:boxCenterW()):length()<40 & !Me:inNoclip()){
+        stoptimer("noclip")
+        timer("noclip",500)
+        concmd("noclip")
+        if (I>10){break}
+    }
+}
+for (ProtectI=1,GunPro:count()){
+    Boom=GunPro[ProtectI,entity]
+    if (Boom:type()=="npc_satchel"){
+        Break=propSpawn("models/props_c17/oildrum001_explosive.mdl",Boom:boxCenterW()+Boom:vel()/30,1)
+        Break:propBreak()
+    }
+    Save:setPos(Boom:boxCenterW()+Boom:vel()/30)
+    Cancel=1
+}
+if(!Cancel){
+    Save:setPos(entity():pos() + vec(0,0,44))
+}
+if (clk("noclip") & owner():inNoclip()){
+    concmd("noclip")
+}

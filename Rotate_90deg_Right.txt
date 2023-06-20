@@ -1,0 +1,16 @@
+@name Rotate 90deg Right
+@inputs 
+@outputs 
+@persist [Me E]:entity 
+@model models/sprops/misc/origin.mdl 
+
+if (first()){
+    runOnTick(1)
+    E = entity()
+    Me = owner()
+}
+Eyes = Me:eye():rotateAroundAxis(vec(0,0,1), -90)
+NewAng = Eyes:toAngle()
+E:setAng( 
+    ang(NewAng:roll(), NewAng:yaw(), -NewAng:pitch())
+)

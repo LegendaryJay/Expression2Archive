@@ -1,0 +1,47 @@
+@name holo golden spiral 2
+@inputs 
+@outputs HeightPercent
+@persist I Max Run Center:vector E:entity Fib:vector2
+@trigger 
+if (first()){
+    #runOnTick(1)
+    Max=holoMaxAmount()
+    E = entity()
+    Center = E:pos()
+    Fib = vec2(0,1)
+}
+if (Run){
+    runOnTick(0)
+} else {
+    interval(100)
+    R = 100
+    
+    IPerc = I / Max
+    
+    HeightPercent = sin( 180 * IPerc )
+    GoldenAngle = 137.508 * I
+    
+    holoCreate(I)
+    holoModel(I, "models/sprops/geometry/sphere_144.mdl")
+    holoMaterial(I, "lights/white")
+    holoColor(I,hsv2rgb(360 * I / Max ,1, 1 - I/Max))
+    
+    holoPos(
+        I, 
+        E:toWorld( 
+            vec(
+                sin(GoldenAngle) * HeightPercent, 
+                cos(GoldenAngle) * HeightPercent, 
+                cos(180 * IPerc)
+            ) * R
+        )
+    )
+    holoAng(I, ang(+90 - IPerc * 180, -GoldenAngle, 0))
+    holoScaleUnits(I,vec(10, 2, 2) * 3)
+    holoParent(I, E)
+    I++
+    if (I == Max){
+        Run++
+        hint("done!", 3)
+    }
+}

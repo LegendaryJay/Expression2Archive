@@ -1,0 +1,24 @@
+@name Rainbow Anything
+@persist I [Target Me]:entity
+@trigger 
+runOnTick(1)
+if (first()){
+    I=0
+    Me=owner()
+}
+Shift=Me:keyPressed("lShift")
+LClick=Me:keyAttack1()
+Ctrl=Me:keyDuck()
+
+if (changed(LClick) & LClick & Shift & Ctrl & Me:aimEntity()){
+    hint("Buttons!",2)
+    Target=Me:aimEntity()
+    if (Target){
+        hint("locked",2)
+    }
+}
+Target:setColor(hsv2rgb(I,1,1))
+I++
+if (I>360){I=0}
+
+

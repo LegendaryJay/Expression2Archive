@@ -1,0 +1,96 @@
+@name Hud
+@inputs 
+@outputs Yaw YawVec:vector2 MarkTable:table
+@persist [E Seat]:entity Hud:wirelink [CompassSize ScreenSize CompassPos]:vector2 MarkTable:table
+@trigger 
+if(first()){
+    E = entity()
+    Seat = E:isConstrainedTo()
+    
+    CompassSize = vec2(400,50)
+    
+    Vehicle = Seat:getConstraints()
+    for(I = 1, Vehicle:count()){
+        if(Vehicle[I, entity]:type() == "gmod_wire_egp_hud"){
+            Hud = Vehicle[I, entity]:wirelink()
+            hint("Linked",4)
+        }
+    }
+    DirectionMarks = array("E", "SE", "S", "SW", "W", "NW", "N", "NE")
+    LetterPos = 1
+    for (I = 0, 31){
+        Angle = 11.25 * I
+        if (I % 8 == 0){
+            DirString = DirectionMarks[LetterPos, string]
+            AngDtring = Angle
+            LetterPos++
+            Type = 3
+        } elseif (I % 4 == 0){
+            DirString = DirectionMarks[LetterPos, string]
+            LetterPos++
+            Type = 2
+        } else {
+            Type = 1
+        } 
+        MarkTable:pushArray( array(Type, Angle, DirString))
+    }
+}
+Driver = Seat:driver()
+runOnTick(1)
+if (changed(Driver)){
+    ScreenSize = egpScrSize(Driver)
+    CompassPos = vec2(ScreenSize:x()/2, ScreenSize:y() - CompassSize:y())
+}
+function number drawMarks(Indx){
+    MarkLength = CompassSize:y()/6
+    MarkYPos = CompassPos:y() - CompassSize:y()*0.25
+    
+    
+    for(I = 0, 31){
+        Array = MarkTable[I+1, array]
+        
+        TrigVal = -Yaw + Array[2, number]
+        
+        MarkXPos = CompassPos:x() + sin(TrigVal) * CompassSize:x() * 0.5
+        MarkZPos = max(0, cos(TrigVal))
+        Hud:egpLine(Indx, vec2(MarkXPos,MarkYPos),vec2(MarkXPos,MarkYPos + MarkZPos * MarkLength * Array[1, number]))
+        Indx++
+        
+        if (Array[1, number] != 1){
+            if(MarkZPos){
+                Size = MarkZPos * 15
+                Hud:egpDrawTopLeft(0)
+                
+                Hud:egpText(Indx, Array[2, number]:toString(), vec2(MarkXPos - Size/2,MarkYPos - CompassSize:y()* 0.25))
+                Hud:egpFont(Indx,"Chatfont",Size)
+                
+                
+                Hud:egpText(Indx + 1, Array[3, string], vec2(MarkXPos - Size/2, CompassPos:y() + CompassSize:y() * 0.125))
+                Hud:egpFont(Indx + 1,"Chatfont",Size)
+            }
+            Indx += 2
+        }
+    }
+    return Indx
+}
+
+if (Driver){
+    
+    
+    Yaw = Driver:eye():toAngle():yaw()
+    YawVec = vec2(Yaw - 45, Yaw + 45)
+    
+    Hud:egpClear()  
+    Hud:egpDrawTopLeft(0)
+    
+    Hud:egpBox(1, CompassPos, CompassSize)
+    Hud:egpColor(1,vec4(0,0,0,70))
+    
+    Hud:egpText(2, "|", CompassPos + vec2(0,CompassSize:y()/2))
+    
+    drawMarks(3)
+    
+}
+
+#0 15 30 45 60 75 90
+#1  3  3  2  3  3  1

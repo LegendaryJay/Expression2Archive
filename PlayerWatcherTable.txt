@@ -1,0 +1,58 @@
+@name 
+@inputs 
+@outputs 
+@persist [PlayerOrder PlayerInfoTable]:table HoloI 
+@trigger 
+
+if (first()){
+    timer("PlayerUpdate", 1)
+    function onPlayerConnect(K:string, PlayerInfo:table){
+        hint("player connected! " + PlayerInfo["name", string],5)
+    }
+    function onPlayerDisconnect(K:string, PlayerInfo:table){
+        hint("player disconnected!" + PlayerInfo["name", string],5)
+    }
+}
+if (numPlayers() != PlayerInfoTable:count() | clkName() == "PlayerUpdate"){
+    timer("PlayerUpdate", 10000)
+    InitPlayers = players()
+    
+    NewPlayers = table()
+    foreach(K, Player:entity = InitPlayers){
+        if (Player:type() == "player"){
+            NewPlayers[Player:id(), table] = table()
+        }
+    }
+    
+    Removes all variables with keys that exist in T2
+    
+    ConnectedPlayers = table:difference(table rv2)
+    PlayerInfoTable = NewPlayers:merge(PlayerInfoTable)
+    PlayerLookup = invert(PlayerOrder)
+    
+    foreach(K, Table:table = PlayerInfoTable){
+        Player = entity(K)
+        if (Player:type() == "player"){
+            if (!PlayerLookup[K, number]){
+                TempTable = table()
+                TempTable["name", string] = Player:name()
+                PlayerInfoTable[K, table] = TempTable:clone()
+                
+                PlayerOrder:pushString(K)
+                
+                onPlayerConnect(K, PlayerInfoTable[K, table]:clone())
+            }
+        } else {
+            PlayerOrder:remove(PlayerLookup[K, number])
+        
+            onPlayerDisconnect(K, PlayerInfoTable[K, table]:clone())
+        
+            PlayerInfoTable:remove(K)
+            
+            
+        }
+    }
+}
+
+
+

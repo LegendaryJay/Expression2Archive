@@ -1,0 +1,38 @@
+#include "lib/async"
+
+if(first()){
+    propSpawnUndo(0)
+    propSpawnEffect(0)
+    function detonate(ID){
+        propSpawn("models/props_phx/ww2bomb.mdl", entity(ID):pos(), 0):propBreak()
+        entity(ID):propDelete()
+    }
+    function entity helibomb(Pos:vector, Timer){
+        function blink(ID){
+            local E = entity(ID)
+            E:setSkin(!E:getSkin())
+        }
+        local E = propSpawn("models/combine_helicopter/helicopter_bomb01.mdl", Pos, ang(randvec(0, 360)), 0)
+        if(E){
+            E:soundPlay(randint(1e9), 0.6, "npc/attack_helicopter/aheli_mine_drop1.wav")
+            E:soundPlay(E:id(), 0, "npc/attack_helicopter/aheli_mine_seek_loop1.wav")
+            Timer = max(Timer, 0.5)
+            for(T = 0, Timer, 0.374){
+                async(T, "blink", E:id())
+            }
+            async(Timer, "detonate", E:id())
+        }
+        return E
+    }
+    function entity ar2grenade(Pos:vector, Dir:vector){
+        local E = propSpawn("models/Items/AR2_Grenade.mdl", Pos, ang(randvec(0, 360)), 0)
+        if(E){
+            E:soundPlay(randint(1e9), 1, "weapons/ar2/ar2_altfire.wav")
+            E:setTrails(5, 15, 0.3, "trails/smoke", vec(20), 255)
+            E:applyForce(E:mass() * (Dir:normalized():rotate(random(-5, 5), random(-5, 5), 0) * 900))
+            E:applyTorque(E:inertia() * vec(0, 1e4, 0))
+            async(1.5, "detonate", E:id())
+        }
+        return E
+    }
+}

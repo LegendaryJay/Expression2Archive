@@ -1,0 +1,51 @@
+@name Box to 2D
+@inputs 
+@outputs 
+@persist [E Me Guide]:entity
+@model models/hunter/blocks/cube8x8x8.mdl 
+
+
+if (first()){
+    runOnTick(1)
+    runOnLast(1)
+    Me=owner()
+    E=entity()
+    
+    for (I = 1, 9){
+        holoCreate(I)
+    }
+    holoScale(9, vec(1))
+    holoModel(9, "models/sprops/rectangles/size_10/rect_480x480x3.mdl")
+    
+    Guide = propSpawn("models/sprops/geometry/sphere_12.mdl", 1)
+    Guide:setPos(E:boxCenterW() + E:boxSize())
+}
+
+function vector corner(Dir:vector){
+    Size=E:boxSize()/2
+    Center=E:boxCenter()
+    return vec(
+        Center:x() + Size:x() * Dir:x(),
+        Center:y() + Size:y() * Dir:y(),
+        Center:z() + Size:z() * Dir:z()
+    )
+}
+
+
+holoPos(1,E:toWorld(corner(vec(1,1,1))))
+holoPos(2,E:toWorld(corner(vec(-1,1,1))))
+holoPos(3,E:toWorld(corner(vec(1,-1,1))))
+holoPos(4,E:toWorld(corner(vec(-1,-1,1))))
+holoPos(5,E:toWorld(corner(vec(1,1,-1))))
+holoPos(6,E:toWorld(corner(vec(-1,1,-1))))
+holoPos(7,E:toWorld(corner(vec(1,-1,-1))))
+holoPos(8,E:toWorld(corner(vec(-1,-1,-1))))
+
+    
+holoPos(9, E:boxCenterW())
+Vec = (Guide:boxCenterW() - E:boxCenterW()):rotate(ang(90, 90, 90))
+holoAng(9, Vec:toAngle())
+if (last()){
+    propDeleteAll()
+}
+

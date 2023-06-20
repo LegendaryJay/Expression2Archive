@@ -1,0 +1,20 @@
+@name Door wirelink
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+#Inputs:	
+Door["Open", number]	
+Door["Close", number]	
+Door["Lock", number]	
+Door["AutoClose", number]	
+Door["CloseTime", number]	
+	
+	
+#Outputs:	
+Door["IsOpened", number]	
+Door["FullyOpen", number]	
+Door["FullyClosed", number]	
+Door["Blocked", number]	
+Door["wirelink", wirelink]

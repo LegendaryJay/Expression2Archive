@@ -1,0 +1,45 @@
+@name 
+@inputs 
+@outputs Timer
+@persist [Prop E]:entity Timer MaxTime Mode Blink
+@model 
+
+if (first()){
+    propSpawnUndo(0)
+    E = entity()
+    Prop = propSpawn("models/sprops/cuboids/height06/size_5/cube_30x30x6.mdl", E:toWorld(vec(0,0,200)), 1)    
+    
+    
+    runOnTick(1)
+    MaxTime = 400
+}
+
+
+if (Timer == 0){
+    Mode = 0
+    Prop:setAlpha(255)
+    Prop:propNotSolid(0)
+    Prop:setMaterial("phoenix_storms/stripes")
+    
+} elseif (Timer == (MaxTime * 0.5)){
+    Prop:setColor(vec(255))
+    Prop:setAlpha(100)
+    Prop:setMaterial("debug/debugwireframe")
+    Prop:propNotSolid(1)
+    Mode = 1
+
+}
+if (!Mode){
+    BlinkTime = 15
+    BlinkTimerStart = MaxTime * 0.5 - BlinkTime * 4
+    if (Timer >= BlinkTimerStart & !((Timer - BlinkTimerStart) % BlinkTime)){
+        Blink = !Blink
+        if (Blink){
+            Prop:setAlpha(200)
+        } else {
+            Prop:setAlpha(255)
+        }
+        
+    }   
+}
+Timer = (Timer + 1) % MaxTime

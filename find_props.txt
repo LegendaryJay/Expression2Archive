@@ -1,0 +1,29 @@
+@name 
+@inputs 
+@outputs Array:array
+@persist Holo
+@trigger 
+@model models/props_c17/oildrum001_explosive.mdl
+runOnTick(1)
+if (first()){
+    for (I=1,10){
+        holoCreate(I)
+    }
+        
+}
+if (findCanQuery()){
+    findExcludeClass("player")
+    findExcludeClass("weapon")
+    findExcludeClass("gmod")
+    findExcludeClass("bb")
+    findInSphere(owner():pos(),300)
+    findSortByDistance(owner():pos())
+    Array=findToArray()
+}
+for (I=1,10){
+    holoPos(I,owner():pos() + vec(sin(360*I/10 + Holo)*300,cos(360*I/10 + Holo)*300,32))
+}
+#[(I=1,20){
+    if (Array[I,entity]:vel():length()>"150")]#
+
+Holo++

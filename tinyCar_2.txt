@@ -1,0 +1,153 @@
+@name tinyCar 2
+@inputs 
+@outputs Yaw
+@persist Run Setup Yaw [E Base Seat]:entity Wheels:array YawEnt:entity WheelsArray:array YawPos:vector
+@trigger 
+@model 
+
+if (first()){
+    runOnTick(1)
+    
+    propSpawnUndo(0)
+    enableConstraintUndo(0)
+    
+    E = entity()
+    Base = seatSpawn("models/sprops/rectangles_thin/size_3/rect_24x24x1_5.mdl", 1)
+    Base:propFreeze(1)
+    
+    WheelsArray = array(vec(1,1,0), vec(1,-1,0), vec(-1,1,0), vec(-1,-1,0))
+    
+    YawPos = vec(0.5, 0, 0) * Base:boxSize()
+    
+    function faceYaw(Ang){
+        TarQ = quat(Base:toWorld(ang(0,Ang,0)))
+        CurQ = quat(YawEnt)
+        Q = TarQ/CurQ
+        V = YawEnt:toLocal(rotationVector(Q)+YawEnt:pos())
+        YawEnt:applyTorque((V * 30 - YawEnt:angVelVector()) * 25 * YawEnt:inertia())
+    }
+}
+if (Run){
+    Driver = Seat:driver()
+    if (Driver){
+        W = Driver:keyPressed("W")
+        A = Driver:keyPressed("A")
+        S = Driver:keyPressed("S")
+        D = Driver:keyPressed("D")
+
+        if (A | D){
+            Yaw = clamp(Yaw + (A - D)* 1, -20, 20)
+            
+        } else {
+            Yaw *= 0.99
+        }
+        faceYaw(Yaw)
+        
+        cameraToggle(1,1, Seat)
+        cameraAng(1, Driver:eye():toAngle())
+        cameraPos(1, Base:toWorld(vec(0,0,20)) - Driver:eye()*80)
+        
+        for (I = 1, 4){
+            Wheel = Wheels[I, entity]
+            Wheel:applyTorque(vec(0, (W-S) * 50 * Wheel:mass(), 0))
+        }
+    } else {
+    Yaw *= 0.99
+        faceYaw(Yaw)
+    }
+} else {
+    switch(Setup){
+        case 0,
+            rangerFilter(array(Base))
+            TempPos = rangerOffset(Base:boxCenterW(), Base:boxCenterW() + Base:up() * -50):pos() + Base:up() * 15
+            Base:setPos(TempPos)
+            Base:setAng(ang())
+            if (Base:pos():distance(TempPos) < 3 & Base:angles() == ang()){
+                Seat = Base #seatSpawn("models/sprops/cylinders/size_4/cylinder_9x3.mdl", Base:toWorld(vec(0,0,0)), Base:angles(), 1)
+                #weld(Seat, Base)
+                Setup++
+            }
+            break
+        case 1,
+            if (propCanCreate()){
+                Wheels:pushEntity(propSpawn("models/sprops/trans/miscwheels/thin_moto15.mdl", Base:toWorld(WheelsArray[Wheels:count() + 1, vector] * Base:boxSize() * 0.5), Base:angles(), 1))
+            }
+            if (Wheels:count() == 4){
+                for(I = 1, 4){
+                    Wheels[I, entity]:makeSpherical(7.5)
+                }
+                Setup++
+            }
+            break
+        case 2,
+            if (propCanCreate()){
+                YawEnt = propSpawn("models/sprops/rectangles_thin/size_1_5/rect_6x6x1_5.mdl", Base:toWorld(YawPos), Base:angles(), 1)
+                YawEnt:propGravity(0)
+                YawEnt:propNotSolid(1)
+            }
+            if (YawEnt){
+                Setup++
+            }
+            break
+        case 3,
+            local Vec = vec(Base:boxSize():x() * 0.5, 0, 0)
+
+            #weld(Seat, Base)
+            
+            #ballsocket(entity ent1,vector v,entity ent2,vector mins,vector maxs,vector frictions,number rotateonly)
+            
+            #axis(YawEnt, vec(), Base, YawPos + vec(0,0,0.001))
+            
+            
+            ballsocket( Wheels[1,entity], vec(), Base, vec(-180), vec(180), vec(), 0)
+            ballsocket( Wheels[2,entity], vec(), Base, vec(-180), vec(180), vec(), 0)
+            axis(Wheels[3, entity], vec(), Base, -Vec)
+            axis(Wheels[4, entity], vec(), Base, -Vec)
+            
+            SpinVec = 180 * vec(0.000001, 1, 0.000001)
+            ballsocket( Wheels[1,entity], vec(), YawEnt, -SpinVec, SpinVec, vec(), 1)
+            ballsocket( Wheels[2,entity], vec(), YawEnt, -SpinVec, SpinVec, vec(), 1) 
+            ballsocket( Wheels[1,entity], vec(), Wheels[2,entity], -SpinVec, SpinVec, vec(), 1)
+            
+            noCollide(Wheels[1,entity], YawEnt)
+            noCollide(Wheels[2,entity], YawEnt)
+            
+            noCollideAll(YawEnt, 1)
+            noCollideAll(Seat, 1)
+            noCollideAll(Base, 1)
+        
+            Base:setMaterial("models/props_combine/metal_combinebridge001")
+            Seat:setMaterial("models/props_combine/metal_combinebridge001")
+            
+            YawEnt:setMaterial("sprops/textures/sprops_rubber2")
+            
+            WheelMass = 1000
+            YawMass = 50000
+            BaseMase = 45
+            
+            Base:setMass(BaseMase)
+            YawEnt:setMass(YawMass)
+            
+            for (I = 1, 4){
+                Wheel = Wheels[I, entity]
+                "models/debug/debugwhite"
+
+                Wheel:setMass(WheelMass)
+                Wheel:setBodygroup(1, 5)
+                Wheel:propPhysicalMaterial("phx_tire_normal")
+                Wheel:setMaterial("models/debug/debugwhite")
+                Wheel:setColor(vec(20))
+            }
+            Setup++
+            break
+        case 4,
+            cameraCreate(1)
+            cameraParent(1, Seat)
+            Props = Base:getConstraints()
+            for (I=1, Props:count()){
+                Props[I,entity]:propFreeze(0)
+            }
+            Base:propFreeze(0)
+            Run = 1
+    }
+}

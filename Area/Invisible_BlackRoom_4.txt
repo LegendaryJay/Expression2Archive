@@ -1,0 +1,60 @@
+@name Invisible BlackRoom 4
+@persist [E Marker]:entity HoloSeperation EBottom BoxBoxCenter:vector
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl
+
+if (first()){
+    runOnTick(1)   
+    E = entity()
+    EBottom = E:boxSize():z()/2
+    propSpawnUndo(0)
+    
+    Marker = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", E:toWorld( vec( 50, 50, 50)), 1)
+    Marker:setAlpha(0)
+    noCollideAll( Marker, 1)
+    
+    holoCreate(100)
+    holoColor(100, vec(105,0,75))
+    holoPos(100, Marker:boxCenterW())
+    holoAng(100, Marker:angles())
+    holoMaterial(100, "models/wireframe")
+    holoModel(100,"models/editor/axis_helper.mdl")
+    holoParent(100, Marker)
+    
+    
+    for(I = 1, 4){
+        holoCreate(I)
+        holoAng(I, E:angles())
+        holoModel(I, "models/hunter/blocks/cube8x8x8.mdl")
+        holoParent(I, E)
+    }
+    BoxBoxCenter = holoEntity(2):boxCenter()
+    holoMaterial(1,"models/wireframe")
+    holoColor(1,vec(20))
+    
+    holoMaterial(2,"engine/writez_model")
+    holoColor(2,vec(255))
+     
+    
+    holoMaterial(3,"lights/white")
+    holoColor(3,vec(0))
+    
+    holoMaterial(4,"models/wireframe")
+    holoColor(4,vec(50))
+
+    HoloSeperation = 0.644
+}
+
+if (Marker:isPlayerHolding() | E:isPlayerHolding() | first()){
+    holoAng(100, E:angles())
+    
+    BoxSize = -toLocal( E:pos() - E:up() * EBottom, ang(), Marker:pos(), E:angles()) * vec(2, 2, 1)
+    BoxSize = vec(abs(BoxSize:x()), abs(BoxSize:y()), abs(BoxSize:z())) 
+    for(I = 1, 4){
+        HoloOffset = vec(HoloSeperation) * (I - 1)
+        holoScaleUnits(I, sign(2.5 - I) * (BoxSize - HoloOffset) * 1.0013)
+        holoPos(I, E:toWorld(vec(0,0,BoxSize:z() * 0.5 - EBottom) - BoxBoxCenter * holoScale(I)))
+    }
+} else {
+    Marker:propFreeze(1)
+    E:propFreeze(1)
+}

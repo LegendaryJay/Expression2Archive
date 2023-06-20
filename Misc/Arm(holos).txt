@@ -1,0 +1,171 @@
+@name Arm(Holos)
+@inputs InputTar:entity
+@outputs YawRotAng [Target TrackEnt]:entity [ElbowVec2 LocalTarVec2]:vector2 ElbowTrig TargDist 
+@persist [E Gear Shoulder UpperArm ForeArm Guide Target TrackEnt]:entity [ShoulderOffset ArmOffset]:vector ArmLength GuideArray:array ShoulderI UpperArmI ForeArmI 
+@persist [Socket TargetPos]:vector
+@trigger 
+@model models/hunter/plates/plate3x3.mdl
+
+function vector2 toVec2(V:vector){
+    local LocalVec = toLocal(
+        Socket,
+        Shoulder:angles(),
+        V,
+        ang()
+    )
+    local TempVec = vec2( vec2(LocalVec):length(), LocalVec:z() ) 
+    return min(TempVec, TempVec:normalized()*ArmLength * 2)  
+}
+function vector toVec(V2:vector2){
+    return toWorld(
+        Shoulder:right() * V2:x() - Shoulder:up() * V2:y(),
+        Shoulder:angles(),
+        Socket,
+        ang()
+    )   
+}
+if(first()){
+    ShoulderMass = 1000
+    ArmMass = 15
+
+    ShoulderFrozen = 0
+    UArmFrozen = 0
+    FArmFrozen = 0
+    
+    runOnTick(1)
+    runOnLast(1)
+    
+    E = entity()
+    E:setMaterial("phoenix_storms/glass")
+    
+    ShoulderOffset = vec(0,0,10)
+    ArmOffset = vec(138,0,0)
+    ArmLength = (abs(ArmOffset:x()) + abs(-ArmOffset:x()))
+    
+    #Shoulder
+    HoloI = 1
+    
+    ShoulderI = HoloI
+    Shoulder = holoCreate(HoloI)
+    holoMaterial(HoloI,"sprops/trans/misc/ls_m1")
+    holoModel(HoloI, "models/mechanics/robotics/xfoot.mdl")
+    holoPos(HoloI, E:toWorld(vec(0,0,15.5)))
+    holoAng(HoloI, E:angles())
+    holoParent(HoloI, E)
+    HoloI++
+    
+    Gear = holoCreate(HoloI)
+    holoModel(HoloI, "models/Mechanics/gears/gear16x6_large.mdl")
+    holoMaterial(HoloI, "sprops/trans/misc/ls_m1")
+    holoParent(HoloI, Shoulder)
+    HoloI++
+    
+    
+    #UpperArm
+    UpperArmToWorld = toWorldPosAng(
+        ArmOffset,
+        ang(0,0,0),
+        Shoulder:toWorld(ShoulderOffset),
+        Shoulder:toWorld(ang(-90,0,-90))
+    )
+    
+    UpperArmI = HoloI
+    UpperArm = holoCreate(HoloI)
+    holoModel(HoloI,"models/mechanics/robotics/d4.mdl")
+    holoPos(HoloI, UpperArmToWorld[1, vector])
+    holoAng(HoloI, UpperArmToWorld[2, angle])
+    holoParent(HoloI, ShoulderI)
+    HoloI++
+    
+    #ForeArm
+    ForeArmToWorld = toWorldPosAng(
+        ArmOffset,
+        ang(0,0,0),
+        UpperArm:toWorld(ArmOffset),
+        UpperArm:toWorld(ang(0,0,180))
+    )
+    ForeArmI = HoloI
+    ForeArm = holoCreate(HoloI)
+    holoModel(HoloI,"models/mechanics/robotics/d4.mdl")
+    holoPos(HoloI, ForeArmToWorld[1, vector])
+    holoAng(HoloI, ForeArmToWorld[2, angle])
+    holoParent(HoloI, UpperArmI)
+    HoloI++
+        
+    GuideArray = array()
+    for (I = HoloI, HoloI + 3){
+        GuideArray:pushNumber(I)
+        holoCreate(I)
+        holoModel(I,"models/editor/axis_helper.mdl")
+        holoScale(I,vec(2))
+        holoMaterial(I,"hlmv/debugmrmwireframe")
+    }
+    holoColor(HoloI,vec(0,255,0))
+    holoColor(HoloI + 1,vec(0,100,100))
+    holoColor(HoloI + 2,vec(100,0,100))
+    holoColor(HoloI + 3,vec(100,100,0))
+    
+    ArmLength = abs(2*ArmOffset:x())
+    TrackEnt = holoEntity(ForeArmI)
+    #propSpawn("")
+    Target = InputTar
+}
+
+Socket = Shoulder:toWorld(ShoulderOffset)
+
+LocalTargPos = toVec2(Target:boxCenterW() + vec(0,0,Target:boxSize():z()*0.6))
+TargDist = LocalTarVec2:length()
+
+LocalTarVec2 = toVec2(TargetPos)
+Wrist = toVec(LocalTarVec2)
+
+ElbowTrig = acos(TargDist*0.5/ArmLength)
+ElbowTrig = !isnan(ElbowTrig) ? ElbowTrig : 0
+ElbowVec2 = (LocalTarVec2:rotate(-ElbowTrig)):normalized()*ArmLength
+
+Elbow = toVec(ElbowVec2)
+
+
+if (~InputTar){
+    Target = InputTar ? InputTar : Target
+}
+
+if(!InputTar & findCanQuery()){
+    findByClass("player")
+    Target = findClosest(Socket)
+}
+
+
+
+
+holoPos(GuideArray[1, number], Socket)
+holoPos(GuideArray[2, number], Elbow)
+ holoPos(GuideArray[3, number], Wrist)
+#holoPos(4, TargetPos)
+holoPos(GuideArray[4, number], Socket + Shoulder:right()*50 )
+
+
+## Yaw ##
+
+YawLocalVec = toLocalPosAng(
+    Socket,
+    ang(),
+    TargetPos,
+    Shoulder:angles()
+)
+YawRotAng = vec2(YawLocalVec[1,vector]:y(), -YawLocalVec[1,vector]:x()):toAngle()
+holoAng(ShoulderI, Shoulder:toWorld(ang(0, YawRotAng, 0)))
+
+## Upper Arm ##
+Socket2Elbow = Elbow - Socket
+holoPos(UpperArmI, Socket + Socket2Elbow/2)
+holoAng(UpperArmI, Socket2Elbow:toAngle() + ang(0,0,180))
+
+## ForeArm ##
+Wrist2Elbow = Elbow - Wrist
+holoPos(ForeArmI, Wrist + Wrist2Elbow/2)
+holoAng(ForeArmI, Wrist2Elbow:toAngle() + ang(0,0,180))
+
+
+
+

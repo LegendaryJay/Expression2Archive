@@ -1,0 +1,198 @@
+@name Useful Textures 4
+@inputs 
+@outputs FileString:string MatCount Materials:array
+@persist [E Me]:entity MatCount Ang Dist [Materials]:array MatListen FileString:string
+@persist Perimeter Pointer LastPointer Pos:vector2 PosVal TempMat:string Prop:entity Mode HN
+@persist 
+@persist [FileName]:string 
+@model models/props_phx/mechanics/mech1.mdl
+
+if (first()){
+    #Mode 1: file Loaded
+    #Mode 2: create Holos
+    #Mode 3: Run
+    
+    runOnTick(1)
+    runOnChat(1)
+    runOnFile(1)
+    
+    propSpawnUndo(0)
+    
+    
+    E = entity()
+    Me = owner()
+    
+    HN = 1
+    
+    Prop = propSpawn("models/sprops/misc/domes/size_4/dome_48x24.mdl", E:toWorld(vec(100, 0, 50)), E:toWorld(ang(90,0,90)), 1)
+    noCollideAll(Prop, 1)
+    
+    holoCreate(300)
+    holoModel(300, "models/sprops/cuboids/height12/size_1/cube_12x12x12.mdl")
+    holoMaterial(300, "models/wireframe")
+    holoColor(300, vec4(255))
+    holoScale(300, vec(-1))
+    holoAng(300, E:toWorld(ang(0,0,0)))
+    holoParent(300, E)
+    
+    FileName = "FavoriteMaterials.txt"
+    fileLoad(FileName)
+    
+    
+    function movePos(X, Y){
+        PosVal = (PosVal + Y * Perimeter) % (Perimeter ^ 2)
+        if (PosVal + 1 > MatCount) {
+            PosVal = (PosVal + Y * Perimeter) % (Perimeter ^ 2)
+        }
+        PosVal = (PosVal - 1 + X) % MatCount + 1
+    }
+    
+    function moveAction(X, Y){
+        holoModel( PosVal, "models/sprops/cuboids/height12/size_1/cube_12x12x12.mdl")
+        movePos(X, Y)
+        holoModel( PosVal, "models/sprops/geometry/sphere_12.mdl")
+        holoPos(300, holoEntity(PosVal):pos())
+        TempMat = holoEntity(PosVal):getMaterial()
+        Prop:setMaterial(TempMat)
+
+        LastMatString = (PosVal == MatCount ? "*WildCard*" : "")
+        hint("Selected Mat: " + (TempMat ?: "[None]" + LastMatString), 4)
+    }
+    hint("Loading...", 2)
+}
+if (Mode == 2){
+    Right = Me:keyPressed("right")
+    Left = Me:keyPressed("left")
+    Down = Me:keyPressed("down")
+    Up = Me:keyPressed("up")
+    
+    Print = Me:keyPressed("pad_enter")
+
+    Copy = Me:keyPressed("pageup")
+    Paste = Me:keyPressed("pagedown")
+    
+    XPosBtnVal = sign(E:toLocal(Me:pos()):x()) * ((changed(Left) & Left) - (changed(Right) & Right))
+    YPosBtnVal = (changed(Up) & Up) - (changed(Down) & Down) 
+    
+    if (XPosBtnVal | YPosBtnVal){
+        moveAction(XPosBtnVal, YPosBtnVal) 
+    }
+    
+    if (changed(Print) & Print){
+        printColor(vec(255), "\"" + TempMat + "\"")
+    }
+    
+    if (changed(Copy) & Copy){
+        AimEnt = Me:aimEntity()
+        if (AimEnt){
+            local Mat =  AimEnt:getMaterial()
+            if (Mat){
+                holoMaterial(MatCount, Mat)
+                hint(Mat + " Copied", 4)
+                moveAction(0,0)
+            } else {
+                hint("No Material on Entity", 4)
+            }
+        } else {
+            hint("No Entity Specified", 4)
+        }
+    }
+    
+    if (changed(Paste) & Paste){
+        AimEnt = Me:aimEntity()
+        if (AimEnt & AimEnt:owner() == Me){
+            AimEnt:setMaterial(TempMat)
+            hint("Pasted Material", 4)
+        } else {
+            hint("Material Not Pasted", 4)
+        }
+    }
+    
+    if (chatClk(Me)){
+        Said = lastSaid()
+        if (Said:lower() == "!save"){
+            hideChat(1)
+            TempString = holoEntity(MatCount):getMaterial()
+            if (TempString){
+                for(I = 1, MatCount){
+                    if (TempString == Materials[I, string]){
+                        Skip = 1
+                        hint(TempString + " Already Added", 4)
+                        break
+                    }
+                }
+                if (!Skip){
+                    FileString = FileString + holoEntity(MatCount):getMaterial() + "\n"
+                    Materials = FileString:explode("\n")
+                    timer("saveMat",1)
+                    hint("Saving...", 1)
+                }
+            } else {
+                hint("No Material Present", 4)
+            }
+        } elseif (Said[Said:length()] == "\\"){#"
+            hideChat(1)
+            print(Said)
+            holoMaterial(MatCount, Said:sub(1, Said:length() - 1))
+            if (PosVal == MatCount){
+                moveAction(0,0)
+            }
+        }
+    }
+    
+    if (clk("saveMat")){
+        if (fileCanWrite()){
+            hint("Saved!", 4)
+            fileWrite(FileName,FileString)
+            Mode = 1
+            
+        } else {
+            timer("saveMat",100)
+        }
+    }
+
+} elseif (!Mode & fileCanLoad()){
+    FileString = fileRead()
+    Materials = FileString:explode("\n")
+    for (I = 1, Materials:count()){
+        if (Materials[I, string] == ""){
+            Materials:remove(I)
+        }
+    }
+    MatCount = Materials:count() + 1
+    Mode++
+} elseif (Mode == 1){
+    MatCount = Materials:count() + 1
+    Perimeter = ceil(sqrt(MatCount))
+    while(holoCanCreate()){
+        holoCreate(HN)
+        holoModel(HN, "models/sprops/cuboids/height12/size_1/cube_12x12x12.mdl")
+        Box = holoScaleUnits(HN) - vec(0.5)
+        holoPos(HN, E:toWorld(vec(0, -((HN - 0.5) % Perimeter - Perimeter/2) * Box:x(), (floor((HN - 1) / Perimeter) + 0.5) * Box:y() + 1)))
+        holoAng(HN, E:angles())
+        holoMaterial(HN, Materials[HN, string])
+        holoParent(HN, E)
+        HN++
+        if (HN > MatCount){
+            Mode++
+            moveAction(0,0)
+            hint("Loaded!", 2)
+            break
+        }
+    }
+}
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

@@ -1,0 +1,51 @@
+@name Vehicle Turret
+@inputs [Base Seat TurrYaw LTurrPitch RTurrPitch]:entity
+@outputs Fire
+@persist [E Me Driver]:entity LClick
+@autoupdate
+
+runOnTick(1)
+
+
+
+if (first())
+{
+    Me=owner()
+        TurrYaw:setMass(500) 
+}
+Driver= Seat:driver()
+LClick=Driver:keyAttack1()
+
+################################################################
+
+if (Driver)
+{
+    Yaw=Driver:eyeAngles():yaw()
+    Pitch=Driver:eyeAngles():pitch()
+    
+    if (changed(LClick)& LClick){Fire=1}
+    else {Fire=0}
+}
+else
+{
+    Yaw=-90
+    Pitch=0
+    Fire=0
+}
+
+################################################################
+
+#applyAng
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+TurrYaw:face(Base:toWorld(ang(0,Yaw+90,0)))
+LTurrPitch:face(TurrYaw:toWorld(ang(Pitch,-90,0)))
+RTurrPitch:face(TurrYaw:toWorld(ang(Pitch,-90,0)))
+

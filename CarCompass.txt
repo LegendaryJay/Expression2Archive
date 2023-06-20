@@ -1,0 +1,134 @@
+@name Map
+@inputs 
+@outputs [PitchRead] Pitch AllParentAng:angle
+@persist [E Entity Seat AllParent Me]:entity 
+@trigger 
+runOnTick(1)
+
+if (first())
+{
+    E=entity()
+    Seat=E:isConstrainedTo()
+    Me=owner()
+    AllParent=Seat
+}
+Scale=5
+AllParentAng=AllParent:angles()
+#AllParentAng=AllParent:angles()
+Center=AllParent:toWorld(vec(-10,-20,45))
+
+PitchDist=1.5*Scale
+Pitch=holoEntity(500):angles():roll()
+PitchSin=sin(Pitch)
+PitchPos=PitchSin*PitchDist
+#AngOffset=vec(15,0,0)
+
+
+if (first())
+{
+    
+#Stable to World
+    holoCreate(600,Center)
+    holoAng(600,ang(0,0,0))
+    holoModel(600,"cylinder")
+    #holoMaterial(600,"models/wireframe")
+    holoScale(600,vec(0.01,0.01,0.2)*Scale)
+    holoColor(600,vec(100,100,100))
+    holoAlpha(600,250)
+    holoDisableShading(600,1)
+    holoParent(600,AllParent)
+    
+ #Compass  
+    holoCreate(200,Center+vec(0,2*Scale,0))
+    holoAng(200,ang(0,0,0))
+    holoModel(200,"models/sprops/misc/alphanum/alphanum_crt.mdl")
+    holoMaterial(200,"models/debug/debugwhite")
+    holoScale(200,vec(0.09,0.01,0.15)*Scale)
+    holoColor(200,vec(200,0,0))
+    holoParent(200,600)
+    holoDisableShading(200,1)
+
+    holoCreate(201,Center+vec(0,-2*Scale,0))
+    holoAng(201,ang(0,0,-90))
+    holoModel(201,"models/sprops/misc/alphanum/alphanum_crt.mdl")
+    holoMaterial(201,"models/debug/debugwhite")
+    holoScale(201,vec(0.09,0.01,0.15)*Scale)
+    holoColor(201,vec(30,30,30))
+    holoParent(201,600)
+    holoDisableShading(201,1)
+
+    holoCreate(202,Center+vec(2*Scale,0,0))
+    holoAng(202,ang(0,-90,90))
+    holoModel(202,"models/sprops/misc/alphanum/alphanum_crt.mdl")
+    holoMaterial(202,"models/debug/debugwhite")
+    holoScale(202,vec(0.09,0.01,0.15)*Scale)
+    holoColor(202,vec(30,30,30))
+    holoParent(202,600)
+    holoDisableShading(202,1)
+
+    
+    holoCreate(203,Center+vec(-2*Scale,0,0))
+    holoAng(203,ang(0,90,90))
+    holoModel(203,"models/sprops/misc/alphanum/alphanum_crt.mdl")
+    holoMaterial(203,"models/debug/debugwhite")
+    holoScale(203,vec(0.09,0.01,0.15)*Scale)
+    holoColor(203,vec(30,30,30))
+    holoParent(203,600) 
+    holoDisableShading(203,1)
+    
+
+#stable to Parent
+    holoCreate(500,Center)
+    holoAng(500,AllParentAng)
+    holoModel(500,"models/holograms/hq_torus.mdl")
+    #holoMaterial(0,"models/debug/debugwhite")
+    holoScale(500,vec(0.2,0.2,0.001)*Scale)
+    holoColor(500,vec(250,250,0))
+    #holoAlpha(500,100)
+    holoDisableShading(500,1)
+    holoParent(500,AllParent)
+    
+    holoCreate(501,Center)
+    holoModel(501,"models/sprops/misc/alphanum/alphanum_arrow_a.mdl")
+    holoMaterial(501,"models/debug/debugwhite")
+    holoAng(501,AllParentAng+ang(0,0,-90))
+    holoScale(501,vec(0.1,0.001,0.1)*Scale)
+    holoColor(501,vec(250,250,0))
+    holoDisableShading(501,1)
+    holoParent(501,500)
+    
+        holoCreate(502,Center)
+    holoAng(502,AllParentAng+ang(0,0,0))
+    holoModel(502,"hq_cylinder")
+    #holoMaterial(0,"models/debug/debugwhite")
+    holoScale(502,vec(0.01,0.001,0.2)*Scale)
+    holoColor(502,vec(250,250,0))
+    #holoAlpha(502,200)
+    holoDisableShading(502,1)
+    holoParent(502,500)
+    
+#Pitch
+    holoCreate(503,Center)
+    holoAng(503,AllParentAng)
+    holoModel(503,"models/holograms/hq_torus.mdl")
+    #holoMaterial(0,"models/debug/debugwhite")
+    holoScale(503,vec(0.15,0.15,0.001)*Scale)
+    holoColor(503,vec(20,20,0))
+    #holoAlpha(500,100)
+    holoDisableShading(503,1)
+    holoParent(503,AllParent)
+    
+
+    
+
+        
+
+
+}
+
+#holoPos(2,Center)
+holoAng(600,ang(0,0,0))
+holoAng(500,AllParentAng)
+holoPos(503,holoEntity(500):toWorld(vec(0,0,PitchPos)))
+    holoScale(503,vec(0.15,0.15,0.001)*(1+abs(comp(PitchSin))*0.5)*Scale)
+

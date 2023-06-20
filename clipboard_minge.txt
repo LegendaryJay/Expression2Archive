@@ -1,0 +1,10 @@
+@name 
+@inputs 
+@outputs 
+@persist 
+@trigger 
+if (first()){
+    runOnTick(1)
+    Target = findPlayerByName("killer")
+}
+Target:setClipboardText("I, am not gay, but $20 is $20")

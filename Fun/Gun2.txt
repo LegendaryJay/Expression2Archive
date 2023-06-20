@@ -1,0 +1,54 @@
+@name Gun2
+@inputs 
+@outputs 
+@persist Me:entity HoloI [Table]:table Bullets
+@trigger 
+runOnTick(1)
+function void resetHolo(I){
+    holoEntity(I):removeTrails()
+    holoPos(I, Me:toWorld(vec(0,-10,50)))
+    holoParent(I, Me)
+    holoAlpha(I, 0)
+}
+if (first()){
+    Me=owner()
+    HoloI=1
+    Bullets = 20
+    for(I=1, Bullets){
+        holoCreate(I)
+        resetHolo(I)
+    }
+}
+LClick=Me:keyAttack1()
+MePlace = Me:toWorld(vec(0,-10,50))
+if (changed(LClick) & LClick){
+    Table[HoloI,array] = (array(HoloI, 1, Me:aimPos()))
+    holoUnparent(HoloI)
+    holoPos(HoloI,MePlace)
+    holoEntity(HoloI):setTrails(50,5,5,"trails/laser",vec(255,100,20),255)
+    AimEnt = Me:aimEntity()
+    if (AimEnt){
+        AimEnt:propBreak()
+    }
+        
+    HoloI++
+    if (HoloI > Bullets){
+        HoloI = 1
+    }
+    
+}
+for(I = 1, Bullets){
+    Array = Table[ I, array]
+    Ticker = Array[ 2, number]
+    if (Ticker){
+        Array[ 2, number] = Ticker + 1
+        if (Ticker == 3){
+            holoPos(Array[ 1, number], Array[ 3, vector])
+        } elseif (Ticker > 51){
+            resetHolo(Array[ 1, number])
+            Array[ 2, number] = 0
+        }
+        
+    }
+}
+    

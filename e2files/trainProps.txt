@@ -1,0 +1,62 @@
+[
+	{
+		"model": "models/sprops/trans/train/track_s01.mdl",
+		"size": "[162.5 120.5 13.5]",
+		"center": "[-81 -0 6.5]"
+	},
+	{
+		"model": "models/sprops/trans/train/track_s02.mdl",
+		"size": "[324.5 120.5 13.5]",
+		"center": "[-162.0001 -0 6.5]"
+	},
+	{
+		"model": "models/sprops/trans/train/track_s03.mdl",
+		"size": "[486.5 120.5 13.5]",
+		"center": "[-243.0001 -0 6.5]"
+	},
+	{
+		"model": "models/sprops/trans/train/track_s04.mdl",
+		"size": "[648.5 120.5 13.5]",
+		"center": "[-324.0001 -0 6.5]"
+	},
+	{
+		"model": "models/sprops/trans/train/track_s05.mdl",
+		"size": "[1296.5 120.5001 13.5]",
+		"center": "[-648.0002 -0 6.5]"
+	},
+	{
+		"model": "models/sprops/trans/train/track_s06.mdl",
+		"size": "[2592.5 120.5001 13.5]",
+		"center": "[-1296.0005 -0.0001 6.5]"
+	},
+	{
+		"model": "models/sprops/trans/train/track_t90_01.mdl",
+		"size": "[885.4998 885.5 13.5]",
+		"center": "[-442.5002 382.5 6.5]"
+	},
+	{
+		"model": "models/sprops/trans/train/track_t90_02.mdl",
+		"size": "[1710.4994 1710.4998 13.5]",
+		"center": "[-855.0002 794.9999 6.5]"
+	},
+	{
+		"model": "models/sprops/trans/train/track_h01.mdl",
+		"size": "[2526.4763 120.5002 509.4579]",
+		"center": "[-1262.9886 -0.0001 254.4789]"
+	},
+	{
+		"model": "models/sprops/trans/train/track_h02.mdl",
+		"size": "[1262.2458 120.5002 266.7326]",
+		"center": "[-630.8733 0 133.1163]"
+	},
+	{
+		"model": "models/sprops/trans/train/track_h03.mdl",
+		"size": "[1269.4589 120.5002 267.7222]",
+		"center": "[-634.4797 0 -120.6111]"
+	},
+	{
+		"model": "models/sprops/trans/train/rerailer.mdl",
+		"size": "[1281.3479 172.5002 53.6031]",
+		"center": "[-639.8809 -0.0001 26.4486]"
+	}
+]

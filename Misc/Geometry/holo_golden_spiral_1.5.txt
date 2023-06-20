@@ -1,0 +1,41 @@
+@name holo golden spiral
+@inputs 
+@outputs 
+@persist I Max Mode
+@trigger 
+if (first()){
+    I=1
+    Max=100
+}
+if (!Mode){
+    
+    if ( I <= Max){
+        R = 100 #* I / Max
+        Gold = 137.508 * I
+        
+        holoCreate(
+            I, 
+            entity():pos() + vec(
+                R * sin(Gold),
+                R * cos(Gold),
+                10
+            ))
+        holoScale(I,vec(0.2))
+        holoColor(I,hsv2rgb(360 * I / Max,1,1))
+        holoAng(I,ang(0,90 - Gold,0))
+        holoScaleUnits( I, vec(0, 1, 1) + vec( 2 * R, 0, 0))
+        interval(1000)
+    }
+    else{
+        Mode=1
+    }
+}
+#[if (Mode){
+    for (II=1,Max){
+        lightColor(II,hsv2rgb(I,1,1))   
+        runOnTick(1) 
+    }
+}]#
+I++
+if (I>360){I-=360}
+if (I>Max){}

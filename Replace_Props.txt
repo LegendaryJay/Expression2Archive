@@ -1,0 +1,84 @@
+@name Replace Props
+@inputs 
+@outputs Props:array
+@persist [Me E]:entity HoloN
+@model models/sprops/geometry/sphere_144.mdl
+
+function void entity:moveTo(){
+    This:applyForce(  (-This:vel() / 3) * This:mass())
+}
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+if(first()){
+    HoloN = 1
+    runOnTick(1)
+    propSpawnUndo(0)
+    E = entity()
+    #noCollideAll(E, 1)
+    E:propNotSolid(1)
+    Me = owner()
+    E:setMaterial("models/wireframe")
+}
+E:setAng(ang(0,E:angles():yaw() + 1,0))
+E:propNotSolid(!Me:isFlashlightOn())
+
+if(findCanQuery()){
+    findIncludePlayerProps(Me)
+    findExcludePlayer(Me)
+    findInSphere(E:boxCenterW(), E:boxSize():z()/2 + 5)
+    NewProps = findToArray()
+    Props = Props:add(NewProps)
+    
+    if(!Props:count()){
+        E:setColor(vec(0,255,0))
+    } else {
+        E:setColor(vec(255,0,0))
+        I = 1
+        while(propCanCreate() & Props:count() & perf()){
+            PropThing = Props:shiftEntity()
+            if(PropThing){
+                I = 1
+                while (perf() & I <= Props:count()){
+                    if (!Props[I, entity] | Props[I, entity] == PropThing ){
+                        Props:remove(I)
+                    } else {
+                        I++
+                    }
+                }
+                if (PropThing:type() == "gmod_wire_hologram"){
+                    holoCreate(HoloN)
+                    holoPos(HoloN, vec():setZ(Me:pos():z() + 50) + vec(random(-100, 100),random(-100, 100),random(0, 100)))
+                    holoModel(HoloN, PropThing:model())
+                    holoSkin(HoloN, PropThing:getSkin())
+                    holoMaterial(HoloN, PropThing:getMaterial())
+                    holoColor(HoloN, PropThing:getColor4())
+                    holoAng(HoloN, ang(random()*360,random()*360,random()*360))
+                    Box = PropThing:boxSize()
+                    MyBox = holoEntity(HoloN):boxSize()
+                    holoScale(HoloN, Box/MyBox)
+                    HoloN++
+                    PropThing:propDelete()
+                } elseif (Props:count() != 1 & PropThing:type() == "gmod_wire_expression2") {
+                    Props:pushEntity(PropThing)
+                } else {
+                    Spawn = propSpawn(PropThing:model(), vec():setZ(Me:pos():z() + 50), PropThing:angles(), 0)
+                    Spawn:setMaterial(PropThing:getMaterial())
+                    Spawn:setColor(PropThing:getColor4())
+                    Spawn:setSkin(PropThing:getSkin())
+                    PropThing:propDelete()
+                }
+                
+                PropThing:propDelete()
+                I++
+            }
+        }
+    }
+    
+}
+#E:propNotSolid(!Me:isFlashlightOn())

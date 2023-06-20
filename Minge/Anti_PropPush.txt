@@ -1,0 +1,30 @@
+@name 
+@inputs 
+@outputs Target:array NoClip
+@persist
+@trigger 
+runOnTick(1)
+if (findCanQuery()){
+    findClearBlackList()
+    findClearWhiteList()
+    findIncludeClass("prop_physics")
+    findInSphere(owner():boxCenterW(),100)
+    
+    findExcludePlayerProps(owner())
+    findSortByDistance(owner():boxCenterW())
+    Target=findToArray()
+}
+
+for (I=1,Target:count()){
+    if (Target[I,entity]:isPlayerHolding() & (Target[I,entity]:nearestPoint(owner():boxCenterW())-owner():boxCenterW()):length()<35 & !owner():inNoclip()){
+        stoptimer("noclip")
+        timer("noclip",500)
+        concmd("noclip")
+        if (I>10){break}
+    }
+}
+if (clk("noclip") & owner():inNoclip()){
+    concmd("noclip")
+    }
+    
+    

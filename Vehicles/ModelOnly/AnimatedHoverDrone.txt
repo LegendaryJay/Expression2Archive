@@ -1,0 +1,353 @@
+@name AnimatedHoverDrone
+@inputs 
+@outputs
+@persist [Me E Spin Core Spin2 LDome RDome HitDome HitBlades]:entity Roll Pitch Count Rotate Mode PitchPerc RollPerc ForceAng
+@trigger  
+
+runOnTick(1)
+runOnLast(1)
+if (first()|duped())
+{
+    
+    #Count=89
+    
+    Me = owner() 
+    E=entity()
+    
+    HoloI=1
+    Core=holoCreate(HoloI,entity():pos() + vec(0,0,97))
+    holoScale(HoloI,vec())
+    #holoParent(HoloI,entity())
+    HoloI++
+    
+
+    
+    #TopDome
+    RDome = holoCreate(HoloI,Core:toWorld(vec(0,-2,3)))
+    holoScale(HoloI,vec(0.5))
+    holoAng(HoloI,Core:toWorld(ang(0,90,0)))
+    holoModel(HoloI,"models/props_phx/construct/metal_dome180.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    HoloI++
+    
+    LDome = holoCreate(HoloI,Core:toWorld(vec(0,2,3)))
+    holoScale(HoloI,vec(0.5))
+    holoAng(HoloI,Core:toWorld(ang(0,-90,0)))
+    holoModel(HoloI,"models/props_phx/construct/metal_dome180.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    HoloI++
+
+    
+    #Inner Rim
+    holoCreate(HoloI,Core:toWorld(vec(0,-3.4,15)))
+    holoScale(HoloI,vec(1.1,1,1.1))
+    holoAng(HoloI,Core:toWorld(ang(0,0,0)))
+    holoModel(HoloI,"models/sprops/geometry/hring_48.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    HoloI++
+    
+    holoCreate(HoloI,Core:toWorld(vec(0,3.4,15)))
+    holoScale(HoloI,vec(1.1,1,1.1))
+    holoAng(HoloI,Core:toWorld(ang(0,0,0)))
+    holoModel(HoloI,"models/sprops/geometry/hring_48.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    HoloI++
+    
+    #Barrel    
+    holoCreate(HoloI,Core:toWorld(vec(0,0,5)))
+    holoScale(HoloI,vec(0.15,1,0.15))
+    holoAng(HoloI,Core:toWorld(ang(0,90,0)))
+    holoModel(HoloI,"models/sprops/misc/tubes/size_1/tube_12x24.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    HoloI++
+    
+    #Big Barrel
+    holoCreate(HoloI,Core:toWorld(vec(22,0,5)))
+    holoScale(HoloI,vec(0.3,1,0.3))
+    holoAng(HoloI,Core:toWorld(ang(0,90,0)))
+    holoModel(HoloI,"models/sprops/misc/tubes/size_1/tube_12x24.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    HoloI++
+    
+    #Inside Top Dome
+    
+    holoCreate(HoloI,Core:toWorld(vec(0,0,12)))
+    holoScale(HoloI,vec(1))
+    holoAng(HoloI,Core:toWorld(ang(0,0,0)))
+    holoModel(HoloI,"models/sprops/misc/tubes/size_3/h_tube_36x12.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    #holoAlpha(HoloI,100)
+    HoloI++
+    
+    #Spinning Ring
+    Spin=holoCreate(HoloI,Core:toWorld(vec(0,0,1)))
+    holoScale(HoloI,vec(1.56,0.8,1.56))
+    holoAng(HoloI,Core:toWorld(ang(0,0,90)))
+    holoModel(HoloI,"models/sprops/misc/tubes/size_3/tube_36x6.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    HoloI++
+    
+    holoCreate(HoloI,Core:toWorld(vec(0,0,1.5)))
+    holoScale(HoloI,vec(1))
+    holoAng(HoloI,Core:toWorld(ang(0,0,90)))
+    holoModel(HoloI,"models/sprops/geometry/fdisc_48.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    HoloI++
+    
+    #Counter Spin
+    Spin2=holoCreate(HoloI,Core:toWorld(vec(0,0,-1)))
+    holoScale(HoloI,vec(1.1))
+    holoAng(HoloI,Core:toWorld(ang(0,0,90)))
+    holoModel(HoloI,"models/sprops/geometry/fdisc_24.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    HoloI++
+    
+    
+    
+    for(I=1,8){
+        Ang= toWorldAng(vec(),ang(180, -22.5,0),vec(),ang(Roll,-45*I,-Pitch))
+        
+        holoCreate(100+I,Core:pos())
+        holoScale(100+I,vec(0.5))
+        holoAng(100+I,Ang)
+        holoModel(100+I,"models/hunter/misc/shell2x2e.mdl")
+        holoMaterial(100+I,"models/debug/debugwhite")
+        holoColor(100+I,vec(100))
+        holoParent(100+I,holoIndex(Spin))
+    }
+    for(I=1,8){
+    Ang= toWorldAng(vec(),ang(180, -22.5,0),vec(),ang(Roll,-45*I,-Pitch))
+        
+        holoCreate(200+I,Core:pos())
+        holoScale(200+I,vec(0.25))
+        holoAng(200+I,Ang)
+        holoModel(200+I,"models/hunter/misc/shell2x2e.mdl")
+        holoMaterial(200+I,"models/debug/debugwhite")
+        holoColor(200+I,vec(100))
+        holoParent(200+I,holoIndex(Spin))
+    }
+    
+    #inside Wall
+    holoCreate(HoloI,Core:toWorld(vec(0,-3.8,3)))
+    holoScale(HoloI,vec(0.5))
+    holoAng(HoloI,Core:toWorld(ang(90,-90,180)))
+    holoModel(HoloI,"models/hunter/tubes/circle2x2c.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    HoloI++
+
+    holoCreate(HoloI,Core:toWorld(vec(0,3.8,3)))
+    holoScale(HoloI,vec(0.5))
+    holoAng(HoloI,Core:toWorld(ang(90,-90,180)))
+    holoModel(HoloI,"models/hunter/tubes/circle2x2c.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(100))
+    holoParent(HoloI,Core)
+    HoloI++
+    
+    #Track
+    holoCreate(HoloI,Core:toWorld(vec(0,-1,3)))
+    holoScale(HoloI,vec(0.4,0.4,0.25))
+    holoAng(HoloI,Core:toWorld(ang(90,-90,180)))
+    holoModel(HoloI,"models/hunter/tubes/circle2x2c.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(75))
+    holoParent(HoloI,Core)
+    HoloI++
+
+    holoCreate(HoloI,Core:toWorld(vec(0,1,3)))
+    holoScale(HoloI,vec(0.4,0.4,0.25))
+    holoAng(HoloI,Core:toWorld(ang(90,-90,180)))
+    holoModel(HoloI,"models/hunter/tubes/circle2x2c.mdl")
+    holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(75))
+    holoParent(HoloI,Core)
+    HoloI++
+    
+#[    #Tech Undercarrage
+    holoCreate(HoloI,Core:toWorld(vec(8,-1,-3)))
+    holoScale(HoloI,vec(0.1))
+    holoAng(HoloI,E:toWorld(ang(90,0,180)))
+    holoModel(HoloI,"models/props_combine/weaponstripper.mdl")
+    #holoMaterial(HoloI,"models/debug/debugwhite")
+    holoColor(HoloI,vec(75))
+    holoParent(HoloI,Core)
+    HoloI++]#
+    
+    ##Hit Box
+    HitDome=propSpawn("models/sprops/misc/domes/size_4/dome_48x24.mdl",Core:toWorld(vec(0,0,3)),1)
+    HitDome:setAlpha(0)
+    
+    HitBlades=propSpawn("models/sprops/misc/tubes/size_72/tube_72x6.mdl",Core:toWorld(vec(0,0,-25)),Core:toWorld(ang(0,0,90)),1)
+    HitBlades:setAlpha(0)    
+    HitBlades:setMass(400)
+    
+    weld(HitDome,HitBlades)
+    holoParent(1,HitDome)
+    
+}
+
+for (I=1,8){
+    Fix=vec(-18.042938,-43.728516,-0.282339)*0.5
+    
+
+    SAng=Spin:angles()
+    
+    AngFix=toWorldAng(vec(),ang(0,-45*I + -90,0),Spin:pos(),SAng+ang(0,0,-90))
+    AngFix2=toWorldAng(vec(),ang(-Pitch,0,-Roll),vec(),AngFix)
+    Ang= toWorldAng(vec(),ang(180, 68.5,0) ,vec(),AngFix2)
+    
+    Vec= toWorld(vec(-sin(360*(I/8))*23.5,-cos(360*(I/8))*23.5,0),ang(),Spin:pos()-vec(0,0,2),SAng+ang(0,0,-90))    
+    Fix2=toWorld(-Fix,ang(),Vec,Ang)
+    holoPos(I+100,Fix2)
+    holoAng(I+100,Ang )
+    
+    Fix=vec(-18.042938,-43.728516,-0.282339)*0.25
+    SAng=Spin2:angles()
+    
+    AngFix=toWorldAng(vec(),ang(0,-45*I + -90,0),Spin2:pos(),SAng+ang(0,0,-90))
+    AngFix2=toWorldAng(vec(),ang(-Pitch,0,Roll),vec(),AngFix)
+    Ang= toWorldAng(vec(),ang(180, 68.5,0) ,vec(),AngFix2)
+    
+    Vec= toWorld(vec(-sin(360*(I/8))*11.75,-cos(360*(I/8))*11.75,0),ang(),Spin2:pos()-vec(0,0,2),SAng+ang(0,0,-90))    
+    Fix2=toWorld(-Fix,ang(),Vec,Ang)
+    holoPos(I+200,Fix2)
+    holoAng(I+200,Ang )
+    
+}
+Max=140
+#holoPos(holoIndex(Core),Core:toWorld(vec(0,0,sin(Count*6)*0.1*random(0,1))))
+
+#holoAng(holoIndex(Core), Core:angles() + ang(random(-1,1),0,random(-1,1))*0.3 + (entity():angles()-Core:angles())/10)
+if (Count <= Max*0.5){
+    
+}
+
+if (Count<=Max){
+    Pitch=sin(90*Count/Max)*90
+    Roll=sin(90*Count/Max)*75
+}
+if (Count<250){
+    Rotate=12*sin(90*Count/250)
+}
+if (Mode==0 & Count<250){
+    Count++
+}
+elseif (Mode==1 & Count>=0){
+    Count--
+}
+
+Count++
+holoAng(holoIndex(Spin),Spin:toWorld(ang(Rotate,0,0)))
+holoAng(holoIndex(Spin2),Spin2:toWorld(ang(-1.25*Rotate,0,0)))
+
+if (last()){
+    HitDome:propDelete()
+    HitBlades:propDelete()
+}
+
+Driver= owner()
+LClick=Driver:keyAttack1()
+RClick=Driver:keyAttack2()
+R=Driver:keyReload()
+W=Driver:keyPressed("w")
+A=Driver:keyPressed("a")
+D=Driver:keyPressed("d")
+S=Driver:keyPressed("s")
+Shift=Driver:keyPressed("LSHIFT")
+Ctrl=Driver:keyPressed("LCONTROL")
+Space=Driver:keyPressed("Space")
+
+
+if (W|S){PitchPercAdd = ( W ? 1 : -1)}
+else {PitchAdd=0}
+if (A|D == 1){RollPercAdd = ( A ? -1 : 1)}
+else {RollAdd=0}
+if (Space|Shift){ForceAngAdd = (Space ? 0.05 : -0.05) }
+
+
+ForceAng+=ForceAngAdd
+if (ForceAng > 15){
+    ForceAng=15
+}
+if (ForceAng < 0){
+    ForceAng = 0
+}
+ForceAng += ForceAngAdd
+Force = (ForceAng/15)*10500
+
+
+
+PitchPerc+=PitchPercAdd
+if (PitchPerc > 50){
+    PitchPerc = 50
+}
+elseif (PitchPerc < -50){
+    PitchPerc = -50
+}
+
+RollPerc+=RollPercAdd
+if (RollPerc > 50){
+    RollPerc = 50
+}
+elseif (RollPerc < -50){
+    RollPerc = -50
+}
+
+if (R == 1)
+{
+    HitDome:propFreeze(0)
+    HitBlades:propFreeze(0)
+}
+
+HitBlades:applyAngForce(ang(0,-PitchPerc,RollPerc))
+HitBlades:applyForce(vec(0,0,Force))
+
+
+
+
+
+if (LClick == 1)
+{
+   # hint("Lclcik",10)
+}
+if (RClick == 1)
+{
+   # hint("Rclcik",10)
+}
+
+
+if (Shift == 1)
+{
+   # hint("Shift",10)
+}
+if (Ctrl == 1)
+{
+   # hint("LControl",10)
+}
+if (Space == 1)
+{
+    #hint("Space",10)
+}
+

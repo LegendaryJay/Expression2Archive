@@ -1,0 +1,57 @@
+@name Garage
+@inputs 
+@outputs 
+@persist E:entity [HoloZ E2Z]:vector  Ang:angle
+@trigger 
+@model models/sprops/misc/alphanum/alphanum_lbracket.mdl
+
+
+function void entity:moveTo(Pos:vector){
+    Vec = (Pos - This:pos())*500
+    This:applyForce((Vec-This:vel())*This:mass())
+}
+
+
+runOnTick(1)
+if (first()) {
+    E=entity()
+    E:propFreeze(1)
+    E:setAng(ang(0,E:angles():yaw(),-90))
+    
+    E2Z=E:pos()
+    
+    timer("!",2)
+}
+
+if (clk("!")){
+    HoloZ=E:toWorld(vec(-2,6,0))
+    Ang=ang(0,E:angles():yaw(),-90)
+    
+    for (I=1,23){
+        Pos=HoloZ + vec(0,0,6.35*I)
+        holoCreate(I,Pos)
+        holoColor(I,vec(51,27,77))
+        holoModel(I,"models/sprops/rectangles_thin/size_1_5/rect_6x132x1_5.mdl")
+        holoMaterial(I,"phoenix_storms/Fender_white")
+        holoAng(I,ang(0,E:angles():yaw() + 90,90))
+        #holoParent(I,1)
+    }
+    
+}
+if (E:isPlayerHolding()){
+    E:propFreeze(0)
+    for (I=1,23){
+        holoPos(I,HoloZ +  vec(0,0, 6.35*I - 6 + E:pos():z() - HoloZ:z() ))
+    }
+    E:setPos(E2Z:setZ(E:pos():z()))
+    E:setAng(Ang)
+    stoptimer("Freeze")
+    timer("Freeze",3)
+    
+}
+if (clk("Freeze")) { 
+    Return=0 
+    E:propFreeze(1)
+    E:setPos(E2Z:setZ(E:pos():z()))
+    E:setAng(Ang)
+}

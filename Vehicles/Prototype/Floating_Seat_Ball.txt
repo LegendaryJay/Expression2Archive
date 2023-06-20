@@ -1,0 +1,80 @@
+@name 
+@inputs 
+@outputs Sep DesiredHeight Angle:vector Pitch Roll
+@persist [Seat E]:entity Ranger:array Height Sep
+
+if (first()){
+    runOnTick(1)
+    runOnLast(1)
+    TPHue = 210
+    TPModel = "models/sprops/geometry/sphere_24.mdl"
+    Seat = seatSpawn(TPModel, 0)
+
+    Sep = Seat:boxSize():x()/2
+    Height = 100
+
+    E = entity()
+    Seat:setMaterial("lights/white")
+    Seat:setColor(hsv2rgb(TPHue, 1, 1))
+    Seat:setAlpha(100)
+    
+    
+    holoCreate(100)
+    holoModel(100, TPModel)
+    holoMaterial(100, "lights/white")
+    holoScale(100, vec(0.85))
+    holoColor(100, hsv2rgb(TPHue, 0.7, 0.9))
+    holoPos(100,Seat:boxCenterW())
+    holoParent(100, Seat)
+    
+    holoCreate(101)
+    holoModel(101, "models/sprops/geometry/fring_36.mdl")
+    holoMaterial(101, "lights/white")
+    holoScale(101, vec(0.85))
+    holoColor(101, hsv2rgb(TPHue, 0.7, 0.9))
+    holoPos(101,Seat:boxCenterW())
+    holoParent(101, Seat)
+    
+    holoCreate(102)
+    holoModel(102, "models/sprops/misc/cones/size_0/cone_3x24.mdl")
+    holoMaterial(102, "lights/white")
+    holoScale(102, vec(0.85))
+    holoColor(102, hsv2rgb(TPHue, 0.7, 0.9))
+    holoAng(102, Seat:angles())
+    holoPos(102, Seat:boxCenterW() + holoEntity(102):up()*12)
+    holoParent(102, Seat)
+    
+    
+    
+    for(I=1,4){
+        holoCreate(I)
+        holoScale(I, vec(0.1))
+        holoColor(I, hsv2rgb(vec(360 * (I-1)/4,1,1)))
+    }
+    
+    holoCreate(200)
+    holoScale(200, vec(0.1))
+}
+
+RangerPos = array(
+    Seat:toWorld(vec( Sep,    0,  0)), #F
+    Seat:toWorld(vec( 0,    Sep,  0)), #-R
+    Seat:toWorld(vec( -Sep,   0,  0)), #-F
+    Seat:toWorld(vec( 0,   -Sep,  0))  #R
+)
+for (I=1,4){
+    rangerFilter(Seat)
+    Ranger[I, ranger] = rangerOffset(RangerPos[ I, vector], RangerPos[ I, vector] - Seat:up()*Height*2)
+    holoPos(I, Ranger[I, ranger]:pos())
+}
+Pitch = atan((Ranger[1, ranger]:distance() - Ranger[3,ranger]:distance())/(Sep*2))
+Roll = -atan((Ranger[2, ranger]:distance() - Ranger[4,ranger]:distance())/(Sep*2))
+
+    holoAng(101, Seat:toWorld(ang(Pitch,0, 90 + Roll)))
+
+
+DesiredHeight =  max(0, Height - (Ranger[1,ranger]:distance() + Ranger[2,ranger]:distance() + Ranger[3,ranger]:distance() + Ranger[4,ranger]:distance())*0.25)
+
+if (last()){
+    propDeleteAll()
+}

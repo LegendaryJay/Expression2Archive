@@ -1,0 +1,28 @@
+@name MineField
+@inputs 
+@outputs 
+@persist Space Max HX HY E:entity Size:vector2
+@trigger 
+if (first()){
+    runOnTick(1)
+    Size = vec2(20, 20)
+    Space = 300
+    HX = 1
+    HY = 1
+    E = entity()
+}
+while (HX <= Size:x() & holoCanCreate()){
+    while (HY <= Size:y() & holoCanCreate()){   
+        I = (HX - 1) * Size:y() + HY
+        holoCreate(I)
+        holoPos(I, E:pos() - vec(Size) * Space/2 + vec(HX -1, HY-1, 0) * Space )# + vec(0,0,holoEntity(I):boxSize():y()/2)
+        holoModel(I, "models/sprops/rectangles/size_1/rect_3x480x3.mdl")
+        holoMaterial(I,"engine/writez")
+        holoAng(I, ang(random(),random(),random())*360)
+        HY++
+    }
+    if (HY > Size:y()){
+        HX++
+        HY = 1
+    }
+}

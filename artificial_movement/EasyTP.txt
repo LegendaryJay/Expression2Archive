@@ -1,0 +1,31 @@
+@name 
+@inputs 
+@outputs 
+@persist [TPCommand Prefix]:string CommandLength
+@trigger 
+if (first()){
+    runOnChat(1)
+    TPCommand = "bamf"
+    Prefix = "!"
+    
+    CommandLength = TPCommand:length() + Prefix:length()
+}
+if (chatClk()){
+    LastSaid = lastSaid()
+    LastSpoke = lastSpoke()
+    if (LastSaid:sub(1, 1) == Prefix){
+       LastSaidArray = LastSaid:sub(2):explode(" ")
+        switch (LastSaidArray[1, string]:lower()){
+            case TPCommand,
+                TargetPlayer = findPlayerByName(LastSaidArray[2, string])?:findPlayerByName(LastSaid:explode("\"")[2, string])
+                if (TargetPlayer){
+                    LastSpoke:plySetPos(TargetPlayer:boxCenterW() - TargetPlayer:eye() * 100 - LastSpoke:boxCenter())
+                    LastSpoke:plySetAng(TargetPlayer:eye():toAngle())
+                }
+                break
+            
+        }
+    }
+
+    
+}

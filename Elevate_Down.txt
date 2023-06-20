@@ -1,0 +1,95 @@
+@name Elevator
+@inputs 
+@outputs 
+@persist [SeatUp SeatDown SeatEsc]:entity [UpPos DownPos EscPos]:vector
+@trigger 
+
+if (first()){
+    runOnTick(1)
+    runOnLast(1)
+    
+    Float = 20
+    
+    UpPos = vec( 0, 0, -12287.718750	+  Float)
+    DownPos = vec( 0, 0, -12799.718750 + Float)
+    EscPos = vec(-733.901794, 85.850777, -12767.718750 + Float)	
+    
+    SeatEsc = seatSpawn("models/sprops/misc/alphanum/alphanum_arrow_a.mdl", EscPos, ang(), 1)
+    SeatEsc:setMaterial("lights/white")
+    SeatEsc:setColor(vec(255,0,0))
+    
+    
+    SeatDown = seatSpawn("models/sprops/misc/alphanum/alphanum_arrow_a.mdl", UpPos, ang(180, 0, 0), 1)
+    SeatDown:setMaterial("lights/white")
+    SeatDown:setColor(vec(50,10,70))
+    
+    
+    SeatUp = seatSpawn("models/sprops/misc/alphanum/alphanum_arrow_a.mdl", DownPos, ang(), 1)
+    SeatUp:setMaterial("lights/white")
+    SeatUp:setColor(vec(10,0,255))
+    
+    noCollideAll(SeatDown, 1)
+    noCollideAll(SeatUp, 1)
+    noCollideAll(SeatEsc, 1)
+    
+}
+
+DriverUp = SeatUp:driver()
+DriverDown = SeatDown:driver()
+DriverEsc = SeatEsc:driver()
+
+function void entity:heldAction(){
+    if (This:isPlayerHolding()){
+        This:propFreeze(1)
+    }
+}
+
+SeatUp:heldAction()
+SeatDown:heldAction()
+SeatEsc:heldAction()
+
+if (changed(DriverUp)){
+    
+    if (SeatUp:driver()){
+        SeatUp:setPos(UpPos)
+        timer("eject:SeatUp", 2)
+    } else {
+        SeatUp:setPos(DownPos)
+        SeatUp:setAng(ang())
+        SeatUp:propFreeze(1)
+    }
+}
+if (changed(DriverDown)){
+    
+    if (DriverDown){
+        SeatDown:setPos(DownPos)
+        timer("eject:SeatDown", 2)
+    } else {
+        SeatDown:setPos(UpPos)
+        SeatDown:setAng(ang(180, 0, 0))
+        SeatDown:propFreeze(1)
+    }
+}
+if (changed(DriverEsc)){
+    
+    if (DriverEsc){
+        SeatEsc:setPos(UpPos)
+        timer("eject:SeatEsc", 2)
+    } else {
+        SeatEsc:setPos(EscPos)
+        SeatEsc:setAng(ang())
+        SeatEsc:propFreeze(1)
+    }
+}
+if (clk("eject:SeatUp")){
+    SeatUp:ejectPod()
+}
+if (clk("eject:SeatDown")){
+    SeatDown:ejectPod()
+}
+if (clk("eject:SeatEsc")){
+    SeatEsc:ejectPod()
+}
+if(last()){
+    propDeleteAll()
+}

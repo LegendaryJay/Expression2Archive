@@ -1,0 +1,38 @@
+@name Invisible BlackRoom
+@model models/hunter/blocks/cube025x025x025.mdl
+
+Scale = 2
+HoloSeperation = 0.3
+
+HalfSize = vec(0, 0, 190.05000305176)
+BoxCenter = vec( 0, 0, 166.07499694824)
+Scale2Unit = 1/ 380.10000610352
+Center = entity():boxCenterW() - vec( 0, 0, entity():boxSize():z()*0.5) - Scale * 0.25 + 1 + HoloSeperation * 4 + HalfSize*abs(Scale)
+
+for(I = 1, 4){
+    TempScale = sign(2.5 - I)*( (2 - I) * HoloSeperation * Scale2Unit * abs(Scale) + abs(Scale))
+    holoCreate(I)
+    holoAng(I, ang())
+    holoModel(I, "models/hunter/blocks/cube8x8x8.mdl")
+    holoScale(I, vec(TempScale))
+    holoPos(I, Center - TempScale * BoxCenter)
+    holoParent(I,entity())
+}
+holoMaterial(1,"models/wireframe")
+holoColor(1,vec(20))
+
+holoMaterial(2,"engine/writez")
+holoColor(2,vec(255))
+ 
+
+holoMaterial(3,"lights/white")
+holoColor(3,vec(0))
+
+holoMaterial(4,"models/wireframe")
+holoColor(4,vec(40))
+
+"engine/writez"
+"models/wireframe"
+"engine/shadowbuild"
+"lights/white"
+

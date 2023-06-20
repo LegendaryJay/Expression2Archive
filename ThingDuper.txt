@@ -1,0 +1,66 @@
+@name Duper
+@inputs 
+@outputs String:string
+@persist Me:entity Mode Table:table Array:array InvestigateList:array
+@trigger 
+
+if (first()){
+    Me = owner()
+    runOnKeys(Me, 1, array("pad_enter"))
+    array(
+        "AdvBallsocket", 
+        "Axis", 
+        "Ballsocket", 
+        "Elastic", 
+        "Hydraulic", 
+        "Keepupright", 
+        "Motor", 
+        "Muscle", 
+        "NoCollide", 
+        "Pulley", 
+        "Rope", 
+        "Slider", 
+        "Weld", 
+        "Winch"
+    )
+
+    function investigate(Entity:entity){
+        TempTable = table()
+        TempTable["model", string] = Entity:model()
+        TempTable["material", string] = Entity:getMaterial()
+        TempTable["color", vector4] = Entity:getColor4()
+        TempTable["subMaterials",array] = Entity:getMaterials()
+        TempTable["skin", number] = Entity:getSkin()
+        TempTable["Angle", angle] = Entity:angles()
+        TempTable["Pos", vector] = Entity:pos()
+        TempTable["class", string] = Entity:type()
+        
+        TempConstraints = Entity:getConnectedEntities()
+        Constraints = table()
+        foreach(K, ConnEnt:entity = Constraints)
+            Constraints[ConnEnt:id():toString(), string] == ""
+        }
+        InvestigateList:add(Constraints)
+        Table[Ent:id():toString(), table] = TempTable:clone()
+        
+    }
+}
+if(keyClk()){
+    Mode = 1 
+    interval(1)  
+}
+if (Mode){
+    interval(500)
+    rangerFilter(Array)
+    Ranger = rangerOffsetHull(Me:aimPos() + vec(0,0,50),Me:aimPos() + vec(0,0,-50),vec(50))
+    Ent = Ranger:entity()
+    if (Ent){
+        Array:pushEntity(Ent)
+        
+        
+    } else {
+        fileWrite("Dupe.txt", jsonEncode(Table, 1))
+    
+    }
+    
+}

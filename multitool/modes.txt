@@ -1,0 +1,31 @@
+@name MultiTool Modes
+@inputs 
+@outputs 
+@persist ActiveModes:table
+@trigger 
+
+if (first()){
+    
+    Me = owner()
+    
+    CopyBtn = "mouse_right"
+    PasteBtn = "mouse_left"
+    DeleteBtn = "r"
+    
+    
+    
+    runOnKeys(1, array())
+    ActiveModes["On", number] = 0
+    ActiveModes["Materials", number] = 0
+    ActiveModes["Colors", number] = 0
+    ActiveModes["Models", number] = 0
+    
+}
+#include "lib/fancyPrint"
+
+function displayMode(){
+    foreach(K, Active:number = ActiveModes){
+        fancyPrint("[" + (Active ? "X" : " ") + "]", K)
+    }
+}
+

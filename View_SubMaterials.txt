@@ -1,0 +1,72 @@
+@name View SubMaterials
+@inputs 
+@outputs MatList:array
+@persist Me:entity [E Target]:entity MatList:array MatCount Run
+@trigger 
+
+if (first()){
+    E = entity()
+    runOnTick(1)
+    Me = owner()
+}
+
+TargetBtn = Me:keyPressed("k")
+if (changed(TargetBtn) & TargetBtn){
+    MatList = array()
+    
+    AimEnt = Me:aimEntity()
+    TargetVec = vec()
+    Target = noentity()
+    
+    if (AimEnt){
+        Run = 1
+        Target = AimEnt
+        
+        MatList = Target:getMaterials()
+        TempMat = Target:getMaterial()
+        
+        if (TempMat){
+            MatList:unshiftString(TempMat)
+        }
+        
+    } else {
+        Ranger = Me:eyeTrace()
+        MatList = array( Ranger:hitTexture())
+        TempPos = round(Me:pos())
+    }
+    OldMatCount = MatCount
+    MatCount = MatList:count()
+    
+    hint((Target ? Target:toString() : TempPos:toString()) + " { " + MatCount + " } ", 4)
+    
+    if (OldMatCount > MatCount){
+        for (I = MatCount + 1, OldMatCount){
+            holoAlpha(I, 0)
+        }
+    }
+    
+    for(I = 1, MatCount){
+        if (!holoEntity(I)){
+            holoCreate(I)
+        }
+        holoAlpha(I, 255)
+        holoPos(I, toWorld(
+            vec(
+                0,
+                0,
+                holoScaleUnits(I):z() * (I - 0.5) + E:boxSize():z() * 0.5
+            ),
+            ang(),
+            E:boxCenterW(),
+            E:angles()
+                      
+        ))
+        holoModel(I, "models/holograms/hq_rcube.mdl")
+        holoMaterial(I, MatList[I, string])
+        holoParent(I, E)
+        holoAng(I, E:angles())
+    }
+
+}
+
+

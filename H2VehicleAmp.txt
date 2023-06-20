@@ -1,0 +1,28 @@
+@name H2VehicleAmp
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+function void entity:moveTo(){
+    Vec = (This:forward() + vec(0,0,1))*50
+    This:applyForce((Vec-vec(0,0,This:vel():z()))*This:mass())
+}
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+runOnTick(1)
+Me = owner() 
+Seat = entity():isConstrainedTo()
+if (Seat:driver():keyPressed("space")){
+    Seat:propNotSolid(1)
+    Seat:moveTo()
+} else {
+    Seat:propNotSolid(0)
+}

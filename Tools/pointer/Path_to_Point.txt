@@ -1,0 +1,67 @@
+@name Path to point
+@inputs InEnt:entity
+@outputs String:string
+@persist [Me E]:entity MaxHolos Timer MaxTimer LastRatioInc MaxDist
+@trigger 
+
+if (first()){
+    runOnTick(1)
+    MaxHolos = 5
+    MaxTimer = 500
+    MaxDist = 700
+    Me = owner()
+    E = entity()
+
+    LastRatioInc = 1/MaxTimer
+}
+
+PointA = Me:shootPos()
+PointB = InEnt:pos()
+
+
+Dist = (-PointB + PointA):length()
+Timer = (Timer + 1) % MaxTimer
+for(I = 1, MaxHolos){
+    LocalTimer = (MaxTimer * I/MaxHolos + Timer) % MaxTimer
+    Ratio = LocalTimer/MaxTimer
+    
+    if (!holoEntity(I)){
+        holoCreate(I)
+        holoModel(I, "models/holograms/hq_torus_thin.mdl")
+        holoColor(I, vec())
+    }
+        
+    if (Dist > MaxDist){
+        BezierStartAng = PointA + Me:eye() * Dist * 0.5
+        
+        Pos = bezier(PointA, BezierStartAng, PointB, Ratio)
+        LastPos = bezier(PointA, BezierStartAng, PointB, Ratio - LastRatioInc)
+    
+        Ang = quat((Pos - LastPos):toAngle()):up():toAngle()
+        Scale = vec(25 + 5 * Ratio)
+        
+        FadeOut = 0.1
+        if (Ratio >= (1 - FadeOut)){
+            Alpha =  255*(1 - Ratio)/FadeOut
+        } elseif (Ratio <= FadeOut) {
+            Alpha =  255 * Ratio/FadeOut
+        } else {
+            Alpha = 255
+        }
+        
+        #Alpha = 355 * (1 - abs(2 * Ratio - 1))
+        
+
+    } else {
+        Pos = PointB
+        Ang = quat((PointA - PointB):toAngle()):up():toAngle()
+        Scale = vec(10 * Ratio) * max(Dist/MaxDist , 0.1)
+        Alpha = 355 * ((LocalTimer > 3) ? (1 - Ratio) : 0)
+    
+    }
+    
+    holoAng(I, Ang)
+    holoPos(I, Pos)
+    holoScale(I, Scale)
+    holoAlpha(I, Alpha)
+}

@@ -1,0 +1,174 @@
+@name E2 finder Advanced EGP
+@inputs Egp:wirelink
+@outputs [E2Table E2Order]:table
+@persist [E Me]:entity [BoundryArr SeedStringArr]:array [E2Order E2Table]:table EGPI EGPSpace LineI LastLine RemovedLine TimerStart
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl 
+interval(500)
+if (clkName() == "interval" | first()){
+    if (first()){
+        HoloN = 1
+        Me = owner()
+        MakeHolos = array()
+        E = entity()
+        timer("egp",250)
+        HoloI = 1
+        TimerStart = 5
+        
+        function egpText(Index, String:string, Pos:vector2, Size, Color:vector){
+            Egp:egpColor(Index, Color)
+            Egp:egpSize(Index, Size)
+            Egp:egpText(Index, String,Pos)
+        }
+        function egpText(Index, String:string, Pos:vector2, Size){
+            Egp:egpSize(Index, Size)
+            Egp:egpText(Index, String,Pos)
+        }
+        
+        function egpTextline(LineNumber, StringArray:array, Colors:array){
+            ArgCount = StringArray:count()
+            StartIndx = (LineNumber - 1) * ArgCount + EGPI - 1
+            for(I = 1, ArgCount){
+                XPos = BoundryArr[I, number]
+                Index = StartIndx + I
+                Egp:egpColor(Index, Colors[I, vector])
+                egpText(Index, StringArray[I,string], vec2(XPos + EGPSpace, 20 + 13 * (LineNumber - 1)), 10)
+            }
+            if (LastLine < LineNumber){
+                LastLine = LineNumber   
+            }
+        }
+        function egpRemoveTextLine(LineNumber){
+            ArgCount = BoundryArr:count()
+            StartI = (LineNumber - 1) * ArgCount + EGPI - 1
+            for(I = 1, ArgCount){
+                Egp:egpSetText(StartI + I, "")
+            }
+            LastLine--
+            
+        }
+    }
+    if(findCanQuery()){
+        findByClass("gmod_wire_expression2")
+        NewE2s = findToArray()
+        NewE2s:unshiftEntity(E)
+        
+        NewE2Table = table()
+        foreach(K, E2:entity = NewE2s){
+            if (E2){
+                NewE2Table[E2:id():toString(), table] = table()
+            }
+        }
+        E2Table = NewE2Table:merge(E2Table)
+        E2Lookup = invert(E2Order)
+        
+        foreach(K, Table:table = E2Table){
+            E2 = entity(K:toNumber())
+            if(E2 & !E2Lookup:exists(K)){
+                TempTable = table()
+                TempTable["owner", string] = E2:owner():name()
+                TempTable["name", string] = E2:getName()
+                TempTable["new", number] = TimerStart
+                E2Table[K, table] = TempTable:clone()
+                
+                E2Order:pushString(K)
+            }
+        }
+        
+    }
+    
+} elseif(clkName() == "egp" | ~Egp){
+    if (changed(clkName()) | ~Egp){
+        Egp:egpClear()
+        EGPI = 1
+        GuideTempArr = array("CPU", "Ops", "Owner", "Name")
+        
+        EGPSpace = 5
+        BoundryArr = array(0, 85, 170, 341, 511)
+        
+        for (I = 1, GuideTempArr:count()){
+            Egp:egpText( EGPI, GuideTempArr[I, string], vec2(BoundryArr[I,number] + EGPSpace,0))
+            EGPI++
+        }
+
+        Egp:egpLine(EGPI,vec2(0, 18),vec2(512,18))
+        EGPI++    
+                
+        for(I = 1, BoundryArr:count()){
+            XPos = BoundryArr[I, number]
+            Egp:egpLine(EGPI,vec2(XPos, 0),vec2(XPos,512))
+            EGPI++
+        }
+        
+    }
+    E2Count = max(LastLine, E2Order:count())
+    while(LineI < E2Count & perf()){
+        LineI++
+        
+        EntId = E2Order[LineI, string]
+        E2 = entity(EntId:toNumber())
+        Name = E2:getName()
+        
+        Owner = E2:owner()
+        
+        InfoTable = E2Table[EntId,table]
+
+        ColorOverride = 0
+        
+        NewTimer = InfoTable["new",number]
+        if (NewTimer){
+            InfoTable["new",number] = NewTimer - 1
+            NameColor = vec(0,255,0)
+            TeamColor = vec(0,255,0)
+            ColorOverride = 1  
+        } elseif (!E2 | E2:type() !=  "gmod_wire_expression2"){
+            if (!InfoTable:exists("removed")){
+                Timer = InfoTable["removed",number] = TimerStart
+            } else {
+                Timer = InfoTable["removed",number]
+            }
+            ColorOverride = 1
+            OverrideOps = 1
+            if (Timer > 0){
+                TeamColor = teamColor(Owner:team())
+                InfoTable["removed",number] = Timer - 1
+                NameColor = vec(255,0,0)
+                TeamColor = vec(255,0,0)   
+            } else {
+                E2Table:remove(EntId)
+                E2Order:remove(LineI)
+                egpRemoveTextLine(LineI)
+                LineI--
+                continue
+            }
+            
+        } elseif(InfoTable["name", string] != Name){
+            InfoTable["name", string] = Name
+            NameColor = vec(255,255,0)
+            TeamColor = teamColor( Owner:team())
+        } else {
+            NameColor = vec(255)
+            TeamColor = teamColor( Owner:team())
+        }
+        E2Table[EntId,table] = InfoTable:clone()
+        CPU = round(E2:cpuUsage() * 1000000,2) ?: 0
+        Ops = E2:ops() ?: 0
+        StringArr = array(
+            OverrideOps ? "" : CPU:toString(), 
+            OverrideOps ? "" : Ops:toString(), 
+            InfoTable["owner",string], 
+            InfoTable["name", string]
+        )
+        ColorArr = array(vec(255),vec(255), TeamColor, NameColor )
+        egpTextline(LineI, StringArr, ColorArr)
+        OverrideOps = 0
+    }
+    if (LineI >= E2Order:count()){
+        LineI = 0
+    }
+    timer("egp",500)
+    
+}
+
+
+
+

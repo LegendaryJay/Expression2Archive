@@ -1,0 +1,51 @@
+@name Annoying Thing 2
+@inputs 
+@outputs ThingPos:array
+@persist [Prop Me E Target]:entity I [Play Thing ThingPos]:array Mode
+@trigger 
+
+runOnTick(1)
+runOnLast(1)
+if (first()|duped()){
+    Play=players()
+    Me=owner()
+
+    E=entity()    
+    Prop=propSpawn("models/sprops/cuboids/height36/size_1/cube_36x18x36.mdl", E:pos()+vec(0,0,10), 1)
+    Prop:setAlpha(0)
+}
+if (numPlayers()!=Play:count()){Play=players()}
+
+L=Me:keyPressed("left")
+R=Me:keyPressed("right")
+U=Me:keyPressed("up")
+D=Me:keyPressed("down")
+
+if (changed(L)& L){I--}
+elseif (changed(R) & R){I++}
+
+if (I>numPlayers()){I=1}
+if (I<1){I=numPlayers()}
+
+
+if (changed(I)){
+    Target=Play[I,entity]
+    hint(Target:name(),2)
+    Mode=0
+}
+if (changed(D) & D){
+   Mode=!Mode
+    if (Mode==1){hint("Active",2)}
+    else {hint("DeActivate",2)}
+}
+if (Mode & Target:inNoclip() & Target:vel():length()<20) {
+    Prop:setPos(Target:boxCenterW())
+    hint("Done",2)
+    Mode=0
+}
+else {
+    Prop:setPos(E:boxCenterW()+vec(0,0,10))
+}
+if (last()){Prop:propDelete()}
+
+

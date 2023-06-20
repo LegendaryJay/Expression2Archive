@@ -1,0 +1,32 @@
+@name HoloInfo
+@inputs 
+@outputs Entity:entity
+@persist Me:entity
+@trigger 
+if (first()){
+    
+    runOnTick(1)
+    Me = owner()
+    
+    holoCreate(1)
+    holoCreate(2)
+    holoModel(1,"models/holograms/hq_sphere.mdl")
+    holoAlpha(1,  50)
+    holoAlpha(2, 150)
+    holoScale(2, -vec(1))
+}
+
+FindHoloButton = Me:keyPressed("K")
+if (changed(FindHoloButton) & FindHoloButton){
+    StartVec = Me:shootPos()
+    Direction = Me:eye()
+    
+    
+    findIncludeClass("gmod_wire_hologram")
+    findInCone( StartVec, Direction, 10000, 2)
+    
+    Entity = findClosest(StartVec)
+    hint(Entity:toString(), 3)
+    holoPos(1, Entity:pos() )
+
+}

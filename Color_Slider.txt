@@ -1,0 +1,163 @@
+@name Color Slider
+@inputs 
+@outputs Holos:array Hue Saturation Value Alpha Idx
+@persist [Holos Props]:array LookupTable:table [BoxCenter BoxSize]:vector RGB:vector Hue Saturation Value Alpha [E Me Target]:entity Idx
+@model models/props_phx/construct/metal_wire1x2b.mdl
+if(first()){
+    function fancyPrint(TextA:string, TextB:string){
+            printColor(vec(77,1,53),TextA, vec(255), TextB)
+        }
+    runOnTick(1)
+    propSpawnUndo(0)
+    enableConstraintUndo(0)
+    Center = entity():pos() + vec(0,0,50)
+    Me = owner()
+    E = entity()
+    E:setMaterial("debug/debugdrawflat")
+    E:propShadow(0)
+    for (I = 1, 4){ #* 0.85 
+        
+        Prop = Props[I, entity] = propSpawn("models/sprops/rectangles/size_1_5/rect_6x72x3.mdl", 
+            E:toWorld(ang(0,90,0)), 0
+        )
+        Prop:propShadow(0)
+        if (I == 1){
+            BoxSize = Props[I, entity]:boxSize() 
+            BoxCenter = Props[I, entity]:boxCenter()
+        }
+        
+        Prop:setPos(
+            E:toWorld(
+                vec(
+                    BoxSize:y() * (I - 2.5) * 0.92,
+                    0,
+                    0
+                ) + E:boxCenter()
+            )
+        )
+        weld(Prop, E)
+        
+        Prop:setMaterial("debug/debugdrawflat")
+        noCollideAll(Prop, 1)
+        #noCollide(E, Prop)
+        LookupTable[Prop:id():toString(), number] = I
+        
+        
+        Holo = Holos[I, entity] = holoCreate(I)
+        holoAng(I, Prop:angles())
+        holoMaterial(I, "debug/debugdrawflat")
+        holoModel(I, "models/holograms/hq_rcube.mdl")
+        holoScaleUnits(I, vec(1,BoxSize:y() * 0.92,1))
+        holoColor(I, vec((I % 2)*35+220))
+        holoParent(I,Prop)
+    }
+    function void updateColor(){
+        E:setColor(hsv2rgb(Hue,Saturation,Value),Alpha)
+        Props[1, entity]:setColor(hsv2rgb(Hue,1,1))
+        Props[2, entity]:setColor(hsv2rgb(Hue,Saturation,1))
+        Props[3, entity]:setColor(hsv2rgb(Hue,1,Value))
+        Props[4, entity]:setColor(hsv2rgb(Hue,Saturation,Value),Alpha)
+        RGB = round(hsv2rgb(Hue,Saturation,Value))
+        E:setName("HSV( " + round(Hue) + ", " + round(Saturation,2) + ", " + round(Value,2) + " ) \n RGB( " + RGB:x() + ", " + RGB:y() + ", " + RGB:z() + " )\nAlpha: " + round(Alpha))
+    }
+    
+    function void updateSliders(InputColor:vector4){
+        local TempColor = rgb2hsv(vec(InputColor))
+        Hue = TempColor:x()
+        Saturation = TempColor:y()
+        Value = TempColor:z()
+        Alpha = InputColor:w()
+        holoPos(1, Props[1,entity]:toWorld(vec(BoxSize:x() * (Hue/360 - 0.5) ,0,BoxSize:z() * 0.5)))
+        holoPos(2, Props[2,entity]:toWorld(vec(BoxSize:x() * (1 - Saturation - 0.5) ,0,BoxSize:z() * 0.5)))
+        holoPos(3, Props[3,entity]:toWorld(vec(BoxSize:x() * (1 - Value - 0.5) ,0,BoxSize:z() * 0.5)))
+        holoPos(4, Props[4,entity]:toWorld(vec(BoxSize:x() * (0.5 - Alpha/255) ,0,BoxSize:z() * 0.5)))
+        updateColor()
+    }
+    updateSliders(vec4(255, 0, 0, 255))
+}
+if (Me:weapon():type() == "remotecontroller"){
+    PasteButton = Me:keyAttack1()
+    PasteButtonChange = changed(PasteButton)
+    
+    SelectButton = Me:keyAttack2()
+    SelectButtonChange = changed(SelectButton)
+    
+    ResetButton = Me:keyPressed("R")
+    RestetButtonChange = changed(ResetButton)
+   
+    if (PasteButton & PasteButtonChange){
+        AimEnt = Me:aimEntity()
+        AimEnt:setColor(RGB, Alpha)
+            
+    }
+    
+    if (ResetButton & RestetButtonChange){
+        AimEnt = Me:aimEntity()
+        if (AimEnt & !LookupTable:exists(AimEnt:id():toString())){
+            AimEnt:setColor(vec4(255))
+        }
+        
+    }
+    if (SelectButton){
+        
+        if (SelectButtonChange){
+            AimEnt = Me:aimEntity()
+            if (AimEnt:isConstrainedTo() == E){
+                Idx = LookupTable[AimEnt:id():toString(), number]
+            } elseif (AimEnt) {
+                Idx = 0
+                Target = AimEnt
+            } else {
+                Idx = 0
+            }
+        }elseif (Idx) {
+            Prop = Props[Idx,entity]
+            WorldVec = rayPlaneIntersection(
+                Me:shootPos(), 
+                Me:eye(), 
+                Prop:toWorld(
+                    vec(0,0,BoxSize:z() * 0.5)
+                ), 
+                Prop:up() 
+            )
+            ClampVal = BoxSize:x() * 0.5
+            RawVal =  clamp(Prop:toLocal(WorldVec):x(), -ClampVal, ClampVal),  
+            Percent = RawVal/BoxSize:x() + 0.5
+            holoPos(Idx, Prop:toWorld(vec(RawVal,0,BoxSize:z() * 0.5)))
+            
+            switch (Idx){
+                case 1,
+                    Hue = 360 * Percent
+                    
+                    break
+                case 2,
+                    Saturation = 1-Percent
+                    
+                    break
+                case 3,
+                    Value = 1-Percent
+                    
+                    break
+                case 4,
+                    Alpha = 255 * (1 - Percent)
+                    break
+            }
+            updateColor()      
+        } else {
+            if (Target){
+                GetColors = Target:getColor4()
+                if (changed(GetColors)){
+                    updateSliders(GetColors)
+                }
+            }
+        }
+    } elseif (SelectButtonChange){
+        Target = noentity()
+    }
+}
+PrintButton = Me:keyPressed("pad_enter")
+if (changed(PrintButton) & PrintButton){
+    fancyPrint("HSV: ", "(" + round(Hue) + ", " + round(Saturation,2) + ", " + round(Value,2) + ")")
+    fancyPrint("RGB: ", "(" + RGB:x() + ", " + RGB:y() + ", " + RGB:z() + ")")
+    fancyPrint("Alpha: ", round(Alpha):toString())
+}

@@ -1,0 +1,62 @@
+@name ACF Turret
+@inputs [Gun Ammo]:entity
+@outputs 
+@persist [Me Gun Ammo Seat E]:entity [GunWire AmmoWire]:wirelink Zoom
+@trigger 
+
+if(first()){
+    propSpawnUndo(0)
+    runOnTick(1)
+    
+    E = entity()
+    Me = owner()
+    Seat = seatSpawn("models/props_phx/construct/glass/glass_dome360.mdl", E:pos(), E:angles(), 1)
+    noCollideAll(Seat, 1)
+    holoCreate(1)
+    holoModel(1,"models/holograms/hq_icosphere.mdl")
+    if (Gun & Ammo){
+        GunWire = Gun:wirelink()
+        Gun:acfUnlinkFrom(Ammo, 1)
+        Gun:acfLinkTo(Ammo, 1)
+            
+        AmmoWire = Ammo:wirelink()
+        Ammo:setPos(E:pos())
+        noCollideAll(Ammo, 1)
+        
+        cameraCreate(1)
+        cameraAng(1, Gun:angles())
+        cameraPos(1, Gun:boxCenterW() + Gun:forward() * Gun:boxSize():x()/2) 
+        cameraParent(1, Gun)        
+    }
+}
+if (~Gun | ~Ammo){
+    reset()
+}
+Driver = Seat:driver()
+if (Driver){
+    rangerFilter(array(Seat, Gun, Ammo))
+    Ranger = rangerOffset(Gun:toWorld(Gun:boxCenter() + vec(Gun:boxSize():x(),0,0)), Gun:toWorld(vec(9999,0,0)))
+    AimPos = Ranger:position()
+    
+    holoPos(1, AimPos)
+    holoScale(1, vec(1 + Ranger:distance())/200)
+    holoVisible(1, players(), 0)
+    holoVisible(1, Driver, 1)
+        
+    cameraToggle(1, 1, Seat)
+    AmmoWire["Active", number] = 1
+    GunWire["Fire", number] = Driver:keyAttack1()
+    GunWire["Reload", number] = Driver:keyPressed("r")
+    
+    Q = Driver:keyPressed("q")
+    if (changed(Q) & Q){
+        Zoom-=10
+        cameraZoom(1, Zoom)
+        if (Zoom > 100){
+            Zoom = 0
+        }
+    }
+    
+}
+Gun:setPos(E:toWorld(vec(0,0,Seat:boxSize():z() + Gun:boxSize():x()/2)))
+Gun:setAng(Driver:eye():toAngle())

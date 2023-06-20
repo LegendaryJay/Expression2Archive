@@ -1,0 +1,97 @@
+@name Steering E2
+@inputs 
+@outputs Yaw
+@persist [Seat Ent E Engine Diff Gear Base]:entity TurnDeg WheelLimit BrakeVal
+@model models/sprops/rectangles/size_2/rect_12x12x3.mdl
+
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+    E:setMass(100)
+}
+if( first() | dupefinished()){
+    E = entity()
+    TurnDeg = 2.5
+    WheelLimit = 40
+    runOnTick(1)
+    
+    
+    if(E:isConstrained()){
+        Seat = E:isConstrainedTo()
+        E:constraintBreak()
+    } else {
+        findByClass("prop_vehicle_prisoner_pod")
+        findIncludePlayerProps(owner())
+        Seat = findClosest(E:pos())
+    }
+    hint(Seat:toString(),2)
+    Base = Seat:isConstrainedTo()
+    
+    local Contrap = Base:getConstraints()
+    for(I = 1, Contrap:count()){
+        local Prop = Contrap[I, entity]
+        local Type = Prop:acfType()
+        if(!Type){
+        }elseif(Prop:acfIsEngine()){
+            Engine = Prop
+            hint("Engine: " + Type,2)
+        } elseif (Prop:acfIsGearbox()){
+            if (Type == "Differencial"){
+                Diff = Prop
+            } else {
+                Gear = Prop
+            }
+            hint("GearBox: " + Type,2)
+        }
+    }
+}
+
+
+Driver = Seat:driver()
+if (Driver){
+    LClick=Driver:keyAttack1()
+    RClick=Driver:keyAttack2()
+    R=Driver:keyReload()
+    W=Driver:keyPressed("w")
+    A=Driver:keyPressed("a")
+    D=Driver:keyPressed("d")
+    S=Driver:keyPressed("s")
+    
+    B=Driver:keyPressed("B")
+    
+    Shift=Driver:keyPressed("LSHIFT")
+    Ctrl=Driver:keyPressed("LCONTROL")
+    Space=Driver:keyPressed("Space")
+    Alt=Driver:keyPressed("LALT")
+    
+    Engine:acfActive(1)
+    Engine:acfThrottle((W|S)*50)
+    
+    if(S){
+        Gear:acfShift(0)
+    }
+    
+    BrakeVal = clamp( (BrakeVal + 0.1*Space) * Space, 0, 5)
+    Gear:acfBrake(BrakeVal)
+    Gear:acfClutch(Alt)
+}else{
+    Engine:acfActive(0)
+    Gear:acfClutch(1)
+    Gear:acfBrake(1)
+}
+
+E:setPos(Engine:boxCenterW() + Engine:up()*10)
+TurnDirection = (A|D) ? A - D : -sign(Yaw)
+Yaw = clamp(Yaw + TurnDirection*TurnDeg, -WheelLimit, WheelLimit)
+
+if(!E:isPlayerHolding()){
+    E:propFreeze(1)
+}
+
+E:setAng( Seat:toWorld( ang( 0, Yaw, 0 ) ) )
+
+

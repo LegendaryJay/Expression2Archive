@@ -1,0 +1,224 @@
+@name Insta Teleporter 2
+@inputs 
+@outputs 
+@persist OffsetVec:vector [Me E Pod]:entity Players:array NumPlayers PlayerI Driver:entity [WarpAngTable WarpTable QueTable]:table Que:array
+@persist
+@model models/sprops/geometry/fhex_36.mdl
+
+function void newSeat(){
+    
+    Pod = seatSpawn("models/props_trainstation/payphone001a.mdl",1)
+    noCollideAll(Pod, 1)
+}
+#############
+# Teleports #
+#############
+function void teleport(Ang:angle, Vec:vector){
+    Pod:setPos(Vec + OffsetVec)
+    Pod:setAng(Ang)
+}
+function void teleport(S:string){
+    teleport(WarpAngTable[ S, angle], WarpTable[S, vector])
+}
+function void entity:preTeleport(){
+    local Ent = This
+    local EntEye = This:eyeAngles()
+    teleport(ang(0, EntEye:yaw() + 180, 0), This:pos() + This:forward()*50)
+}
+
+function void table:teleport(I){
+    TempTable = This[I, table]
+    Type = TempTable["type", string]
+    if (Type == "toPlayer"){
+        hint("toPlayer",2)
+        local Ent = TempTable["ent", entity]
+        teleport( ang( 0, Ent:eyeAngles():yaw(), 0), Ent:pos() + Ent:forward()*-70)
+    } 
+    elseif (Type == "raw"){
+        teleport(TempTable["ang", angle], TempTable["vec", vector])
+    } 
+    elseif (Type == "rawVec"){
+        Pod:setPos(TempTable["vec", vector] + OffsetVec)
+    } 
+    elseif (Type == "warp") {
+        teleport(TempTable["warp", string])
+    }
+    This:remove(I)
+}
+
+function number entity:isInQue(){
+    for(I = 1, Que:count()){
+        if (Que[I, entity] == This){
+            return I
+        } else {
+            return 0
+        }
+    } 
+}
+
+
+
+
+function void setWarp(S:string, Ang:angle, Vec:vector){
+    WarpTable[ S:lower(), vector] = Vec
+    WarpAngTable[ S:lower(), angle] = Ang
+}
+function void setHome(Ent:entity){
+    E:setPos(Ent:pos())
+    E:setAng(ang( 0, Ent:angles():yaw(), 90))
+    setWarp("home", E:angles(), E:pos())
+    teleport("home")
+}
+function void entity:setWarp(S:string){
+    setWarp(S, This:angles(),This:aimPos())
+}
+
+if (first()){
+    Spin = 1
+    runOnTick(1)
+    runOnChat(1)
+    #runOnPlayerConnect(1)
+    #runOnPlayerDisconnect(1)
+    Me = owner()
+    E = entity()
+    E:setMaterial("models/effects/comball_glow1")
+    E:propFreeze(1)
+    Players = players()
+    
+    OffsetVec = vec( 0, 0, 35)
+    
+    WarpTable = table()
+    WarpTable["home", vector] = E:boxCenterW()
+    
+    WarpAngTable = table()
+    WarpAngTable["home", angle] = ang( 0, E:angles():yaw(), 0)
+    setHome(E)
+    newSeat()
+    teleport("home")
+    
+   #[ 
+
+    Que[1, entity] = Player
+    
+    TempQue = table()
+    TempQue["type", string] 
+    TempQue["warp", string]
+    TempQue["vec", vector] 
+    TempQue["ang", angle] 
+    TempQue["ent",entity]
+    QueTable:unShiftTable = TempQue
+    
+    ]#
+}
+    
+####################
+# Populate Players #
+####################
+#[if (playerConnectClk()){
+    local NewGuy = lastConnectedPlayer()
+    Players:pushEntity(NewGuy)
+    hint(NewGuy:name() + "has joined", 2)
+} elseif (playerDisconnectClk()){
+    local Dick = lastDisconnectedPlayer()
+    for(I = 1, numPlayers()){
+        if(!Players[I, entity]){Players:removeEntity(I)}
+    }
+    local N = Dick:isInQue()
+    Que:removeEntity(N)
+    QueTable:removeTable(N)
+}]#
+Players = players()
+############
+# Controls #
+############
+#[
+for (I = 1, numPlayers()) {
+    local P = Players[I, entity]
+    if (P:keyPressed("Down") & P:isInQue()){
+        P:preTeleport()
+    }
+}]#
+
+Driver = Pod:driver()
+if (changed(Driver) & Driver){
+    local Idx = Driver:isInQue()
+    if (Idx){
+        QueTable:teleport(Idx)
+        timer("Break",5)
+    }
+}
+if (clk("Break")){
+    Pod:ejectPod()
+    timer("home",5)
+}
+if (clk("home")){
+    teleport("home")
+}
+
+if(chatClk()){
+    Spoke = lastSpoke()
+    Said = lastSaid()
+    
+    if (Said[1] == "$"){
+        hideChat(1)
+        SaidArray = array()
+        TempArray = Said:sub(2):trimRight():explode("\"")
+        for(I = 1, TempArray:count()){
+            if (TempArray[I, string] == ""){
+                
+            }elseif ( I % 2 == 1){
+                local SuperTempArray = TempArray[I, string]:trim():explode(" ")
+                SaidArray = SaidArray:add(SuperTempArray)
+            } else {
+                SaidArray:pushString(TempArray[I, string])
+            }
+        }   
+        S1 = SaidArray[1,string]:lower()
+        if(S1 == "tp"){
+            local TempPlayer = findPlayerByName(SaidArray[2,string]:trim())
+            print(TempPlayer:name())
+            if (TempPlayer) {
+                Que:unshiftEntity(Spoke)
+                
+                TempQue = table()
+                TempQue["type", string] = "toPlayer"
+                TempQue["ent",entity] = TempPlayer
+                
+                QueTable:unshiftTable(TempQue)
+                Spoke:preTeleport()
+            }
+        } elseif (S1 == "home" ) {
+            Que:unshiftEntity(Spoke)
+        
+            TempQue = table()
+            TempQue["type", string] = "warp"
+            TempQue["warp",string] = "home"
+            
+            QueTable:unshiftTable(TempQue)
+            Spoke:preTeleport()
+        } elseif (S1 == "warp" ) {
+            local Warp = WarpTable[SaidArray[2, string], vector]
+            if (Warp){
+                 Que:unshiftEntity(Spoke)
+        
+                TempQue = table()
+                TempQue["type", string] = "warp"
+                TempQue["warp",string] = SaidArray[2, string]
+                
+                QueTable:unshiftTable(TempQue)
+                Spoke:preTeleport()
+            } else {
+                hint("No such warp",2)
+            }
+        } elseif (S1 == "setwarp"){
+            Spoke:setWarp(SaidArray[2,string])
+        } elseif (Spoke == owner() & S1 == "sethome"){
+            setHome(Spoke)
+        }
+    } 
+}
+
+runOnLast(1)
+if (last()){
+    propDeleteAll()
+}

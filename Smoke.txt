@@ -1,0 +1,66 @@
+@name Smoke
+@inputs 
+@outputs Ticker Active HoloValues:table
+@persist Run Prop:entity HN  HoloValues:table HoloI [BoxSize Wind]:vector Ticker I 
+@persist MaxTime MaxSize MaxHolos
+@model models/Gibs/HGIBS.mdl 
+
+#array(Time, Direction, Spin)
+function void spawn(){
+    HoloI = (HoloI) % MaxHolos + 1
+   
+    holoScaleUnits(HoloI, BoxSize * 0.3)
+    holoPos(HoloI, Prop:boxCenterW())
+    Vec = (randvec() * 0.05):setZ(0.17)
+    HoloValues[HoloI, array] = array(1, Vec, 0)
+}
+if (Run){
+    Ticker++
+    if(Ticker % (MaxTime/MaxHolos) < 1){
+        spawn()
+    }
+    while(perf() & I < MaxHolos){
+        Array = HoloValues[I, array]
+        Time = Array[1, number]
+        if (Time){
+            HoloValues[I, array][1, number] = Time + 1
+            Holo = holoEntity(I)
+            Scale = BoxSize * 0.3 + Time * 1.01
+            holoScaleUnits(I,Scale)
+            
+            holoPos(I, Holo:pos() + Array[2, vector])
+            #holoAlpha(I, 255 * ((10 * Time/MaxTime) ^ 2)/100)
+        }
+        I++
+    }
+    if (I >= MaxHolos){
+        I = 1
+    }
+
+} else {
+    if (first()){
+        runOnTick(1)
+        
+        Prop = entity()
+        
+        MaxTime = 200
+        MaxHolos = 50
+        BoxSize = vec((Prop:boxSize():x() + Prop:boxSize():y() + Prop:boxSize():z()) * 0.33)
+        
+    }
+    if (HN < MaxHolos){
+        if (holoCanCreate()){
+            HN++
+            holoCreate(HN)
+            holoModel(HN, "models/sprops/geometry/sphere_144.mdl")
+            holoScaleUnits(HN, vec(0))
+            holoMaterial(HN, "models/debug/debugwhite")
+        }
+    } else {
+        hint("ready", 2)
+        Run = 1
+        HoloI = 1
+    }
+}
+
+#

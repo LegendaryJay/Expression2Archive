@@ -1,0 +1,49 @@
+@name fly ragdoll
+@inputs 
+@outputs Forward
+@persist [Me Prop]:entity Forward Up Left
+@trigger 
+
+if (first()){
+    runOnTick(1)
+    Me = owner()
+}
+
+function entity findDoll(){
+    findByClass("prop_ragdoll")
+    findClipToPlayerProps(Me)
+    findSortByDistance(Me:pos())
+    local Array = findToArray()
+    for(I = 1, Array:count()){
+        Ent = Array[I, entity]
+        if (Ent:model() == Me:model()){
+            Ent:propGravity(0)
+            return Ent
+        }
+    }
+    return noentity()
+}
+if (Prop){
+    Eye = Me:eye()
+    LClick=Me:keyAttack1()
+    RClick=Me:keyAttack2()
+    R=Me:keyReload()
+    W=Me:keyPressed("w")
+    A=Me:keyPressed("a")
+    D=Me:keyPressed("d")
+    S=Me:keyPressed("s")
+    Shift=Me:keyPressed("LSHIFT")
+    Ctrl=Me:keyPressed("LCONTROL")
+    Space=Me:keyPressed("Space")
+    
+    ShiftVal = 1 + Shift * 0.2
+    Forward = Forward * 0.95 + ShiftVal * ( W - S) * 5
+    Up = Up * 0.95 + ShiftVal * ( Space - Ctrl) * 5
+    Left = Left * 0.95 + ShiftVal * (S - A) * 5
+    
+    LeftDir = vec(Eye:toAngle() + ang(0, 90, 0))
+    UpDir = vec(Eye:z(), Eye:y(), -Eye:x())
+    Prop:setPos(Prop:pos() + Eye * Forward + UpDir * Up + LeftDir * Left)
+} elseif (findCanQuery()){
+    Prop = findDoll()
+}

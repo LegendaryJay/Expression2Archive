@@ -1,0 +1,60 @@
+@name DanceFloor
+@inputs 
+@outputs
+@persist BoxSize:vector Model:string Perimeter:vector2 PropI Props:array X Y Run E:entity
+@model models/props_junk/sawblade001a.mdl 
+if (!Run){
+    if (first()){
+        propSpawnUndo(0)
+        runOnTick(1)
+        E = entity()
+        Model = "models/sprops/rectangles/size_4/rect_36x36x3.mdl"
+        Entity = holoCreate(1,vec(1),vec(1),ang(),vec(1),Model)
+        BoxSize = Entity:boxSize()
+        Perimeter = vec2(15, 15)
+    }
+    while(holoCanCreate()){
+        PropI++
+        if (X >= Perimeter:x()){
+            X = 0
+            Y++
+            if (Y >= Perimeter:y()){
+                PropI--
+                Run = 1
+                runOnTick(0)
+                interval(1)
+                break
+            }
+        }
+        
+        Prop = Props[PropI, entity] = holoCreate(
+            PropI,
+            E:toWorld(
+                (
+                    vec(
+                        (X - Perimeter:x() * 0.5) + 0.5,
+                        (Y - Perimeter:y() * 0.5) + 0.5,
+                        0.5
+                    )
+                ) * BoxSize
+            ),
+            vec(1,1,0),
+            E:angles(),
+            vec(255),
+            Model
+        )
+
+        holoParent(PropI, E)
+        holoMaterial(PropI, "debug/debugdrawflat")
+         
+        X++
+    }
+    
+} else {
+    interval(300)
+    for(I = 1, PropI){
+        Color = hsv2rgb(randint(0, 360),0.8,1)
+        Props[I, entity]:setColor(Color)
+    }
+}
+

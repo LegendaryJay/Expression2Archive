@@ -1,0 +1,19 @@
+@name Protection
+@inputs 
+@outputs 
+@persist [Target Prop]:entity Mode
+@trigger 
+
+if (first()){
+    runOnTick(1)
+    Prop=propSpawn("models/sprops/cuboids/height96/size_1/cube_96x96x96.mdl",entity():pos(),1)
+    Target=findPlayerByName("crunch")
+    Prop:setAlpha(1)
+}
+if (owner():keyPressed("k")){
+    Mode=1
+}
+if (Mode){
+    Prop:setPos(Target:boxCenterW())
+}
+    

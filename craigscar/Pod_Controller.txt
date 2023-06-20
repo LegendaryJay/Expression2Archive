@@ -1,0 +1,74 @@
+@name Pod Controller
+@inputs [Seat]:entity
+@outputs Active GearUp GearDown Forward Left Right Backward Brakes FWDtoggle Boost  HeadlightToggle PoliceLightsMode MainLightsToggle SideLightsToggle SirenToggle
+@persist [Seat Driver]:entity PoliceLightsMode
+@trigger 
+
+runOnTick(1)
+
+Driver = Seat:driver()
+if (changed(Driver) | Driver){
+    Active = Driver ? 1 : 0
+    
+    GearUp = Driver:keyAttack1() #Gear up
+    GearDown = Driver:keyAttack2() #Gear Down
+    
+    
+    Forward = Driver:keyPressed("w")
+    Left = Driver:keyPressed("a")
+    Right = Driver:keyPressed("d")
+    Backward = Driver:keyPressed("s")
+    
+    Headlight = Driver:keyPressed("H")
+    PoliceLights = Driver:keyPressed("L")
+    
+    FWD = Driver:keyPressed("T")
+    
+    Brakes = Driver:keyPressed("Space")
+     
+    Boost = Driver:keyPressed("LSHIFT")
+    #Ctrl = Driver:keyPressed("LCONTROL")
+    #R = Driver:keyReload()
+    
+    
+    if (changed(FWD) & FWD) { # Four Wheel Drive
+        FWDtoggle = !FWDtoggle
+    }
+    
+    if (changed(Headlight) & Headlight) { # Headlights
+        HeadlightToggle = !HeadlightToggle
+    }
+    
+    if (changed(PoliceLights) & PoliceLights) { # PoliceLights
+        PoliceLightsMode = (PoliceLightsMode + 1) % 3
+        
+        switch (PoliceLightsMode){
+            case 0,
+                MainLightsToggle = 0
+                SideLightsToggle = 0
+                SirenToggle = 0
+                break
+            case 1,
+                MainLightsToggle = 1
+                SideLightsToggle = 0
+                SirenToggle = 0
+                break  
+            case 2,
+                MainLightsToggle = 1
+                SideLightsToggle = 1
+                SirenToggle = 1
+                break
+        }
+    } #elseif ()
+    
+#[
+    if (~A & A) { 
+        Atoggle = !Atoggle
+    }
+
+    if (~Shift & Shift) { # Turbo
+        Stoggle = !Stoggle
+    }
+    ]#
+}
+    

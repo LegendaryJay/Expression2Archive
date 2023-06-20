@@ -1,0 +1,33 @@
+@name Leeloo
+@inputs 
+@outputs 
+@persist E:entity Prop:entity Freeze SliderEnts:array
+@model models/sprops/rectangles/size_3_5/rect_30x30x3.mdl 
+
+if (first()){
+    runOnTick(1)
+    enableConstraintUndo(0)
+    runOnTick(1)
+    Back = entity()
+    for(I = 1, 4){
+        SliderEnts[I, entity]  = propSpawn("models/props_borealis/bluebarrel001.mdl", 1)
+    }
+    
+    Freeze = 1
+}
+BackHold = E:isPlayerHolding()
+
+    if (BackHold){
+        for (I = 1, 4){
+            Ent = SliderEnts[I, entity] 
+            Ent:parentTo(Back)
+            Ent:propFreeze(0)
+        }
+    } else {
+        Back:propFreeze(1)
+        for (I = 1, 4){
+            Ent = SliderEnts[I, entity] 
+            Ent:deparent()
+            Ent:propFreeze(1)
+        }
+    }

@@ -1,0 +1,62 @@
+@name Compass
+@inputs Ent:entity Vec:vector
+@outputs Target:entity
+@persist [BackupTarget Compass Target E Me]:entity TargetPos:vector
+@trigger 
+@model models/sprops/geometry/sphere_24.mdl
+
+if (first()){
+    runOnTick(1)
+    
+    E = entity()
+    E:setMaterial("models/wireframe")
+    #E:setAlpha(10)
+    
+    Me = owner()
+    
+    Compass = holoCreate(1)
+    holoModel(1, "models/holograms/hq_cone.mdl")
+    holoParent(1, E)
+    holoScale(1, vec(0.1,0.1,1)*2)
+    holoMaterial(1, "lights/white")
+    holoColor(1, vec(100, 0, 100))
+    
+    holoCreate(2)
+    holoParent(2, E)
+    holoModel(2,"models/sprops/misc/origin.mdl")
+    holoMaterial(2, "models/debug/white")
+    holoAng(2, ang())
+    holoScale(2, vec(1))
+    holoAlpha(2, 50)
+    BackupTarget = owner()
+    Target = Ent ? Ent : owner()
+}
+
+if (~Ent){
+    Target = Ent ? Ent : BackupTarget
+}
+
+
+TargetKey = Me:keyPressed("m")
+if (changed(TargetKey) & TargetKey){
+    Target = BackupTarget = Me:aimEntity()
+    hint(Target:type() + " | " + Target:model(), 2)
+}
+
+holoAng(2, ang())
+
+if (Vec) {
+    if (~Vec){
+        TargetPos = Vec
+    }
+} else {
+    TargetPos = Target:boxCenterW()
+}
+holoAng(
+    1, 
+    (TargetPos - E:boxCenterW()):toAngle() + ang(90, 0, 0)
+)
+holoPos(
+    1,
+    E:boxCenterW() + Compass:up()*24
+)

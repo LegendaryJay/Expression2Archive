@@ -1,0 +1,27 @@
+@name camera wirelink
+@inputs Cameracontroller:wirelink
+@outputs 
+@persist 
+@trigger 
+
+#Inputs:	
+Cameracontroller["Activated", number]	
+Cameracontroller["Direction", vector]	
+Cameracontroller["Angle", angle]	
+Cameracontroller["Position", vector]	
+Cameracontroller["Distance", number]	
+Cameracontroller["UnRoll", number]	
+Cameracontroller["Parent", entity]	
+Cameracontroller["FilterEntities", array]	
+Cameracontroller["FLIR", number]	
+Cameracontroller["FOV", number]	
+	
+	
+#Outputs:	
+Cameracontroller["On", number]	
+Cameracontroller["HitPos", vector]	
+Cameracontroller["CamPos", vector]	
+Cameracontroller["CamDir", vector]	
+Cameracontroller["CamAng", angle]	
+Cameracontroller["Trace", ranger]	
+Cameracontroller["wirelink", wirelink]	

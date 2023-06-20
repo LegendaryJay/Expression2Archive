@@ -1,0 +1,8 @@
+{
+	"STEAM_0:0:50313446": "[IJWTB] Corkie",
+	"STEAM_0:1:33722426": "Zxvnm4",
+	"STEAM_0:1:19429028": "NightHawk475 [IJWTB]",
+	"STEAM_0:0:92235521": "SnowWhalez",
+	"STEAM_0:0:75591692": "deleteMe",
+	"STEAM_0:1:53475136": "Delta Titan"
+}

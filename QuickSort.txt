@@ -1,0 +1,71 @@
+@name Quicksort
+@inputs 
+@outputs 
+@persist Run HoloI HoloMax HoloScaleDiff HoloScaleMin HoloScaleMax HoloArray
+@trigger 
+if(Run){
+    
+} else { 
+    if (first()){
+        runOnTick(1)
+        
+        HoloMax = 50
+        
+        HoloScaleMin = 0.5
+        HoloScaleMax = 6
+        
+        HoloScaleDiff = HoloScaleMax - HoloScaleMin
+        function swap(Arr:array, I, J){
+           Temp = Arr[I, entity]
+           Arr[I, entity] = Arr[J, entity]
+           Arr[J, entity] = Temp
+        }
+        
+        function number partition(Arr:array, Pivot, Left, Right){
+            PivotValue = Arr[Pivot, entity]:id()
+            PartitionIndex = Left
+        
+           for(I = Left, Right - 1){
+            if(Arr[I, entity]:id() < PivotValue){
+              swap(Arr, I, PartitionIndex)
+              PartitionIndex++
+            }
+          }
+          swap(Arr, Right, PartitionIndex)
+          return PartitionIndex
+        }
+        
+        function array quickSort(Arr:array, Left, Right){
+           Len = Arr:count()
+        
+          if(Left < Right){
+            Pivot = Right
+            PartitionIndex = partition(Arr, Pivot, Left, Right)
+            
+           #sort left and Right
+           quickSort(Arr, Left, PartitionIndex - 1)
+           quickSort(Arr, PartitionIndex + 1, Right)
+          }
+          return Arr
+        }
+        function array randomize(Arr:array){
+            for (I = 1, Arr:count()){
+                swap(Arr, I, floor(random() * Arr:count()) + 1)
+            }
+        }
+    }   
+    
+    while(HoloI < HoloMax){
+        Percent0 = HoloI/HoloMax
+        HoloI++
+        Percent1 =  HoloI/HoloMax
+        
+        holoCreate(HoloI)
+        holoColor(HoloI, hsv2rgb( 360 * Percent0, 1, 1))
+        holoScale(HoloI, vec(1,1,Percent1 * HoloScaleDiff + HoloScaleMin))
+        holoPos(HoloI, entity():toWorld(vec(Percent0 - 0.5,0,0) * HoloMax * 15 ))
+    }
+    if (HoloI == HoloMax){
+        Run = 1
+    }
+}

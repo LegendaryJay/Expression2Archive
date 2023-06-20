@@ -1,0 +1,167 @@
+@name Useful Textures 3
+@inputs 
+@outputs Time
+@persist Run Pos [E Me]:entity MatCount Ang Dist HN [Props Materials]:array MatListen
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl
+
+
+
+if (first()){
+    runOnTick(1)
+    runOnChat(1)
+    
+    propSpawnUndo(0)
+    Materials = array(
+        "models/player/shared/ice_player",
+        "engine/shadowbuild",
+        "engine/writez",
+        "lights/white",
+        "models/debug/debugwhite",
+        "models/wireframe",
+        "models/props_c17/fisheyelens",
+        "hlmv/debugmrmwireframe",
+        "effects/combineshield/comshieldwall",
+        "models/effects/portalfunnel_sheet",
+        "models/perftest/high_poly_test",
+        "models/props_lab/monitorface",
+        "models/effects/vortshield",
+        "dev/dev_energyflow",
+        "glass/glasswindow_refract01",
+        "models/props_dev/test_graygrid",
+        "wingf0x/seethrough_plastic",
+        "dak/dakpittedmetaldark",
+        "de_dust/hr_dust/hr_dust_sidewalk01_color",
+        "debug/env_cubemap_model_translucent",
+        "effects/combineshield/comshieldwall2",
+        "debug/env_cubemap_model_translucent_fountain",
+        "hunter/mywindow",
+        "engine/modulatesinglecolor",
+        "models/props_combine/coredx70",
+        "models/gibs/metalgibs/metal_gibs",
+        "models/props_lab/projector_noise",
+        "models/props_combine/cit_lightning001"
+    ) 
+    MatCount = Materials:count() + 1
+    
+    E = entity()
+    E:setAlpha(0)
+    
+    Me = owner()
+    
+    
+    Bottom = propSpawn("models/sprops/geometry/fring_48.mdl", E:boxCenterW(), E:toWorld(ang(0,90,0)), 1)
+    Bottom:parentTo(E)
+    Bottom:propNotSolid(1)
+    Bottom:setMaterial("models/debug/debugwhite")
+    Bottom:setColor(vec(150))
+    
+    Ang = 360 * 1/MatCount
+    Ang2 = (180 - Ang)/2 # a polygon is made of isocolese triangles- these are the other angles
+    
+    #diameter of the sphere + gap
+    Dist = (  (42 + 5) * sin(Ang2)  ) / sin(Ang)
+    
+    HN = 1
+    
+    Models = array("models/sprops/misc/cones/size_2/cone_24x24.mdl","models/sprops/geometry/sphere_24.mdl","models/sprops/cuboids/height24/size_1/cube_24x24x24.mdl")
+    for( I = 1, 3){
+        TempAng = 120 * ( I - 1 )
+        Props[I, entity] = propSpawn(
+            Models[I, string], 
+            E:toWorld(   
+                vec( sin(TempAng), cos(TempAng), 0) * 30 + vec( 0, Dist, I == 1 ? -12 : 0 )   
+            ), 
+            1
+        )
+        Props[I, entity]:parentTo(E)
+    }
+    holoCreate(300)
+    holoScale(300, vec())
+    
+    holoCreate(301)
+    holoPos(301,  E:toWorld(E:boxCenter() + vec( 0, Dist, 40 )))
+    holoScale(301, vec(-1))
+    holoAng(301, E:toWorld(ang(180,0,0)))
+    holoModel(301, "models/sprops/geometry/sphere_24.mdl")
+    holoParent(301, E)
+}
+
+function setHoloPos(I){
+    ThisAng = Ang * (I - Pos - 1) + 180
+    holoPos(
+        I, 
+        E:toWorld(
+            E:boxCenter() + vec( sin(ThisAng), cos(ThisAng),  0) * Dist + vec( 0, Dist, 0 ) 
+        )
+    )
+}
+
+function setPropColors(Mat:string){
+    for (I = 1, Props:count()){
+        Props[I, entity]:setMaterial(Mat)
+    }
+    holoEntity(300):setTrails(100,100,3,Mat,vec(255),255)
+    holoMaterial(301, Mat)
+}
+if (Run){
+    Time = curtime() * 100
+    holoPos(300,  E:toWorld(E:boxCenter() + vec( 0, Dist, 0 ) + vec(sin(Time), cos(Time), 0) * 50))
+    Right = Me:keyPressed("right")
+    Left = Me:keyPressed("left")
+    PrintKey = Me:keyPressed("down")
+    Up = Me:keyPressed("up")
+    
+    if ((changed(Left) & Left) | (changed(Right) & Right)){
+        Pos += Right - Left
+        Pos = Pos % MatCount
+        TempMat = holoEntity(Pos + 1):getMaterial()
+        setPropColors(TempMat)
+        hint(TempMat, 4)
+        for(I = 1, MatCount){
+            setHoloPos(I)
+        }
+    }
+    if (changed(Up) & Up){
+        MatListen = !MatListen
+        hint("Listen Mode " + (MatListen ? "Active" : "Inactive"), 4)
+    }
+    
+    if (changed(PrintKey) & PrintKey){
+        print("\"" + holoEntity(Pos + 1):getMaterial() + "\"")
+    }
+} else {
+    while(holoCanCreate() & HN <= MatCount){
+        holoCreate(HN)
+        holoModel(HN, "models/sprops/geometry/sphere_42.mdl")
+        setHoloPos(HN)
+        holoMaterial(HN, Materials[HN, string])
+        holoParent(HN, E)
+        HN++
+    }
+    if (HN > MatCount){
+        #runOnTick(0)
+        #runOnKeys(Me, 1)
+        Run = 1
+    }
+}
+
+Said = lastSaid()
+if (chatClk(Me) & MatListen){
+    hideChat(1)
+    setPropColors(Said)
+    holoEntity(MatCount):setMaterial(Said)
+}
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

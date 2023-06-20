@@ -1,0 +1,89 @@
+@name Vehicle Compass 
+@inputs 
+@outputs 
+@persist E:entity Center:vector
+@trigger 
+
+if (first()){
+    E = entity()
+    runOnTick(1)
+    
+    Center = E:pos()
+    HN = 1
+    holoCreate(HN)
+    holoAng(HN,ang())
+    holoModel(HN, "hq_torus_thin")
+    holoColor(HN, vec(255, 255, 0))
+    holoParent(HN, E)
+    HN++
+    
+    holoCreate(HN)
+    holoAng(HN,ang())
+    holoModel(HN, "hq_torus")
+    holoColor(HN, vec(50))
+    holoParent(HN, E)
+    HN++
+    
+    holoCreate(HN)
+    holoAng(HN,ang(0, 0, 0))
+    holoModel(HN, "models/sprops/misc/alphanum/alphanum_n.mdl")
+    holoColor(HN, vec(255))
+    holoScale(HN, vec(0.3))
+    holoPos(HN, Center + vec(0,6,0))
+    holoMaterial(HN,"models/debug/debugwhite")
+    holoParent(HN, 2)
+    HN++
+    
+    holoCreate(HN)
+    holoAng(HN,ang(0, 180, 0))
+    holoModel(HN, "models/sprops/misc/alphanum/alphanum_s.mdl")
+    holoColor(HN, vec(255))
+    holoScale(HN, vec(0.3))
+    holoPos(HN, Center + vec(0,-6,0))
+    holoMaterial(HN,"models/debug/debugwhite")
+    holoParent(HN, 2)
+    HN++
+    
+    holoCreate(HN)
+    holoAng(HN,ang(0,90,0))
+    holoModel(HN, "models/sprops/misc/alphanum/alphanum_w.mdl")
+    holoColor(HN, vec(255))
+    holoScale(HN, vec(0.3))
+    holoPos(HN, Center + vec(-6,0,0))
+    holoMaterial(HN,"models/debug/debugwhite")
+    holoParent(HN, 2)
+    HN++
+    
+    holoCreate(HN)
+    holoAng(HN,ang(0,-90,0))
+    holoModel(HN, "models/sprops/misc/alphanum/alphanum_e.mdl")
+    holoColor(HN, vec(255))
+    holoScale(HN, vec(0.3))
+    holoPos(HN, Center + vec(6,0,0))
+    holoMaterial(HN,"models/debug/debugwhite")
+    holoParent(HN, 2)
+    HN++
+    
+    holoCreate(HN)
+    holoAng(HN, E:toWorld(ang(90,90,0)))
+    holoModel(HN, "hq_torus_thin")
+    holoColor(HN, vec(255))
+    #holoScale(HN, vec(0.5,0.2,0.2))
+    holoMaterial(HN,"models/debug/debugwhite")
+    holoParent(HN, E)
+    HN++
+    
+    holoCreate(HN)
+    holoAng(HN, ang())
+    holoModel(HN, "models/sprops/cylinders/size_1/cylinder_1_5x12.mdl")
+    holoColor(HN, vec(50))
+    holoScale(HN, vec(0.5,0.5,1))
+    holoMaterial(HN,"models/debug/debugwhite")
+    holoParent(HN, 2)
+    HN++
+    
+}
+holoAng(2, ang())
+holoAng(1, -E:angles())
+holoAng(7, E:toWorld(ang(90,90,0)))
+holoPos(7, E:pos())

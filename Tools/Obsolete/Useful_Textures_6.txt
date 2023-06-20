@@ -1,0 +1,423 @@
+@name Useful Textures 6
+@inputs 
+@outputs #FileString:string MatCount PosVal 
+@persist [E Me]:entity MatCount [Materials]:array FileString:string
+@persist Perimeter PosVal TempMat:string Prop:entity HN
+@persist [FileName]:string Loaded
+#@model models/props_phx/mechanics/mech1.mdl
+@persist R Forward [HoloScaleUnits Eye]:vector EyeAngs:angle Scale Selected SelectMode SelectedMaterial:string HoloI CenterPos:vector LastSelected EnableSelectionButton
+@persist [Target BackPlate]:entity MatList:array SelectionMatCount
+@persist GridHeight
+@outputs SelectMode MatList:array AimToPlaneVec2:vector2
+@model models/sprops/geometry/t_fdisc_120.mdl
+if (!Loaded){
+    if (first()){
+
+        runOnTick(1)
+        runOnChat(1)
+        runOnFile(1)
+        
+        propSpawnUndo(0)
+        
+        GridHeight = 0
+        
+        E = entity()
+        Me = owner()
+        
+        HN = 1
+        
+        Prop = propSpawn("models/sprops/misc/domes/size_4/dome_48x24.mdl", E:toWorld(vec(0, 100, 0)), E:toWorld(ang(90,90,90)), 1)
+        BackPlate = E #propSpawn("models/sprops/rectangles_thin/size_6/rect_96x96x1_5.mdl", E:toWorld(vec(0,0,GridHeight * 0.5 + 48.25)), E:toWorld(ang(90,0,0)), 1 )
+        
+        noCollideAll(BackPlate, 1)
+        BackPlate:propShadow(0)
+        BackPlate:setAlpha(0)
+        
+        BackPlate:parentTo(E)
+        noCollideAll(Prop, 1)
+        
+        holoCreate(300)
+        holoModel(300, "models/sprops/cuboids/height12/size_1/cube_12x12x12.mdl")
+        holoMaterial(300, "models/wireframe")
+        holoColor(300, vec4(255))
+        holoScale(300, vec(1.05))
+        holoAng(300, E:toWorld(ang(0,0,0)))
+        holoParent(300, E)
+        
+        holoCreate(100)
+        holoAlpha(100,0)
+        holoMaterial(100, "debug/debugdrawflat")
+        
+        holoCreate( 
+            301,
+            vec(),
+            vec(0),
+            ang(),
+            vec(255),
+            "models/holograms/hq_rcube.mdl"
+        )
+        
+        FileName = "FavoriteMaterials.txt"
+        fileLoad(FileName)
+        
+        R = 15
+        Forward = 50
+        
+        function void endCircle(){
+            for(I = 1, SelectionMatCount){
+                holoAlpha(300 + I,0)
+            }
+            holoAlpha(100, 0)
+        }
+        
+        function void printMaterial(MatString:string){
+            if (MatString != ""){
+                printColor(vec(255),"Material: ", hsv2rgb(270, 1,1), "\"" + MatString + "\"")
+            } else {
+                printColor(vec(255), "No Material Selected")
+            }
+        }
+        function string returnMaterial(SelectedIndex){
+            if (SelectedIndex == 0){return ""}
+            return MatList[SelectedIndex, string] 
+        }
+        
+        
+        function refreshPropMat(){
+            if (PosVal == 0){
+                PosVal = MatCount
+            }
+            TargetHolo = holoEntity(PosVal)
+            TempMat = TargetHolo:getMaterial()
+            holoPos(300, TargetHolo:pos())
+            Prop:setMaterial(TempMat)
+            hint("Selected Mat: " + (TempMat ?: "[Empty]" + ((PosVal == MatCount) ? "**WildCard**" : "")), 4)
+            
+        }
+        
+        function void makeSelection(SelectedIndex){
+            SelectedMaterial = returnMaterial(SelectedIndex)
+            printMaterial(SelectedMaterial)
+            SelectMode = 0
+            Selection = 0
+            endCircle()
+            holoMaterial(MatCount, SelectedMaterial)
+            refreshPropMat()
+        }
+        
+        
+        function movePos(X, Y){
+            PosVal = ((PosVal -1 + Y * Perimeter) + X ) % MatCount + 1
+        }
+        
+        function moveAction(X, Y){
+            movePos(X, Y)
+            refreshPropMat()
+        }
+        
+        function void reloadGrid(){
+            for(I = 1, MatCount){
+                if (!holoEntity(I)){
+                    holoCreate(I)
+                    holoModel(I, "models/holograms/hq_rcube.mdl")
+                    holoParent(I, E)
+                }
+                
+                Box = holoScaleUnits(I) - vec(0.5)
+                holoPos(
+                I, 
+                E:toWorld(
+                    vec(
+                        -((I - 0.5) % Perimeter - Perimeter * 0.5) * Box:x(), 
+                        0, 
+                        (floor((I - 1) / Perimeter) + 0.5) * Box:y() - Perimeter * 0.5 * Box:y())
+                    )
+                )
+                holoAng(I, E:angles())
+                holoMaterial(I, Materials[I, string])
+            }
+            refreshPropMat()
+        }
+        function void reloadMats(){
+            for (I = 1, Materials:count()){
+                if (Materials[I, string] == ""){
+                    Materials:remove(I)
+                }
+            }
+            Materials:pushString("")
+            MatCount = Materials:count()
+            Perimeter = ceil(sqrt(MatCount))
+        }
+    }
+    
+    if (fileClk(FileName)){
+        FileString = fileRead()
+        Materials = FileString:explode("\n")
+        reloadMats()
+    }
+    
+    if (MatCount){
+        while(HN <= MatCount & holoCanCreate()){
+            holoCreate(HN)
+            holoModel(HN, "models/holograms/hq_rcube.mdl")
+            holoParent(HN, E)
+            HN++
+        }
+        if (HN > MatCount){
+            Loaded = 1
+            reloadGrid()
+        }
+    }
+} else {
+    if (fileClk(FileName)){
+            hint("Saved!", 4)
+    }
+
+    Right = Me:keyPressed("right")
+    Left = Me:keyPressed("left")
+    Down = Me:keyPressed("down")
+    Up = Me:keyPressed("up")
+    
+    Print = Me:keyPressed("pad_enter")
+    
+    XPosBtnVal = sign(-E:toLocal(Me:pos()):y()) * ((changed(Left) & Left) - (changed(Right) & Right))
+    YPosBtnVal = (changed(Up) & Up) - (changed(Down) & Down) 
+    
+    if (XPosBtnVal | YPosBtnVal){
+        moveAction(XPosBtnVal, YPosBtnVal) 
+    }
+    
+    Cannon = Me:weapon():type() == "weapon_physcannon"
+
+    if (Cannon){
+        AimEnt = Me:aimEntity()
+        
+        
+        
+        if (AimEnt == BackPlate){
+            
+        } else {
+        
+            CopyButton = Me:keyAttack2()
+            CopyButtonChange = changed(CopyButton)
+            
+            PasteButton = Me:keyAttack1()
+            PasteButtonChange = changed(PasteButton)
+            if (PasteButtonChange & !PasteButton){
+                AimEnt:setMaterial(TempMat)
+            }
+            
+            if (SelectMode){
+                
+                Plane = rayPlaneIntersection(Me:shootPos(), Me:eye(), CenterPos, -Eye)
+                AimToPlaneVec2 = vec2( shiftL(toLocal(
+                    Plane,
+                    ang(),
+                    CenterPos,
+                    EyeAngs 
+                )))
+                
+                SelectionDistance = AimToPlaneVec2:length()
+        
+                MinRange = R * 0.8 - HoloScaleUnits:z() * 0.5
+                MaxRange = R * 2
+                
+                LastSelected = Selected
+                if ( inrange(SelectionDistance, MinRange, MaxRange)){
+                    holoAlpha(100, 255)
+                    SelectAng = AimToPlaneVec2:rotate(-90):toAngle()
+                    SelectAng = SelectAng + (sign(SelectAng) == -1) * 360
+                    
+                    
+                    Selected = round(SelectionMatCount * SelectAng/360) % SelectionMatCount + 1
+                    
+                    SelectedEnt = holoEntity(300 + Selected)
+                    
+                    if (LastSelected != Selected){
+                        holoScale(300 + LastSelected, vec(Scale))
+                        holoScale(300 + Selected, vec(Scale * 1.1))
+                        hint(returnMaterial(Selected), 2)
+                        
+                        holoModel(100, "models/holograms/hq_cone.mdl")
+                        holoPos(100, SelectedEnt:toWorld(vec(0,0,-HoloScaleUnits:z() * 0.7)))
+                        holoAng(100, SelectedEnt:toWorld(ang(0,90,0)))
+                        holoScale(100, vec(Scale * 0.3))
+                    }
+                    
+                    
+        
+                } else {
+                    holoScale(300 + LastSelected, vec(Scale))
+                    Selected = 0
+                    
+                    
+                    if (SelectionDistance < MinRange){
+                        holoAlpha(100, 100)
+                        holoModel(100, "models/holograms/hq_sphere.mdl")
+                        holoPos(100, Plane)
+                        holoScale(100, vec(Scale * 0.1))
+                    } elseif (SelectionDistance > MaxRange){
+                        holoScale(300 + LastSelected, vec(Scale))
+                        holoAlpha(100, 0)
+                    }
+                }  
+                if (!CopyButton & CopyButtonChange){  
+                    makeSelection(Selected)
+                }
+                
+            } else {
+                if (CopyButton){
+                    endCircle()
+                    #Get list of materials
+                    
+                    local OldSelectionMatCount = SelectionMatCount
+                    local ChangedMat = changed(returnMaterial(1))
+                    if (AimEnt){
+                        if (AimEnt != Target){
+                            Target = AimEnt
+                            MatList = Target:getMaterials()
+                            TempMat = Target:getMaterial()
+                            
+                            if (TempMat){
+                                MatList:unshiftString(TempMat)
+                            }
+                            
+                            SelectionMatCount = MatList:count()
+                            hint(Target:toString() + " { " + SelectionMatCount + " } ", 4)
+                            
+                            Scale = min(7/SelectionMatCount, 0.5)
+                            HoloScaleUnits = holoEntity(1):boxSize() * Scale
+                            
+                            while(SelectionMatCount > HoloI & holoCanCreate()){
+                                HoloI++
+                                holoCreate(300 + HoloI)
+                                holoModel(300 + HoloI,"models/holograms/hq_rcube.mdl" )
+                                holoColor(300 + HoloI, vec(255))
+                                holoAlpha(300 + HoloI, 0)
+                                
+                            } 
+                        }
+                    } else {
+                        Target = noentity()
+                        Ranger = Me:eyeTrace()
+                        MatList = array(Ranger:hitTexture())
+                        SelectionMatCount = MatList:count()
+                        if (ChangedMat){
+                            hint(returnMaterial(1), 4)
+                        }
+                    }              
+                    
+                    
+                    #Display Materials
+                    
+                    
+                    Eye = Me:eye()
+                    EyeAngs = Me:eyeAngles()
+                    
+                    CenterPos = Me:shootPos() + Eye * Forward
+         
+                    
+                        
+                    if (SelectionMatCount > 1){
+                        
+                        for(I = 1, SelectionMatCount){    
+                            Percent = (I - 1)/SelectionMatCount
+                            Ang = 360 * Percent
+                            
+                            VecAng = toWorldPosAng( 
+                                vec( 0, 0, R), 
+                                ang(), 
+                                CenterPos, 
+                                EyeAngs:setRoll(Ang)
+                            )
+                            
+                            holoPos( 300 + I, VecAng[ 1, vector])
+                            holoAng( 300 + I, VecAng[ 2, angle] )
+                            holoMaterial(300 + I, MatList[I, string])
+                            holoAlpha(300 + I, 255)
+                            holoScale(300 + I, vec(Scale))
+                        }
+                            
+                    } else {
+                        holoAlpha(301, 255)
+                        holoScale(301, vec(0.5))
+                        holoPos(301, CenterPos)
+                        holoAng(301, EyeAngs)
+                        holoMaterial(301, returnMaterial(1))
+                    }
+                } elseif (CopyButtonChange){
+                    if(SelectionMatCount == 1){
+                        makeSelection(1)
+                    } else {
+                        SelectMode = 1
+                    }
+                }
+            }
+        }
+        
+        
+          
+    } elseif (changed(Cannon)){
+        endCircle()
+    }
+    
+    if (changed(Print) & Print){
+        printMaterial(TempMat)
+    }
+    
+    
+    if (chatClk(Me)){
+        Said = lastSaid()
+        if (Said:lower() == "!save"){
+            hideChat(1)
+            TempString = holoEntity(MatCount):getMaterial()
+            if (TempString){
+                for(I = 1, MatCount){
+                    if (TempString == Materials[I, string]){
+                        Skip = 1
+                        hint(TempString + " Already Added", 4)
+                        break
+                    }
+                }
+                if (!Skip){
+                    FileString = FileString + holoEntity(MatCount):getMaterial() + "\n"
+                    Materials = FileString:explode("\n")
+                    hint("Saving...", 1)
+                    fileWrite(FileName,FileString)
+                    reloadMats()
+                    reloadGrid()
+                    PosVal = MatCount
+                    refreshPropMat()
+                }
+            } else {
+                hint("No Material Present", 4)
+            }
+        } elseif (Said[Said:length()] == "\\"){
+            hideChat(1)
+            SaidBit = Said:sub(1, Said:length() - 1)
+            print(SaidBit)
+            holoMaterial(MatCount, SaidBit)
+            if (PosVal == MatCount){
+                refreshPropMat()
+            }
+        }
+    }
+    
+}
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

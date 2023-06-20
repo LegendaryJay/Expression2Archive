@@ -1,0 +1,54 @@
+@name Pod Controller
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+#Inputs:	
+Pod["Lock", number]	
+Pod["Terminate", number]	
+Pod["Strip weapons", number]	
+Pod["Eject", number]	
+Pod["Disable", number]	
+Pod["Crosshairs", number]	
+Pod["Brake", number]	
+Pod["Allow Buttons", number]	
+Pod["Relative", number]	
+Pod["Damage Health", number]	
+Pod["Damage Armor", number]	
+Pod["Hide Player", number]	
+Pod["Hide HUD", number]	
+Pod["Vehicle", entity]	
+	
+	
+#Outputs:	
+Pod["W", number]	
+Pod["A", number]	
+Pod["S", number]	
+Pod["D", number]	
+Pod["Mouse1", number]	
+Pod["Mouse2", number]	
+Pod["R", number]	
+Pod["Space", number]	
+Pod["Shift", number]	
+Pod["Zoom", number]	
+Pod["Alt", number]	
+Pod["TurnLeftKey", number]	
+Pod["TurnRightKey", number]	
+Pod["PrevWeapon", number]	
+Pod["NextWeapon", number]	
+Pod["Light", number]	
+Pod["X", number]	
+Pod["Y", number]	
+Pod["Z", number]	
+Pod["AimPos", vector]	
+Pod["Distance", number]	
+Pod["Bearing", number]	
+Pod["Elevation", number]	
+Pod["ThirdPerson", number]	
+Pod["Team", number]	
+Pod["Health", number]	
+Pod["Armor", number]	
+Pod["Active", number]	
+Pod["Driver", entity]	
+Pod["wirelink", wirelink]	

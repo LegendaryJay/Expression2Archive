@@ -1,0 +1,49 @@
+@name Push Away Remake
+@inputs 
+@outputs [Target PushProp]:entity I Dist Vec:vector
+@persist [Target PushProp Me]:entity I
+@model models/props_c17/gravestone_cross001b.mdl
+
+if (first()){
+    runOnTick(1)
+    runOnLast(1)
+    Me = owner()
+}
+
+
+if (!PushProp){
+    PushProp= propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl",Me:toWorld(vec(0,0,100)),0)
+    PushProp:propNotSolid(1)
+}
+if (findCanQuery()){
+    findIncludeModel("models/props_c17/FurnitureWashingmachine001a.mdl")
+    findIncludeClass("vehicle")
+    findInSphere(Me:boxCenterW(),400)
+    Target=find()
+}
+Dist=Me:boxCenterW():distance(Target:pos())
+
+if (Target & Dist<400){
+    I++
+    if (I<5){
+        PushProp:propNotSolid(0)
+        PushProp:setMass(Target:mass()*20)
+    }
+    elseif (I<6){
+        Vec = Target:massCenter() - Me:boxCenterW()
+        PushProp:setPos(Me:boxCenterW() + Vec:normalized()*(Dist - 10))
+    }
+    elseif (I<8){
+        PushProp:applyForce((-PushProp:pos()+Target:boxCenterW())*Target:mass()-PushProp:vel())
+    }
+    elseif (I<15) {
+        I=0   
+    }
+}
+else {
+    PushProp:applyForce((owner():toWorld(vec(0,0,100))-PushProp:pos())*50-PushProp:vel()*PushProp:mass())
+    PushProp:propNotSolid(1)
+    PushProp:setMass(1)
+}
+    
+if (last()){PushProp:propDelete()}

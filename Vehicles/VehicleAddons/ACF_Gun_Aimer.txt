@@ -1,0 +1,120 @@
+@name ACF Gun Aimer
+@inputs [Gun1 Gun2 Seat AmmoEnt]:entity 
+@outputs Vec:vector
+@persist [AmmoWirelink Gun1Wirelink Gun2Wirelink]:wirelink NumPlayers [Seat Gun1 Gun2 YawThing]:entity Zoom Cam Width Height Gun1Fire
+@trigger 
+
+if (first()){
+    runOnTick(1)
+    NumPlayers = numPlayers()
+    Gun1Wirelink = Gun1:wirelink()
+    Gun2Wirelink = Gun2:wirelink()
+    
+    Gun1:acfUnlinkFrom(AmmoEnt, 1)
+    Gun2:acfUnlinkFrom(AmmoEnt, 1)
+    
+    Gun1:acfLinkTo(AmmoEnt, 1)
+    Gun2:acfLinkTo(AmmoEnt, 1)
+    
+    Width = (Gun1:boxSize():y() + AmmoEnt:boxSize():y())*0.51
+    Height = (Seat:boxSize():z() + AmmoEnt:boxSize():z())*0.51
+    
+    holoCreate(1)
+    holoModel(1,"models/sprops/geometry/sphere_3.mdl")
+    holoMaterial(1, "hlmv/debugmrmwireframe")
+    holoColor(1, vec(255,0,0)) 
+    
+    AmmoWirelink = AmmoEnt:wirelink()
+    cameraCreate(1)
+    cameraAng(1, AmmoEnt:angles())
+    cameraPos(1, AmmoEnt:boxCenterW() + AmmoEnt:forward() * 20) 
+    #cameraParent(1, Gun1)
+    
+    YawThing = AmmoEnt
+    YawThing:setPos(Seat:boxCenterW() + Seat:up()*30 + Seat:forward()*-30) 
+    
+    Zoom = 100
+}
+Driver = Seat:driver()
+Place = Seat:boxCenterW() + Seat:up()*Height + Seat:forward()*-20
+if (Driver){
+    AmmoWirelink["Active", number] = 1
+    rangerFilter(array(Seat, Gun1, Gun2, AmmoEnt))
+    Ranger = rangerOffset(Place, Place + Driver:eye()*99999)
+    AimPos = Ranger:position()
+    holoPos(1, AimPos)
+    holoScale(1, vec(1 + Ranger:distance())/100)
+
+    LocalVec = YawThing:toLocal(AimPos)
+    Yaw = vec2(LocalVec):toAngle()
+    Pitch = -vec2(LocalVec:x(),LocalVec:z()):toAngle()
+    
+    
+    YawThing:setAng(YawThing:toWorld(ang(0, Yaw, 0)))
+    
+    GunAng = YawThing:toWorld(ang(Pitch,0,0))
+    Gun1:setAng(GunAng)
+    Gun2:setAng(GunAng)
+    AmmoEnt:setAng(YawThing:angles())
+    
+    if (Driver:keyAttack1()){
+        Gun1Wirelink["Fire", number] = 1
+        Gun2Wirelink["Fire", number] = 1
+        timer("ReverseFire", Gun1:acfFireRate()/2)
+        Gun1Fire = !Gun1Fire
+    } else {
+        Gun1Wirelink["Fire", number] = 0
+        Gun2Wirelink["Fire", number] = 0
+    }
+        
+    if (Driver:keyPressed("r")){
+        Gun1Wirelink["Reload", number] = 1
+        Gun2Wirelink["Reload", number] = 1
+    } else {
+        Gun1Wirelink["Reload", number] = 0
+        Gun2Wirelink["Reload", number] = 0
+    }
+    LClick = Driver:keyAttack2()
+    if (changed(LClick) & LClick){
+        Cam = !Cam
+        cameraToggle(1, Cam)
+    }
+    Q = Driver:keyPressed("q")
+    if (changed(Q) & Q){
+        Zoom-=10
+        cameraZoom(1, Zoom)
+        if (Zoom > 100){
+            Zoom = 0
+        }
+    }
+    
+    cameraAng(1, Driver:eye():toAngle())
+    cameraPos(1, AmmoEnt:boxCenterW() + AmmoEnt:forward() * 20) 
+    
+} else {
+    YawThing:setAng(Seat:toWorld(ang(0, 90, 0)))
+    Gun1:setAng(YawThing:angles())
+    Gun2:setAng(YawThing:angles())
+}
+if (clk("ReverseFire")){
+    hint(Gun1:acfFireRate():toString(), 2)
+    Gun1Fire = !Gun1Fire
+}
+Gun1Wirelink["Target Ent", entity] = holoEntity(1)
+Gun2Wirelink["Target Ent", entity] = holoEntity(1)
+
+YawThing:setPos(Place)
+Gun2:setPos(Place + YawThing:right()*Width)
+Gun1:setPos(Place + YawThing:right()*-Width)
+
+
+NumPlayers = numPlayers()
+if (changed(NumPlayers) | changed(Driver)){
+    holoVisible(1, players(), 0)
+    holoVisible(1, Driver, 1)
+}
+
+
+
+
+

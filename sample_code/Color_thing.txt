@@ -1,0 +1,26 @@
+@name Snake
+@inputs 
+@outputs I
+@persist I HoloNumber
+@trigger 
+runOnTick(1)
+if (first()){
+    HoloNumber=20
+    I=1
+}
+if (I>HoloNumber){I=1}
+
+while (perf() & I<=HoloNumber){
+    hint(toString(I),2)
+    Red=127*sin((I/HoloNumber)*90)+128
+    Grn=0 #127*sin(Sin*0.01*I + 2/3*pi())+128
+    Blu=0 #127*sin(Sin*0.01*I + 4/3*pi())+128
+
+    Color=vec(Red,Grn,Blu)
+    if (!holoEntity(I)){holoCreate(I)}
+    holoPos(I,entity():pos() + vec(    sin(I*90/HoloNumber)*100,    cos(I*90/HoloNumber)*100,    10*I))
+    holoColor(I,Color)
+    I++
+}
+
+

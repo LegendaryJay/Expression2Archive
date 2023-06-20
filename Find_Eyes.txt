@@ -1,0 +1,32 @@
+@name Eye Poaition
+@inputs 
+@outputs 
+@persist Me:entity
+@model models/props_borealis/bluebarrel001.mdl 
+
+if (first()){
+    runOnTick(1)
+    Me = owner()
+    
+    holoCreate(1)
+    holoScale(1, -vec(0.5))
+}
+
+
+Pos = Me:pos()
+AimPos = Me:aimPos()
+Eye = Me:eye()
+
+EyePitch = vec2(vec2(Eye):length(), Eye:z()):toAngle() + 90
+
+Pos2Aim = (AimPos - Pos)
+
+PosPitch = -vec2(vec2(Pos2Aim):length(), Pos2Aim:z()):toAngle() + 90
+PosAimLength = Pos2Aim:length()
+
+PivotPitch = 180 - PosPitch - EyePitch
+
+Length = (sin(PivotPitch) * PosAimLength) / sin(EyePitch)
+
+holoPos(1, Pos + vec(0,0,Length))
+

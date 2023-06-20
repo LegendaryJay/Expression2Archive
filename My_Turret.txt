@@ -1,0 +1,50 @@
+@name My Turret
+@inputs [Base Yaw Pitch Seat]:entity [Egp Cam]:wirelink
+@outputs Fire
+@persist 
+@trigger 
+
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+
+if (first()){
+    runOnTick(1)
+    Pitch:setMass(50000)
+    Yaw:setMass(50000)
+    Cam["Activated",number]=1
+    Cam["Angle",angle]=entity():angles()   #ang(-Pitch:angles():roll(),Pitch:angles():yaw()+90,Pitch:angles():pitch())
+    Cam["Position",vector]=entity():toWorld(vec(0,0,10)) #Pitch:boxCenterW()+Pitch:up()*20
+    Cam["Parent",entity]=entity()
+}
+Driver=Seat:driver()
+
+if (Driver){
+    Ang=Seat:toWorld(Driver:eyeAngles()+ang(0,90,0))
+    
+    Cam["Activated",number]=1
+    #Cam["Angle",angle]=entity():angles()   #ang(-Pitch:angles():roll(),Pitch:angles():yaw()+90,Pitch:angles():pitch())
+    #Cam["Position",vector]=entity():pos() #Pitch:boxCenterW()+Pitch:up()*20
+    
+    if (Driver:keyAttack1()){
+        Fire=1
+    }
+    else {
+        Fire=0
+    }
+    
+    Yaw:face(Base:toWorld(ang(Ang:yaw()+90,0,0)))
+    Pitch:face(Yaw:toWorld(ang(-90,-Ang:pitch()-90,0)))
+    
+}
+else {
+    Cam["Activated",number]=0
+    Yaw:face(Base:toWorld(ang(-90,0,0)))
+    Pitch:face(Yaw:toWorld(ang(-90,-90,0)))
+}

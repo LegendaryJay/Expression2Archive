@@ -1,0 +1,110 @@
+@name Attack Field
+@inputs 
+@outputs Timer TargetList:array TargetsExist TargetI StartPos:vector KillDeviceActive
+@persist [Me KillDevice E]:entity Timer RoomR TargetI TargetsExist Whitelist:array
+@model models/sprops/geometry/fring_18.mdl
+#include "lib/async"
+if(first()){ 
+    propSpawnUndo(0)
+    Me = owner()
+    E = entity()
+    Whitelist = array(Me)
+    
+    KillDevice = propSpawn("models/sprops/geometry/sphere_6.mdl", vec(), ang(),  0)
+    KillDevice:propGravity(0)
+    KillDevice:setMass(300)
+    KillDevice:setTrails(0,50,0.01,"trails/laser",vec(255),255)
+    KillDevice:propDraw(0)
+    
+    RoomR = 500
+    
+    holoCreate(1, E:boxCenterW())
+    holoModel(1, "models/sprops/geometry/fring_144.mdl")
+    holoScaleUnits(1, vec(RoomR * 2):setY(1))
+    holoAng(1, ang(0,0,90))
+    
+    function moveKillDevice(Vector:vector){
+        KillDevice:setAng(ang())
+        KillDevice:applyForce(Vector)
+    }
+    
+    function setKillDevice(Vector:vector){
+        KillDevice:setAng(ang())
+        KillDevice:setPos(Vector)
+    }
+    
+    function attack(Vector:vector){
+        moveKillDevice(Vector)
+        KillDeviceActive = 0
+        interval(1)
+    }
+    
+    function prepareAttack(Tar:entity){
+        #KillDevice:soundPlay(1,3,"ambient.electrical_zap_" + randint(9))
+        
+        
+        Dir = (E:boxCenterW() - Tar:boxCenterW()):normalized()
+        StartPos = rayAABBoxIntersection(E:boxCenterW(),-Dir, Tar:boxCenterW(), Tar:boxSize())
+        
+        setKillDevice(StartPos + Dir * KillDevice:boxSize() * 2)
+        
+        async(2,"attack", (-Dir * 800 * KillDevice:mass()))
+    }
+    
+
+    
+    function sendKillDeviceHome(){
+        setKillDevice(E:pos())
+        KillDevice:propFreeze(1)
+        soundStop(1)
+    }
+    
+    function array:nextTarget(){
+        TargetI = (TargetI + 1) % This:count()
+        Target = This[TargetI + 1, entity]
+        
+        if (Target:isAlive()){
+            KillDevice:soundPlay(1,-1,"hornet/ag_buzz" + randint(3) + ".wav")
+            #KillDevice:soundPlay(1,5,"npc/vort/attack_shoot.wav")
+            KillDevice:propFreeze(0)
+            async(1, "prepareAttack", Target)
+            KillDeviceActive = 1
+        } else {
+            This:remove(TargetI + 1)
+            if (This:count()){
+                This:nextTarget()
+            } else {
+                sendKillDeviceHome()
+                
+            }
+                
+        }
+    }
+} 
+TargetList = array()
+TargetsExist = 0
+if (findCanQuery()){
+    findInSphere(E:pos(), RoomR)
+    findExcludeEntities(Whitelist)
+    findClipToClass("player")
+    TargetList = findToArray()
+    
+    if (TargetList:count()){
+        TargetsExist = 1
+    }
+}
+
+ChangedTargetExists = changed(TargetsExist)
+if (TargetsExist){
+    if (!KillDeviceActive){
+        TargetList:nextTarget()
+    } else {
+    
+        interval(1)
+    }
+} else {
+    if (ChangedTargetExists){
+        sendKillDeviceHome()
+    }
+    interval(300)
+}

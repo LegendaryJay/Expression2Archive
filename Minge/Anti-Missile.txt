@@ -1,0 +1,104 @@
+@name anti-Missile
+@persist [Me PushProp StopProp]:entity Targets:array ShieldI ShieldMode PropShield:array BreakMode PushMode PushTarget:entity PushI
+if (first()){
+    runOnTick(1)
+    Me = owner()
+    E = entity()
+    propSpawnUndo(0)
+    
+    StopProp = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl",entity():pos(),1)
+    #StopProp:setAlpha(0)
+    PushProp = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl",entity():toWorld(vec(0,0,50)),1)
+    PushProp:propNotSolid(1)
+    #PushProp:setAlpha(0)
+    PushProp:setMass(9999)
+}
+
+if (findCanQuery()){
+    findClearBlackList()
+    findClearWhiteList()
+    findIncludeClass("rpg_missile")
+    findIncludeClass("crossbow_bolt")
+    
+    findIncludeClass("npc_grenade")
+    findIncludeClass("prop_combine_ball")
+    findIncludeClass("bb_thrown")
+    findIncludeClass("grenade_ar2")
+    
+    findIncludeClass("npc_satchel")
+    findIncludeClass("npc_tripmine")
+    findIncludeClass("acf_missile")
+
+    #findExcludePlayerProps(Me)
+    findInSphere(Me:boxCenterW(),600)
+
+    Targets = findToArray()    
+}
+
+for (ShieldI = 1,Targets:count()){
+    Boom = Targets[ShieldI,entity]
+    switch(Boom:type()){
+        case "npc_satchel",
+        case "npc_tripmine",
+            if (!BreakMode){
+                Break = propSpawn("models/props_junk/gascan001a.mdl", Boom:boxCenterW() + Boom:vel() / 30, 1)
+                Break:propBreak()
+                BreakMode = 1
+                stoptimer("Break")
+                timer("Break",100)
+            }
+        case "rpg_missile",
+        case "acf_missile",
+        case "crossbow_bolt",
+        case "npc_grenade_bugbait",
+        case "grenade_ar2",
+            StopProp:setPos(Boom:boxCenterW() + Boom:vel()/30)
+            break
+        default,
+            if (!PushMode){
+                PushMode = 1
+                StopProp:setPos(Boom:boxCenterW() + Boom:vel()/30)
+                PushTarget = Boom
+            }
+            Cancel = 1
+    }
+}
+if (PushMode){
+    PushDist = (Me:boxCenterW()-PushTarget:pos()):length()
+    if (PushTarget & PushDist < 600){
+        PushI++
+        if (PushI < 5){
+            StopProp:setPos(E:toWorld(vec(0,0,44)))
+            PushProp:propNotSolid(0)
+            PushProp:setMass(PushTarget:mass())
+            PushProp:propFreeze(0)
+        }
+        elseif (PushI < 10){
+            PushProp:setPos(PushTarget:nearestPoint(Me:boxCenterW()))
+        }
+        elseif (PushI < 15){
+            PushProp:applyForce((PushTarget:boxCenterW() - PushProp:pos() + PushTarget:vel() / 25 ) * 5000 * PushTarget:mass() )
+        }
+        else {
+            PushI = 0  
+        }
+    } else {
+        PushMode = 0
+        PushI = 0   
+        
+        PushProp:propNotSolid(1)
+        PushProp:setMass(1)
+        PushProp:propFreeze(1)
+        
+        PushProp:setAng(ang())
+        PushProp:setPos( E:toWorld(vec(0,0,50)) )
+    }
+}
+
+    
+if (clk("Break")){BreakMode=0}
+if(!Cancel){
+    StopProp:setPos(E:pos() + vec(0,0,44))
+}
+
+

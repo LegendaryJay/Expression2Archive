@@ -1,0 +1,27 @@
+@name Creepy e2
+@inputs 
+@outputs 
+@persist 
+@trigger 
+if(first()){
+    runOnHTTP(1)
+    runOnFile(1)
+    ID = findPlayerByName("spoopy"):steamID64()
+#httpRequest("https://steamid.eu/api/request.php?api=B6MWPAF5P8F9PAL6A79L&player=76561198038869313&request_type=1&format=json")
+    httpRequest("https://steamid.io/lookup/" + ID)
+}
+
+if (httpClk()){
+    local Data = httpData()
+    JumpTo = Data:find("<dl class=\"panel-body dl-horizontal\">")
+    #local TweetStart = Data:find("<dl class=\"panel-body dl-horizontal\">")
+    local TweetStart = Data:find("<dl class=\"panel-body dl-horizontal\">")
+    local TweetEnd = Data:find("</dl>",TweetStart)
+    local TempTweet = Data:sub(TweetStart,TweetEnd)
+    #TempTweet = TempTweet:replace(" ","")
+    #TempTweet = TempTweet:replace("\n","")
+    print(TempTweet)
+    fileWrite("Names.txt",TempTweet)
+    selfDestruct()
+}
+"<spanclass=\"profile-statepublic\">public</span></dd>"

@@ -1,0 +1,118 @@
+@name Sound Machine
+@inputs Mode
+@outputs Pitch Activate
+@persist Pitch Activate
+runOnTick(1)
+Driver=entity():isConstrainedTo():driver()
+if(first()) {Pitch=100 Activate=0}
+
+K0=Driver:keyPressed("0")
+K1=Driver:keyPressed("1")
+K2=Driver:keyPressed("2")
+K3=Driver:keyPressed("3")
+K4=Driver:keyPressed("4")
+K5=Driver:keyPressed("5")
+K6=Driver:keyPressed("6")
+K7=Driver:keyPressed("7")
+K8=Driver:keyPressed("8")
+K9=Driver:keyPressed("9")
+LClick=Driver:keyAttack1()
+RClick=Driver:keyAttack2()
+R=Driver:keyReload()
+W=Driver:keyPressed("w")
+A=Driver:keyPressed("a")
+D=Driver:keyPressed("d")
+S=Driver:keyPressed("s")
+Shift=Driver:keyPressed("LSHIFT")
+Ctrl=Driver:keyPressed("LCONTROL")
+Space=Driver:keyPressed("Space")
+
+if (K0)
+{
+    Index=0
+    Activate=1
+}
+if (K1)
+{
+    Index=1
+    Activate=1
+}
+if (K2)
+{
+    Index=2
+    Activate=1
+}
+if (K3)
+{
+    Index=3
+    Activate=1
+}
+if (K4)
+{
+    Index=4
+    Activate=1
+}
+if (K5)
+{
+    Index=5
+    Activate=1
+}
+if (K6)
+{
+    Index=6
+    Activate=1
+}
+if (K7)
+{
+    Index=7
+    Activate=1
+}
+if (K8)
+{
+    Index=8
+    Activate=1
+}
+if (K9)
+{
+    Index=9
+    Activate=1
+}
+
+if (W|S){Pitch=W ? Pitch+2 : Pitch-2}
+soundPitch(0,Pitch)
+soundPitch(1,Pitch)
+soundPitch(2,Pitch)
+
+if (Activate==1)
+{
+    if (Index==0)
+    {
+        entity():soundPlay(0,0,"hl1/ambience/alien_minddrill.wav")
+        Activate=2
+    }
+    elseif (Index==1)
+    {
+         entity():soundPlay(1,0,"hl1/ambience/labdrone2.wav")
+        Activate=2
+    }
+    elseif (Index==2)
+    {   
+        entity():soundPlay(2,0,"npc/combine_gunship/dropship_engine_near_loop1.wav")
+        Activate=2
+    }
+}
+if (Activate==0)
+{
+soundPurge()
+}
+if (RClick==1) {Activate=0}
+
+#[Engine
+hl1/ambience/labdrone2.wav
+npc/combine_gunship/dropship_engine_near_loop1.wav
+hl1/ambience/alien_minddrill.wav
+
+StartUp
+npc/attack_helicopter/aheli_charge_up.wav
+vehicles/apc/apc_start_loop3.wav
+]#

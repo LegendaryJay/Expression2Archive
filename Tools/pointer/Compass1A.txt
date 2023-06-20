@@ -1,0 +1,66 @@
+@name Compass1A
+@inputs Ent:entity Vec:vector
+@outputs [Compass Target]:entity  Direction:vector
+@persist [BackupTarget Compass Target E Me]:entity [CompassCenter TargetPos]:vector
+@trigger 
+@model models/sprops/geometry/sphere_18.mdl
+
+if (first()){
+    runOnTick(1)
+    
+    E = entity()
+    #E:setMaterial("models/wireframe")
+    E:setMaterial("lights/white")
+    #E:setAlpha(0)
+    
+    Me = owner()
+    
+    CompassScale = vec( 3)
+    
+    #index, position, scale, angle, color, model)
+    Compass = holoCreate( 1, vec(), CompassScale, ang(), vec(100, 0, 100), "models/Items/AR2_Grenade.mdl")
+    CompassCenter = CompassScale * Compass:boxCenter()
+    holoParent(1, E)
+    holoMaterial(1, "models/debug/debugwhite")
+    
+    holoCreate(2)
+    holoParent(2, E)
+    holoModel(2,"models/sprops/misc/origin.mdl")
+    #holoMaterial(2, "lights/white")
+    holoAng(2, ang())
+    holoScale(2, vec(1.02))
+    #holoAlpha(2, 150)
+    BackupTarget = owner()
+    Target = Ent ? Ent : owner()
+}
+
+ECenter = E:boxCenterW()
+if (~Ent){
+    Target = Ent ? Ent : BackupTarget
+}
+
+
+E:propNotSolid(E:isPlayerHolding())
+
+TargetKey = Me:keyPressed("m")
+if (changed(TargetKey) & TargetKey){
+    Target = BackupTarget = Me:aimEntity()
+    hint(Target:type() + " | " + Target:model(), 2)
+}
+
+if (Vec) {
+    if (~Vec){
+        TargetPos = Vec
+    }
+} else {
+    TargetPos = Target:boxCenterW()
+}
+
+Direction = (TargetPos - ECenter):normalized()
+
+Ang = Direction:toAngle():rotateAroundAxis(vec(0,1,0), 90)
+Pos = toWorld(-CompassCenter, Ang, E:boxCenterW() + Direction * 0.4, Compass:angles())
+
+holoAng(1, toWorldAng(vec(), ang(0,0,0), Pos, Direction:toAngle()))
+holoPos( 1, Pos)
+holoAng(2, ang())

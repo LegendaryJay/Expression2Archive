@@ -1,0 +1,25 @@
+@name Player Array
+@inputs 
+@outputs CountArray PlayerCount I PlayerArray:array
+@persist [E Me Target Seat CenterEnt]:entity Moo PlayerArray:array Radius Center:vector I CountArray
+@trigger 
+    
+    
+if (first()){
+    runOnTick(1)
+    runOnPlayerConnect(1)
+    runOnPlayerDisconnect(1)
+    
+    Players = players()
+    NumPlayers = numPlayers()
+}
+if (playerConnectClk()){
+    hint(lastConnectedPlayer():name() + " Arrived", 2)
+    Players = players()
+    NumPlayers = numPlayers()
+}
+if (playerDisconnectClk()){
+    hint(lastDisconnectedPlayer():name() + " Left", 2)
+    Players = players()
+    NumPlayers = numPlayers()
+}

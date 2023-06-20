@@ -1,0 +1,555 @@
+@name Useful Textures 7
+@outputs PosVal
+@persist [E Me DisplayProp]:entity  MaterialPropModel:string MaterialPropSize:vector
+#loading animation
+@persist StartR
+#File
+@persist FileName:string Loaded FileString:string
+#Selection Circle
+@persist [Eye]:vector EyeAngs:angle
+@persist CircleRadius SelCircleForward SelCirclePropScale HoloScaleUnits:vector CenterPos:vector    
+@persist SelectedMatIdxFromCircle LastSelectedMatIdxFromCircle SelectMode SelectedMaterial:string
+@persist CircleHoloI CircleTarget:entity CircleMaterialList:array CircleMatCount
+#Material Grid
+@persist MatCount Materials:array Props:array
+@persist GridHeight SpacedMaterialPropSize:vector Perimeter PosVal HN
+@persist SkipSelection PropLookupTable:table
+#Pasting
+#@persist PasteMat:string  
+@model models/sprops/misc/alphanum/alphanum_arrow_a.mdl
+if (!Loaded){
+    if (first()){
+#########################################################   
+        #How high up the grid is     
+        GridHeight = 10
+        
+        #How spaced apart each prop on the grid is
+        PropGap = 2
+        
+        #What model most of the props are
+        MaterialPropModel = "models/holograms/hq_rcube.mdl"
+        
+        #Start Animation Size
+        StartR = 50
+        
+        #Select Material Menu Size
+        CircleRadius = 15
+        
+        #How far from your face the menu is
+        SelCircleForward = 50
+#########################################################
+        
+
+
+
+
+
+
+
+
+
+        #Run on
+        enableConstraintUndo(0)
+        runOnTick(1)
+        runOnChat(1)
+        runOnFile(1)
+        propSpawnUndo(0)
+        
+        
+        #Define Common Entities
+        E = entity()
+        Me = owner()
+        E:setMaterial("debug/debugdrawflat")
+        
+        #Half Circle Prop
+        DisplayProp = propSpawn("models/sprops/misc/domes/size_4/dome_48x24.mdl", E:toWorld(vec(50, 100, 50)), E:toWorld(ang(90,90,90)), 1)
+        noCollideAll( DisplayProp,1)
+        #Grid Selection Holo
+        holoCreate(300)
+        holoModel(300, "models/sprops/cuboids/height12/size_1/cube_12x12x12.mdl")
+        holoMaterial(300, "models/wireframe")
+        holoColor(300, vec4(255))
+        holoAng(300, E:toWorld(ang(0,0,0)))
+        
+        #Circle Selector Cursor
+        holoCreate(100)
+        holoAlpha(100,0)
+        holoMaterial(100, "debug/debugdrawflat")
+        
+        # Holo used now to measure size, but later used in circle menu
+        holoCreate( 
+            1,
+            vec(),
+            vec(),
+            ang(),
+            vec(255),
+            MaterialPropModel
+        )
+        #measuring holo size
+        MaterialPropSize = holoEntity(1):boxSize()
+        #same thing but with spacing
+        SpacedMaterialPropSize = MaterialPropSize + vec(PropGap)
+
+        #############################
+        #                           #
+        #        Functions!!        #
+        #                           #
+        #############################
+        ### Print Function
+        function fancyPrint(TextA:string, TextB:string){
+            printColor(vec(77,1,53),TextA, vec(255), TextB)
+        }
+        
+        function void printMaterial(MatString:string){
+            if (MatString != ""){
+                fancyPrint("Material: ", "\"" + MatString + "\"")
+            }
+        }
+        function string returnSelectionRingMaterial(SelectedIndex){
+            if (SelectedIndex == 0){return ""}
+            return CircleMaterialList[SelectedIndex, string] 
+        }
+        
+        function hintGridSelectedProp(){
+            local TempMat = Props[PosVal, entity]:getMaterial()
+            hint("Selected Mat: " + (TempMat ?: "[Empty]" + ((PosVal == MatCount) ? "**WildCard**" : "")), 4)
+        }
+        
+        ## DisplayProp
+        function setDisplay(String:string){
+            DisplayProp:setMaterial(String)
+        }
+        
+        ##Selection Circle Stuff
+        function void closeSelCircle(){
+            for(I = 1, CircleMatCount){
+                holoAlpha( I, 0)
+            }
+            holoAlpha(100, 0)
+        }
+        
+        function void makeCircleSelection(SelectedIndex){
+            SelectMode = 0
+            Selection = 0
+            
+            SelectedMaterial = returnSelectionRingMaterial(SelectedIndex)
+                        
+            if (SelectedMaterial != ""){
+                setDisplay(SelectedMaterial)
+                Props[MatCount, entity]:setMaterial(SelectedMaterial)
+            }
+            closeSelCircle()
+        }
+        
+        ## Make Prop
+        function makeProp(Idx){
+            Ang = 360 * Idx/MatCount
+            
+            Prop = Props[Idx,entity] = propSpawn(MaterialPropModel,  E:toWorld( vec(StartR * sin(Ang),0, StartR * cos(Ang) + StartR + 15)), E:toWorld(ang(Ang,0,0)),1)
+            noCollideAll(Prop, 1)
+            noCollide(Prop, E)
+            PropLookupTable[Prop:id():toString(), number] = Idx
+            Prop:propShadow(0)
+        }
+        
+        
+        ## Grid Functions
+        function number entToGridId(Ent:entity){
+            if (Ent:isConstrainedTo() == E){
+                return PropLookupTable[Ent:id():toString(), number]
+            }
+            return 0
+        }
+        
+        function updateGridSelection(){
+            if (PosVal == 0){
+                PosVal = MatCount
+            }
+            CircleTargetProp = Props[PosVal, entity]
+            local TempMat = CircleTargetProp:getMaterial()
+            holoPos(300, CircleTargetProp:pos())
+            holoAng(300, CircleTargetProp:angles())
+            holoParent(300, CircleTargetProp)
+            setDisplay(TempMat)
+            
+        }
+
+        function setGridSelection(Position){
+            PosVal = Position ?: MatCount
+            updateGridSelection()
+        }
+        
+        function void reloadGrid(){
+            for(I = 1, MatCount){
+  
+                Prop = Props[I, entity]
+                
+                if (!Prop){
+                    makeProp(I)
+                }
+                
+                Prop:propManipulate(
+                    E:toWorld(
+                        vec(
+                            -((I - 0.5) % Perimeter - Perimeter * 0.5) * SpacedMaterialPropSize:x(), 
+                            0, 
+                            (floor((I - 1) / Perimeter) + 1) * SpacedMaterialPropSize:z() + GridHeight
+                        )
+                    ),
+                    E:angles(),
+                    1,
+                    0,
+                    0
+                )
+                Prop:setMaterial(Materials[I, string])
+            }
+            
+            #updateGridSelection()
+            
+        }
+        
+        
+        function void reloadMaterialArray(){
+            for (I = 1, Materials:count()){
+                if (Materials[I, string] == ""){
+                    Materials:remove(I)
+                }
+            }
+            Materials:pushString("")
+            MatCount = Materials:count()
+            Perimeter = ceil(sqrt(MatCount))
+        }
+        
+        #File stuff
+        FileName = "FavoriteMaterials.txt"
+        fileLoad(FileName)
+        
+        
+        
+        
+        
+
+        
+        function helpMenu(Num:number){
+            Grey = vec(190)
+            White = vec(255)
+            BlackBerry = vec(77,1,53)
+            Gold = hsv2rgb(40,1,1)
+            
+            HelpMax = 2
+            print(" ")
+            Num = Num?:1
+            printColor(Gold, "Help Menu " + Num + "/" + HelpMax)
+            if (!Num | Num == 1){
+                printColor(BlackBerry,"Must be using Wiremod Remote Control!", Grey, " Weapons > Wiremod > Remote Control")
+                fancyPrint("Copy Material: ", "Right Click")
+                fancyPrint("Paste Material: ", "Left Click")
+                fancyPrint("Reset Material: ", "R")
+                fancyPrint("Print Material Name: ", "Numpad Enter")
+                printColor(Grey, "Say !help 2 for more information!")
+            } elseif (Num == 2){
+                printColor("Chat Commands:")
+                fancyPrint("Save Material:", " !save")
+                fancyPrint("Display Material: ","[Material Name]\\")
+                printColor(Grey, "    example: models/debug/debugwhite\\")
+            } else {
+            }
+            
+        }
+        
+        helpMenu(1)
+        HN = 1
+    } #End First
+    if (fileClk(FileName)){
+        FileString = fileRead()
+        Materials = FileString:explode("\n")
+        reloadMaterialArray()
+    }
+    ## Makes a prop for every material
+    
+    if (MatCount){
+        while(HN <= MatCount & propCanCreate()){
+            makeProp(HN)
+            HN++
+        }
+        if (HN > MatCount){
+            Loaded = 1
+        }
+    }
+
+    holoScaleUnits(300, SpacedMaterialPropSize)
+} else { #If files is loaded
+    if (fileClk(FileName)){
+            hint("Saved!", 4)
+    }
+    
+    #if E2 is moved, reload grid.
+    EHeld = E:isPlayerHolding()
+    if(changed(EHeld) & !EHeld){
+        reloadGrid()
+        E:propFreeze(1)
+    }
+
+    #Print stuff
+    Print = Me:keyPressed("pad_enter")
+    if (changed(Print) & Print){
+        printMaterial(DisplayProp:getMaterial())
+    }
+    Cannon = Me:weapon():type() == "remotecontroller"
+
+    if (Cannon){
+        AimEnt = Me:aimEntity()
+        AimEntChange = changed(AimEnt)
+        
+        PasteButton = Me:keyAttack1()
+        PasteButtonChange = changed(PasteButton)
+        
+        CopyButton = Me:keyAttack2()
+        CopyButtonChange = changed(CopyButton)
+        
+        ResetButton = Me:keyPressed("R")
+        ResetButtonChanged = changed(ResetButton)
+        
+        if (!ResetButtonChanged & ResetButton){
+            AimEnt:setMaterial("")
+        }
+        
+        if (PasteButtonChange & !PasteButton){
+            if (!entToGridId(AimEnt)){
+                AimEnt:setMaterial(DisplayProp:getMaterial())
+            }
+        }
+        
+        if (SelectMode){
+            
+            Plane = rayPlaneIntersection(Me:shootPos(), Me:eye(), CenterPos, -Eye)
+            AimToPlaneVec2 = vec2( shiftL(toLocal(
+                Plane,
+                ang(),
+                CenterPos,
+                EyeAngs 
+            )))
+            
+            SelectionDistance = AimToPlaneVec2:length()
+    
+            MinRange = CircleRadius * 0.8 - HoloScaleUnits:z() * 0.5
+            MaxRange = CircleRadius * 2
+            
+            LastSelectedMatIdxFromCircle = SelectedMatIdxFromCircle
+            if ( inrange(SelectionDistance, MinRange, MaxRange)){
+                holoAlpha(100, 255)
+                SelectAng = AimToPlaneVec2:rotate(-90):toAngle()
+                SelectAng = SelectAng + (sign(SelectAng) == -1) * 360
+                
+                
+                SelectedMatIdxFromCircle = round(CircleMatCount * SelectAng/360) % CircleMatCount + 1
+                
+                SelectedEnt = holoEntity(SelectedMatIdxFromCircle )
+                
+                if (LastSelectedMatIdxFromCircle != SelectedMatIdxFromCircle){
+                    holoScale(LastSelectedMatIdxFromCircle, vec(SelCirclePropScale))
+                    holoScale(SelectedMatIdxFromCircle, vec(SelCirclePropScale * 1.3))
+                    #hint(returnSelectionRingMaterial(SelectedMatIdxFromCircle), 2)
+                    
+                    holoModel(100, "models/holograms/hq_cone.mdl")
+                    holoPos(100, SelectedEnt:toWorld(vec(0,0,-HoloScaleUnits:z() * 0.7)))
+                    holoAng(100, SelectedEnt:toWorld(ang(0,90,0)))
+                    holoScale(100, vec(SelCirclePropScale * 0.3))
+                }
+                
+                
+    
+            } else {
+                holoScale(LastSelectedMatIdxFromCircle, vec(SelCirclePropScale))
+                SelectedMatIdxFromCircle = 0
+                
+                
+                if (SelectionDistance < MinRange){
+                    holoAlpha(100, 100)
+                    holoModel(100, "models/holograms/hq_sphere.mdl")
+                    holoPos(100, Plane)
+                    holoScale(100, vec(SelCirclePropScale * 0.1))
+                } elseif (SelectionDistance > MaxRange){
+                    holoScale(LastSelectedMatIdxFromCircle, vec(SelCirclePropScale))
+                    holoAlpha(100, 0)
+                }
+            }  
+            if (!CopyButton & CopyButtonChange ){  
+                if (!SkipSelection){
+                    makeCircleSelection(SelectedMatIdxFromCircle)
+                    setGridSelection(0)
+                    hintGridSelectedProp()
+                }
+            }
+            
+        } else {
+            if (CopyButton){
+                closeSelCircle()
+
+                #Get list of materials
+                local ChangedMat = changed(returnSelectionRingMaterial(1))
+
+                if (AimEnt){  
+                    
+                    if (AimEnt != CircleTarget & !changed(CircleTarget:getMaterial())){
+                        CircleTarget = AimEnt
+                        GridEnt = entToGridId(AimEnt)
+                        if (GridEnt){
+                            CircleMaterialList = array(returnSelectionRingMaterial(GridEnt))
+                            setGridSelection(GridEnt)
+                            SkipSelection = 1
+                            CircleMatCount = 1
+                        } else {
+                            SkipSelection = 0
+                            CircleMaterialList = CircleTarget:getMaterials()
+                            TempMat = CircleTarget:getMaterial()
+                            
+                            if (TempMat){
+                                CircleMaterialList:unshiftString(TempMat)
+                            }
+                            CircleMatCount = CircleMaterialList:count()
+                            #hint(CircleTarget:toString() + " { " + CircleMatCount + " } ", 4)
+                        }
+                            
+                        
+                        
+                        SelCirclePropScale = min(7/CircleMatCount, 0.5)
+                        HoloScaleUnits = MaterialPropSize * SelCirclePropScale
+                        
+                        while(CircleMatCount > CircleHoloI & holoCanCreate()){
+                            CircleHoloI++
+                            holoCreate(CircleHoloI)
+                            holoModel(CircleHoloI,MaterialPropModel )
+                            holoColor(CircleHoloI, vec(255))
+                            holoAlpha(CircleHoloI, 0)
+                            
+                        } 
+                    }
+                } else {
+                    SkipSelection = 0
+                    CircleTarget = noentity()
+                    Ranger = Me:eyeTrace()
+                    CircleMaterialList = array(Ranger:hitTexture())
+                    CircleMatCount = CircleMaterialList:count()
+                }              
+                
+                
+                if (!SkipSelection){
+                    
+                    
+                    
+                    
+                
+                    #Display Materials
+                    
+                    
+                    Eye = Me:eye()
+                    EyeAngs = Me:eyeAngles()
+                    
+                    CenterPos = Me:shootPos() + Eye * SelCircleForward
+         
+                    
+                        
+                    if (CircleMatCount > 1){
+                        
+                        for(I = 1, CircleMatCount){    
+                            Percent = (I - 1)/CircleMatCount
+                            Ang = 360 * Percent
+                            
+                            VecAng = toWorldPosAng( 
+                                vec( 0, 0, CircleRadius), 
+                                ang(), 
+                                CenterPos, 
+                                EyeAngs:setRoll(Ang)
+                            )
+                            
+                            holoPos( I, VecAng[ 1, vector])
+                            holoAng( I, VecAng[ 2, angle] )
+                            holoMaterial(I, CircleMaterialList[I, string])
+                            holoAlpha(I, 255)
+                            holoScale(I, vec(SelCirclePropScale))
+                        }
+                            
+                    } else {
+                        holoAlpha(1, 255)
+                        holoScale(1, vec(0.5))
+                        holoPos(1, CenterPos)
+                        holoAng(1, EyeAngs)
+                        holoMaterial(1, returnSelectionRingMaterial(1))
+                    }
+                }
+            } elseif (CopyButtonChange){
+                if(CircleMatCount == 1){
+                    makeCircleSelection(1)
+                    hintGridSelectedProp()
+                } elseif (CircleMatCount > 1) {
+                    SelectMode = 1
+                }
+            }
+        }
+    } elseif (changed(Cannon)){
+        closeSelCircle()
+    }
+    
+    
+    if (chatClk(Me)){
+        Prefix = "!"
+        Said = lastSaid()
+        if (Said:sub(1,1) == Prefix){
+            SaidArr = Said:sub(2):lower():trim():explode(" ")
+            switch (SaidArr[1, string]){
+                case "save",
+                    hideChat(1)
+                    TempString = Props[MatCount, entity]:getMaterial()
+                    if (TempString){
+                        for(I = 1, MatCount){
+                            if (TempString == Materials[I, string]){
+                                Skip = 1
+                                hint(TempString + " Already Added", 4)
+                                break
+                            }
+                        }
+                        if (!Skip){
+                            FileString = FileString + Props[MatCount, entity]:getMaterial() + "\n"
+                            Materials = FileString:explode("\n")
+                            hint("Saving...", 1)
+                            fileWrite(FileName,FileString)
+                            reloadMaterialArray()
+                            reloadGrid()
+                            setGridSelection(MatCount)
+                        }
+                    } else {
+                        hint("No Material Present", 4)
+                    }
+                    break
+                case "help",
+                    hideChat(1)
+                    helpMenu(SaidArr[2, string]:toNumber())
+                    break
+            }
+        } elseif (Said[Said:length()] == "\\"){
+            hideChat(1)
+            SaidBit = Said:sub(1, Said:length() - 1)
+            print(SaidBit)
+            Props[MatCount,entity]:setMaterial(SaidBit)
+            setGridSelection(0)
+        }
+    }
+}
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

@@ -1,0 +1,25 @@
+@name Toggle Chip (Craig)
+@inputs FWD A L H Shift
+@outputs FWDtoggle Atoggle Ltoggle Stoggle Htoggle
+@persist FWDtoggle Atoggle Ltoggle Stoggle Htoggle
+@trigger
+
+if (~FWD & FWD) { # Four Wheel Drive
+    FWDtoggle = !FWDtoggle
+}
+
+if (~A & A) { 
+    Atoggle = !Atoggle
+}
+
+if (~L & L) { # Police Lights
+    Ltoggle = !Ltoggle
+}
+
+if (~H & H) { # Headlights
+   Htoggle = !Htoggle
+}
+
+if (~Shift & Shift) { # Turbo
+    Stoggle = !Stoggle
+}

@@ -1,0 +1,110 @@
+
+@persist HN Phase HoloI E:entity Height Scale Kerning Space LetterMaterial:string
+#@model models/sprops/rectangles/size_10/rect_480x120x3.mdl
+"мороз ожог"
+
+if (first()){
+    runOnTick(1)
+    E = entity()
+    HN = 1
+    
+    Scale = 20
+    Height = 1
+    Space = 10 * Scale
+    Kerning = 10 * Scale
+    LetterMaterial = "models/player/shared/ice_player"
+    
+    E:setMaterial("models/props_dev/test_graygrid")
+    E:setAlpha(0)
+}
+switch (Phase){
+    case 0,
+        if(holoCanCreate() & HN <= 10){
+            holoCreate(HN)
+            holoPos(HN, vec())
+            holoMaterial(HN, LetterMaterial)
+            holoParent(HN, E)
+            HN++
+        }
+        if (HN > 10){
+            Phase++
+        }
+        break
+    case 1,
+        HN2 = 1
+        holoModel(HN2, "models/sprops/misc/alphanum/alphanum_m.mdl")
+        holoAng(HN2, E:toWorld(ang(0, -90, 90)))
+        holoPos(HN2, E:toWorld(vec(1.5 * Scale,0,Height)))
+        holoScale(HN2, vec(1,1,0.75) * Scale)
+        HN2++
+        
+        holoModel(HN2, "models/sprops/misc/alphanum/alphanum_l_o.mdl")
+        holoAng(HN2, E:toWorld(ang(0, -90, 90)))
+        holoPos(HN2, E:toWorld(vec(0,E:toLocal(holoEntity(HN2 - 1):pos()):y() + Kerning + 2 * Scale,Height)))
+        holoScale(HN2, vec(1) * Scale)
+        HN2++
+        
+        holoModel(HN2, "models/sprops/misc/alphanum/alphanum_l_p.mdl")
+        holoAng(HN2, E:toWorld(ang(0, -90, 90)))
+        holoPos(HN2, E:toWorld(vec(0,E:toLocal(holoEntity(HN2 - 1):pos()):y() + Kerning,Height)))
+        holoScale(HN2, vec(1) * Scale)
+        HN2++
+        
+        holoModel(HN2, "models/sprops/misc/alphanum/alphanum_l_o.mdl")
+        holoAng(HN2, E:toWorld(ang(0, -90, 90)))
+        holoPos(HN2, E:toWorld(vec(0,E:toLocal(holoEntity(HN2 - 1):pos()):y() + Kerning,Height)))
+        holoScale(HN2, vec(1) * Scale)
+        HN2++
+        
+        holoModel(HN2, "models/sprops/misc/alphanum/alphanum_3.mdl")
+        holoAng(HN2, E:toWorld(ang(180, 90, -90)))
+        holoPos(HN2, E:toWorld(vec(1.5 * Scale,E:toLocal(holoEntity(HN2 - 1):pos()):y() + Kerning,Height)))
+        holoScale(HN2, vec(1,1,0.75) * Scale)
+        HN2++
+ 
+        holoModel(HN2, "models/sprops/misc/alphanum/alphanum_l_o.mdl")
+        holoAng(HN2, E:toWorld(ang(0, -90, 90)))
+        holoPos(HN2, E:toWorld(vec(0,E:toLocal(holoEntity(HN2 - 1):pos()):y() + Kerning + Space,Height)))
+        holoScale(HN2, vec(1) * Scale)
+        HN2++
+        
+        holoModel(HN2, "models/sprops/misc/alphanum/alphanum_l_x.mdl")
+        holoAng(HN2, E:toWorld(ang(180, 90, -90)))
+        holoPos(HN2, E:toWorld(vec(0 ,E:toLocal(holoEntity(HN2 - 1):pos()):y() + Kerning,Height)))
+        holoScale(HN2, vec(1) * Scale)
+        HN2++
+        
+        holoModel(HN2, "models/sprops/misc/alphanum/alphanum_l_l.mdl")
+        holoAng(HN2, E:toWorld(ang(180, 90, -90)))
+        holoPos(HN2, E:toWorld(vec(1.7 * Scale ,E:toLocal(holoEntity(HN2 - 1):pos()):y(),Height - 0.02)))
+        holoScale(HN2, vec(1,1,0.725) * Scale)
+        HN2++
+        
+        holoModel(HN2, "models/sprops/misc/alphanum/alphanum_l_o.mdl")
+        holoAng(HN2, E:toWorld(ang(180, 90, -90)))
+        holoPos(HN2, E:toWorld(vec(0 ,E:toLocal(holoEntity(HN2 - 1):pos()):y() + Kerning,Height)))
+        holoScale(HN2, vec(1) * Scale)
+        HN2++
+        
+        holoModel(HN2, "models/sprops/misc/alphanum/alphanum_l_r.mdl")
+        holoAng(HN2, E:toWorld(ang(180, 90, -90)))
+        holoPos(HN2, E:toWorld(vec(0 ,E:toLocal(holoEntity(HN2 - 1):pos()):y() + Kerning,Height)))
+        holoScale(HN2, vec(1) * Scale)
+        HN2++
+        
+        runOnTick(0)
+}
+
+
+#[
+
+    HN++,HT[HN,array] = array(HN,vec(0.000000,0.000000,0.000000),ang(0.000000,-90.000000,0.000000),,"",vec4(255,255,255,255))
+    HN++,HT[HN,array] = array(HN,vec(84.468750,-0.343751,7.968750),ang(-0.000000,-0.000003,0.000000),"models/sprops/misc/alphanum/alphanum_l_o.mdl","",vec4(255,255,255,255))
+    HN++,HT[HN,array] = array(HN,vec(97.156250,23.031248,-8.031250),ang(-0.000000,-0.000003,0.000000),"models/sprops/misc/alphanum/alphanum_l_x.mdl","",vec4(255,255,255,255))
+    HN++,HT[HN,array] = array(HN,vec(39.500000,-1.468750,-0.468750),ang(-0.000000,-180.000000,0.000000),,"",vec4(255,255,255,255))
+    HN++,HT[HN,array] = array(HN,vec(11.343750,-3.125000,0.781250),ang(-0.000000,-180.000000,0.000000),"models/sprops/misc/alphanum/alphanum_l_o.mdl","",vec4(255,255,255,255))
+    HN++,HT[HN,array] = array(HN,vec(104.125000,27.343748,-13.375000),ang(-5.009766,-0.000003,5.009766),"models/sprops/misc/alphanum/alphanum_l_i.mdl","",vec4(255,255,255,255))
+    HN++,HT[HN,array] = array(HN,vec(20.500000,-1.343750,1.843750),ang(-0.000000,-180.000000,0.000000),"models/sprops/misc/alphanum/alphanum_l_p.mdl","",vec4(255,255,255,255))
+    HN++,HT[HN,array] = array(HN,vec(63.000000,-5.906251,3.312500),ang(-0.000000,-180.000000,-180.000000),"models/sprops/misc/alphanum/alphanum_l_o.mdl","",vec4(255,255,255,255))
+    HN++,HT[HN,array] = array(HN,vec(92.843750,-3.812501,7.000000),ang(-0.000000,-180.000000,0.000000),"models/sprops/misc/alphanum/alphanum_l_r.mdl","",vec4(255,255,255,255))
+    HN++,HT[HN,array] = array(HN,vec(28.562500,-5.750000,0.843750),ang(-0.000000,-180.000000,0.000000),"models/sprops/misc/alphanum/alphanum_l_o.mdl","",vec4(255,255,255,255))]#

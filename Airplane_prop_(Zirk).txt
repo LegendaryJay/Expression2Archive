@@ -1,0 +1,98 @@
+@name Airplane prop
+@inputs Active FullThrottle
+@outputs SpeedRatio
+@persist ChangedPropSpeed Ticker SpeedRatio E:entity PropellerFade BlurAlpha PropFadeDelay MaxSpeed TickChange TargetSpeedRatio Direction IdleSpeed
+@trigger 
+interval(50)
+if(first() | dupefinished()){
+    #####################
+    # Changeable Values #
+    #####################
+    
+    PropellerFade = 255 # (0 to 255)    Amount blade will fade. 0 is no fading at all.
+    PropFadeDelay = 0.2 # (0 to 1)      Percent when blade starts to fade out and blur fade in
+    BlurAlpha = 120      # (0 to 255)    Amount of blur that will be added
+    IdleSpeed = 0.5
+    MaxSpeed = 100      # (0 to ?)      Max Speed that the blade will turn
+    
+    
+    #########
+    # Debug #
+    #########
+    
+    #SpeedRatio = 0.5    
+    #ChangedPropSpeed = 0        
+    #TickChange = MaxSpeed * SpeedRatio
+    
+    #########
+    # SetUp #
+    #########
+    
+    E=entity()
+    E:setAlpha(0)
+
+    holoCreate(1)
+    holoModel(1,"models/sprops/trans/air/prop_4b_m.mdl")
+    holoSkin(1,1)
+    holoPos(1,E:toWorld(vec(0,0,2)))
+    holoScale(1,vec(1))
+    holoAlpha(1,255)
+    holoColor(1,vec(0,0,0))
+    holoParent(1,E)
+    
+    holoCreate(2)
+    holoModel(2,"models/sprops/trans/air/pcone_4b_l.mdl")
+    holoPos(2,holoEntity(1):toWorld(vec(0,0,0)))
+    holoAng(2,holoEntity(1):toWorld(ang(-90,0,0)))
+    holoScale(2,vec(0.8))
+    holoAlpha(2,255)
+    holoColor(2,vec(255,255,255))
+    holoParent(2,1)       
+
+    holoCreate(3)
+    holoModel(3,"models/sprops/geometry/sphere_144.mdl")
+    holoPos(3,holoEntity(1):pos())
+    holoAng(3,holoEntity(1):toWorld(ang(0,90,0)))
+    holoScaleUnits(3,shiftR(holoScaleUnits(1)) * vec(1, 0.5, 1))
+    holoAlpha(3,0)
+    holoColor(3,vec(0))
+    holoMaterial(3, "phoenix_storms/fender_chrome")
+    holoParent(3,1) 
+    
+}
+if (Active & ~FullThrottle & FullThrottle){ #if this button is pressed while active
+    TargetSpeedRatio = 1
+    Mode = 1
+    ChangedPropSpeed = 1
+}
+if (~Active | first()){ #if this button changes
+    if (Active){
+        Direction = 1
+        TargetSpeedRatio = SpeedRatio > IdleSpeed ? 1 : IdleSpeed
+    } else {
+        TargetSpeedRatio = 0
+        Direction = -1
+    }
+    ChangedPropSpeed = 1
+} 
+if (ChangedPropSpeed){
+    SpeedRatio = SpeedRatio * (1 + Direction * 0.01) + Direction * 0.001
+    SpeedRatio = (TargetSpeedRatio ? min(TargetSpeedRatio, SpeedRatio) : max(SpeedRatio, 0))
+    
+    FadeDelay = max(((SpeedRatio - PropFadeDelay) / (1 - PropFadeDelay)), 0)
+    
+    holoAlpha(3,BlurAlpha * SpeedRatio * FadeDelay)
+    holoAlpha(1,255 - PropellerFade * FadeDelay)
+        
+    TickChange = MaxSpeed * SpeedRatio
+    
+    if (SpeedRatio == TargetSpeedRatio){
+        ChangedPropSpeed = 0
+    }
+}
+
+Ticker += TickChange
+holoAng(1,E:toWorld(ang(90,Ticker,0)))
+
+
+

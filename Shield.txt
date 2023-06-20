@@ -1,0 +1,30 @@
+@name Shield
+@inputs
+@outputs 
+@persist Shield:entity
+#@model models/sprops/rectangles/size_78/rect_78x78x3.mdl 
+if (first()){
+    runOnTick(1)
+    Shield=propSpawn("models/sprops/rectangles/size_4/rect_36x36x3.mdl",entity():toWorld(vec(0,0,20)),entity():angles(),1)
+    #Shield:setAlpha(0)
+   # Shield:setAlpha(50)
+    
+}
+Me=owner()
+for (I=1,numPlayers()){
+    Player=players()[I,entity]
+    rangerReset()
+    rangerPersist(1)
+    rangerFilter(Player)
+    rangerFilter(Shield)
+    Ranger=rangerOffset(9000,Player:attachmentPos("eyes"),Player:eyeAngles():forward())
+
+    if (Ranger:entity()==Me){
+        Vec=(Player:attachmentPos("eyes")-Ranger:position())
+        Scale=1-60/Vec:length()
+        Shield:setPos(Player:attachmentPos("eyes")-Vec*Scale)
+        Shield:setAng(Vec:toAngle() + ang(90,0,0))
+    }
+}
+
+

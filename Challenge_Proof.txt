@@ -1,0 +1,69 @@
+@name 
+@inputs 
+@outputs 
+@persist Var1 Var2 Var3
+@trigger 
+runOnTick(1)
+if (first()){
+    for(I = 1, 4){
+        holoCreate(I)
+    }
+    
+    holoModel(1, "models/sprops/geometry/fdisc_144.mdl")
+    holoModel(2, "models/sprops/geometry/fdisc_144.mdl")
+    holoModel(4, "models/sprops/geometry/fdisc_144.mdl")
+    
+    holoEntity(1):setTrails(5,5,10,"trails/laser",hsv2rgb(vec(0,1,1)),255)
+    holoEntity(2):setTrails(3,5,10,"trails/laser",hsv2rgb(vec(120,1,1)),255)
+    holoEntity(3):setTrails(0.1,5,10,"trails/laser",hsv2rgb(vec(240,1,1)),255)
+    
+    holoAng(2, holoEntity(3):forward():toAngle():setRoll(90))
+    holoParent(2, 1)
+}
+Start = entity():pos() + vec(0,0,100)
+R1 = 200
+R2 = 75
+R3 = 40
+
+Layer1= Start + vec(sin(Var1) * R1, cos(Var1) * R1, 0)
+Layer2=Layer1+vec(sin(Var1)*sin(Var2)*R2,cos(Var1)*sin(Var2)*R2,cos(Var2)*R2)
+
+Cos3=vec(sin(Var2)*sin(Var1)*cos(Var3)*R3,sin(Var2)*cos(Var1)*cos(Var3)*R3,cos(Var2)*cos(Var3)*R3)
+Sin3=vec(cos(-Var1)*sin(Var3)*R3,sin(-Var1)*sin(Var3)*R3,0)
+Layer3=Layer2 + Cos3 + Sin3
+
+#########################
+
+
+Right0 = vec(0,0,-1)
+Forward0 = Layer1 - Start
+Up0 = Right0:cross(Forward0):normalized()
+
+holoPos(4, Start)
+holoScaleUnits(4, vec(R1 * 2, 1, R1 * 2))
+holoAng(4, Forward0:toAngle():setRoll(Right0:toAngle():pitch()))
+
+Right1 = Up0
+Forward1 = Layer2 - Layer1
+Up1 = Right1:cross(Forward1):normalized()
+
+holoPos(1,Layer1)
+holoScaleUnits(1, vec(R2 * 2, 1, R2 * 2))
+holoAng(1, Forward1:toAngle():setRoll(Right1:toAngle():pitch()))
+
+Right2 = Up1
+Forward2 = Layer3 - Layer2
+Up2 = Right2:cross(Forward2):normalized()
+
+holoPos(2,Layer2)
+holoScaleUnits(2, vec(R3 * 2, 1, R3 * 2))
+#holoAng(2, holoEntity(3):forward():toAngle())
+
+holoPos(3,Layer3)
+holoScaleUnits(3, vec(2))
+
+
+
+Var1+=0.1
+Var2+=0.5
+Var3+=1

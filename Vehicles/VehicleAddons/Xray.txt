@@ -1,0 +1,98 @@
+@name Xray
+@inputs 
+@outputs CountArray PlayerCount I PlayerArray:array
+@persist [E Me Target Seat CenterEnt]:entity Moo PlayerArray:array Radius Center:vector I CountArray
+@trigger 
+    runOnTick(1)
+    
+if (first()){
+
+    
+    E=entity()
+    Seat=E:isConstrainedTo()
+    CenterEnt=holoEntity(100)
+    
+    Radius=10
+    
+    
+    holoCreate(100,owner():pos()+vec(0,0,65))
+    holoScale(100,vec(1,1,1)*-0)
+    holoModel(100,"hq_sphere")
+    holoAlpha(100,100)
+    #holoMaterial(100,"models/wireframe")
+    holoDisableShading(100,1)
+    
+    CenterEnt=holoEntity(100)
+    
+    findByClass("player")
+    PlayerArray=findToArray()
+    CountArray=PlayerArray:count()
+    I=CountArray
+}
+
+Driver=Seat:driver()
+Center=CenterEnt:pos()
+CenterAng=Driver:eyeAngles()
+
+CountArray=PlayerArray:count()
+PlayerCount=numPlayers()
+
+holoPos(100,Seat:toWorld(vec(0,2,37)))
+holoParent(100,Seat)
+
+if (CountArray!=PlayerCount)
+{
+    if (CountArray<PlayerCount)
+    {
+        holoDelete(CountArray)
+    }
+    PlayerArray:clear()
+    findByClass("player")
+    PlayerArray=findToArray()
+}
+
+function xray(Index:number, Target:entity)
+{
+    if (Target==Driver)
+    {
+        holoAlpha(Index,0)
+    }
+    else
+    {
+        TarPos=Target:boxCenterW()
+        Local=CenterEnt:toLocal(TarPos)
+        Dist=Center:distance(TarPos)
+        Scale=Radius/Dist
+        S_Local=Local*Scale
+        
+        if (!holoEntity(Index) & Target!=Driver)
+        {
+            holoCreate(Index,CenterEnt:toWorld(S_Local))
+            hint(toString(Index) + ": " + toString(PlayerArray[Index,entity]),10)
+            
+        }
+        Alpha=(Dist/2500)*255
+        if (Alpha>255){Alpha=255}
+        
+        holoPos(Index,CenterEnt:toWorld(S_Local))
+        holoAng(Index,Target:angles())
+        holoColor(Index,teamColor(Target:team()))
+        holoScale(Index,Target:boxSize()*0.09*-Scale)
+        holoModel(Index,"hq_cylinder")
+        holoAlpha(Index,Alpha)
+        #holoMaterial(Index,"models/wireframe")
+        holoDisableShading(Index,1)
+    }
+}
+
+while (I>=1 & perf())
+{
+    xray(I,PlayerArray[I,entity])
+    I--
+    
+}
+if (I==0 | I > CountArray)
+{
+    I=CountArray
+
+}

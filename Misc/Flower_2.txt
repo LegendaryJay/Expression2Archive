@@ -1,0 +1,32 @@
+@name 
+@inputs 
+@outputs 
+@persist Scale:vector Max I Count
+@trigger 
+
+if (first()){
+    Max=200
+    runOnTick(1)   
+    entity():setAlpha(0)
+}
+
+while (perf() & I<=Max & holoCanCreate()){
+    Z=I*2/Max + 2
+    Scale=vec(Z/10,Z/10,3*I/Max + 3)
+    if(!holoEntity(I)){
+        holoCreate(I)
+        holoScale(I,Scale)
+        holoColor(I,hsv2rgb(220,1,random(0,0.5)))
+        holoModel(I,"hq_sphere")
+    }
+    Fix=Scale*(1/0.083333280351461)*0.5
+    Ang= vec(I*5*sin(137.508*I +Count),I*5*cos(137.508*I + Count),0):toAngle():setPitch(abs(77*sin(90*I/Max*sin(Count))))
+    Vec= toWorld(Fix,ang(),vec(),Ang)
+    holoPos(I,Vec + entity():pos())
+    holoAng(I,Ang)
+    holoParent(I,entity())
+    I++
+    
+}
+if (I>Max){I=1}
+Count+=1

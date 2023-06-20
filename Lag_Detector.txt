@@ -1,0 +1,29 @@
+@name Lag Detector
+@inputs 
+@outputs Lag
+@persist Previous E:entity
+@model models/props_c17/gravestone_cross001a.mdl
+
+TimeDiff = curtime() - realtime()
+
+if (first()){
+    E = entity()
+    E:setMaterial("lights/white")
+    runOnTick(1)
+} else {
+    Lag = Previous - TimeDiff
+    if (Lag > 0.008){
+        if (Lag > 0.1){
+            concmd(Lag:toString() + " seconds of lag")
+            owner():soundPlay(1, 2,"error.wav")
+        }
+        print("Lag: " + Lag)
+        
+        Color = vec(255,0,0)
+    } else {
+        Color = vec(0, 255, 0)
+    }
+    E:setColor(Color)
+}
+Previous = TimeDiff
+

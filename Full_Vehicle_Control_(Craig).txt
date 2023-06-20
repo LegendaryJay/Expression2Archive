@@ -1,0 +1,210 @@
+@name Toggle Chip (Craig)
+@inputs FWD A L H Shift
+@outputs FWDtoggle Atoggle Ltoggle Stoggle Htoggle
+@persist FWDtoggle Atoggle Ltoggle Stoggle Htoggle
+@trigger
+
+if (~FWD & FWD) { # Four Wheel Drive
+    FWDtoggle = !FWDtoggle
+}
+
+if (~A & A) { 
+    Atoggle = !Atoggle
+}
+
+if (~L & L) { # Police Lights
+    Ltoggle = !Ltoggle
+}
+
+if (~H & H) { # Headlights
+   Htoggle = !Htoggle
+}
+
+if (~Shift & Shift) { # Turbo
+    Stoggle = !Stoggle
+}
+
+@name Control System (Craig)
+@inputs Active W A S D L Space Dz Gearup Geardown
+@outputs Direction Rdirection Accelerate Brake Lightbar Headlights Fourwd Gofront
+@persist
+@trigger
+
+Direction = 0
+Rdirection = 0
+Accelerate = 0
+Brake = 0
+Fourwd = 0
+Gofront = 0
+
+
+Fourwd = (FWDtoggle | BasePitch > 5)
+
+YawDirection = A - D
+Forward = W - S
+
+Brake = (Space | !Active)
+
+Lightbar = Ltoggle
+Headlights = Htoggle
+
+@name Speed Control (Craig)
+@inputs Z1 Z2 Fourwd Gear
+@outputs Speed Dz
+@persist
+@trigger 
+
+Speedbase = 1 + (Gear*1.1)
+Speed = 1
+
+if (Fourwd) {
+    Speed = 0.5   
+}
+
+Dz = Z1 - Z2
+
+if (Dz<10) {
+    Speed = Speedbase
+} else {
+    Speed = Speedbase + (Dz*1.5)
+}
+
+if (Dz<30) {
+if (Speed>=25) {
+    Speed = 25   
+}
+}
+
+if (Dz>=30) {
+if (Speed>=50) {
+    Speed = 50   
+}
+}
+
+@name Rear Wheel Control (Craig)
+@inputs Active Accelerate Brakein Direction Speedin
+@outputs Go Speed Brakeout Grab
+@persist
+@trigger 
+
+Speed = 0
+Grab = 0
+Go = 0
+Brakeout = 0
+
+if (Accelerate & !Brakein) {
+    if (Direction==1) {
+        Go = 1
+        Speed = Speedin
+    }
+    if (Direction==2) {
+        Go = -1
+        Speed = Speedin
+    }
+} else {
+    Go = 0
+    Speed = 0
+}
+
+if (Brakein) {
+    Brakeout = 100
+    if (!Active) {
+        Grab = 1
+    }
+    Go = 0
+} else {
+    Brakeout = 0
+    Grab = 0
+}
+@name Front/Steering Wheel Control (Craig)
+@inputs Active Direction Rdirection Speed Fourwd Go Brakein Dz
+@outputs Speedleft Speedright Goleft Goright Brakeout
+@persist
+@trigger all
+
+if (Brakein) { # Braking
+    Brakeout = 100
+    Go = 0
+} else { # Not Braking
+    Brakeout = 0
+}
+
+if (!Active) { # If vehicle is parked
+    Speedleft = 0
+    Speedright = 0
+    Goleft = 0
+    Goright = 0
+    exit()   
+}
+
+if (Direction==0) { # No turning
+    if (Fourwd==1&Go==1) {
+        Speedleft = Speed
+        Speedright = Speed
+        Goleft = 0
+        Goright = 0
+    } else {
+        Speedleft = 0
+        Speedright = 0
+        Goleft = 0
+        Goright = 0
+    }
+}
+
+if (Direction==1&Fourwd==0&Brakein==0) { # Turn Right
+    if (Rdirection==1|Rdirection==0) { # Forward / Neutral
+        Speedleft = Speed * 2
+        Speedright = 0
+        Goleft = 1
+        Goright = 0
+    } elseif (Rdirection==2) { # Reverse
+        Speedleft = 0
+        Speedright = Speed * 2
+        Goleft = 0
+        Goright = -1
+    }
+}
+
+if (Direction==2&Fourwd==0&Brakein==0) { # Turn Left
+    if (Rdirection==1|Rdirection==0) { # Forward / Neutral
+        Speedleft = 0
+        Speedright = Speed * 2
+        Goleft = 0
+        Goright = 1
+    } elseif (Rdirection==2) { # Reverse
+        Speedleft = Speed * 2
+        Speedright = 0
+        Goleft = -1
+        Goright = 0
+    }
+}
+
+
+# 4 Wheel Drive
+if (Direction==1&Fourwd==1) { # Turn right
+    if (Rdirection==1|Rdirection==0) { # Forward / Neutral
+        Goleft = 1
+        Goright = 0
+        Speedleft = Speed * 3
+        Speedright = Speed
+    } elseif (Rdirection==2) { # Reverse
+        Goleft = 0
+        Goright = -1
+        Speedleft = Speed * 3
+        Speedright = Speed
+    }
+}
+
+if (Direction==2&Fourwd==1) { # Turn Left
+    if (Rdirection==1|Rdirection==0) { # Forward / Neutral
+        Goleft = 0
+        Goright = 1
+        Speedleft = Speed
+        Speedright = Speed * 3
+    } elseif (Rdirection==2) { # Reverse
+        Goleft = -1
+        Goright = 0
+        Speedleft = Speed
+        Speedright = Speed * 3
+    }
+}

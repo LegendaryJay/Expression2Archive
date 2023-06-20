@@ -1,0 +1,61 @@
+@name Wave
+@inputs 
+@outputs 
+@persist Run HoloN HoloMax Setup Scale Ticker [Prop E]:entity Origin:vector ZMemory:array Sin PropHeight Decay Gap
+@trigger 
+
+if (Run){
+    Sin += 10
+    Ticker += 5
+    PropHeight *= Decay
+    
+    TempScale = holoEntity(1):boxSize() * Scale
+    
+    for(I = 1, HoloMax){
+        holoPos(I,Origin - vec((I - 1) * (TempScale:x() + Gap),0, ZMemory[I, number] * ((Decay) ^ I)))
+    }
+    Holding = Prop:isPlayerHolding()
+    HoldChange = changed(Holding)
+    if (Holding){
+        Prop:propFreeze(0)
+        Prop:setPos(Origin:setZ(Prop:pos():z()))
+    } elseif (HoldChange) {
+        PropHeight = -Origin:z() + Prop:pos():z()
+        Sin = 0
+        Prop:propFreeze(1)
+    } else {
+        Prop:setPos( Origin + vec( 0, 0, PropHeight * cos(Sin) ) )
+    }
+    ZMemory:pop()
+    ZMemory:unshiftNumber(Origin:z() - Prop:pos():z() )
+    for (I = 1, 20){
+        
+} else {
+    if (first()){
+        runOnTick(1)
+        E = entity()
+        E:propFreeze(1)
+        HoloN = 1
+        HoloMax = 70
+        Scale = 1
+        Gap = 2
+        Origin = E:pos() + vec(0,0,100)
+        Decay = 0.99
+        propSpawnUndo(0)
+        Prop = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", Origin, ang(), 1)
+        slider(Prop, vec(), E, vec(), 0)
+    }
+    while(holoCanCreate()){
+        ZMemory:unshiftNumber(0)
+        holoCreate(HoloN)
+        holoAng(HoloN, ang())
+        holoModel(HoloN,"")
+        holoScale(HoloN, vec(Scale))
+        holoColor(HoloN, hsv2rgb( 360 * (HoloN - 1)/HoloMax, 1, 1))
+        HoloN++
+        if (HoloN > HoloMax){
+            Run++
+            break
+        }
+    }
+}

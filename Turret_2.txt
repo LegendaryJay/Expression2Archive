@@ -1,0 +1,67 @@
+@name Turret 2
+@persist Mass InvRangeDist HoverDist RangeDist [Epos Vec Vel]:vector [Me E]:entity Prop:entity
+@model models/sprops/cuboids/height06/size_1/cube_6x48x6.mdl
+runOnTick(1)
+runOnChat(1)
+if (first())
+{
+    entity():setMass(0)
+    Me = owner()
+    E=entity():isConstrainedTo()
+    Mass=E:mass()
+        
+    HoverDist=100
+    
+    
+    holoCreate(1,E:toWorld(vec(24,0,0)))
+    holoColor(1,vec(255,100,100))
+    holoAlpha(1,80)
+    holoScale(1,vec(0.49,0.49,0.49))
+    holoParent(1,E)
+}
+Epos=E:pos()
+Eang=E:angles()
+MePos=Me:pos()
+Speed= toUnit("mph",E:vel():length())
+
+#Ranger Filters
+rangerHitWater(1)
+rangerFilter(E)
+rangerFilter(Prop)
+
+#Ranger
+Front=rangerOffset(9999999,E:toWorld(vec(30,0,0)),-ang(0,0,0):up())
+Back=rangerOffset(9999999,E:toWorld(vec(-30,0,0)),-ang(0,0,0):up())  
+
+FrontDist=Front:distance()
+BackDist=Back:distance()
+
+#Ranger Math
+AvgRangeDist=(FrontDist+BackDist)/2
+InvRangeDist=-(AvgRangeDist-HoverDist)
+
+LegA=-FrontDist+BackDist
+LegB=60
+
+#applyForce
+X=owner():aimPos():x()
+Y= owner():aimPos():y()
+Z=(Epos+InvRangeDist):z()
+Loc=vec(X,Y,Z)
+
+Vel=entity():vel()
+Vec = Loc-Epos
+
+E:applyForce((Vec*5-Vel)*Mass)
+
+#applyAngForce
+P=-asin(LegA/LegB) + Eang:pitch()
+Y=Me:eyeAngles():yaw()
+R=Eang:roll()
+Gyro=E:toLocal(ang(P,Y,R))
+
+Inertia=shiftL(ang(E:inertia()))
+
+E:applyAngForce((Gyro - E:angVel())*Inertia)
+
+

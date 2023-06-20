@@ -1,0 +1,43 @@
+@name Explosive
+@inputs 
+@outputs Force
+@persist Force Payload:entity Vel:vector Prop:entity MaxForce Held
+@trigger 
+@model models/props_c17/oildrum001_explosive.mdl
+
+if (first()){
+    MaxForce = 600
+    
+    Prop = entity()
+    noCollideAll(Prop, 0)
+    runOnLast(1)
+    runOnTick(1)
+    
+    propSpawnUndo(0)
+    
+    Payload = propSpawn("models/props_junk/gascan001a.mdl", Prop:massCenter() ,0)
+    Payload:setAlpha(0)
+    Payload:propNotSolid(1)
+    Payload:propShadow(0)
+    Payload:parentTo(Prop)
+    
+    Prop:propFreeze(0)
+    
+}
+Vel = Prop:vel()
+Force = abs($Vel:length())
+if (Held) {
+    Held--
+}
+if (Prop:isPlayerHolding()){
+    Held = 5
+} 
+
+if (!Held & Force > MaxForce){
+    Payload:deparent()
+    Payload:propBreak()
+    Prop:setAlpha(0)
+} elseif (!Payload){
+    Prop:propDelete()
+}
+

@@ -1,0 +1,36 @@
+@name Teleporter animation 2
+@inputs 
+@outputs
+@persist Ticker Val Max E:entity
+@trigger 
+
+interval(10)
+if (first()){
+    Max = 24
+    
+    
+    E = entity()
+    for(I = 1, Max){
+        holoCreate(I)
+        holoModel(I, "models/sprops/geometry/fdisc_48.mdl")
+        holoAng(I, ang(0,0,90))
+        holoPos(I, entity():pos() + vec(0, 0, (I - 1)*3 + 1.5))
+        holoAlpha(I, 0)
+        holoParent(I, E)
+        holoMaterial(I, "models/props_c17/fisheyelens")
+        Val = 1
+        Ticker = 1
+    }
+}
+if (Ticker){
+    holoAlpha(Ticker, max(255 * Val,0))
+    Ticker++
+    if (Ticker > Max){
+        if (Val == 1){
+            Val = -1
+        } else {
+            Ticker = 0
+        }
+        Ticker = 1
+    }
+}

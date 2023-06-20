@@ -1,0 +1,43 @@
+@name Area Detector
+@inputs 
+@outputs Hit Boop
+@persist Hit E:entity Ranger:ranger [Size Length Center]:vector
+@trigger 
+
+if (first()){
+    runOnTick(1)   
+    E = entity()
+    
+    Min = vec(-512, -2205, -14581)
+    Max = vec(-221, -2086, -14410)
+    Size = vec(abs(Min:x() - Max:x()), abs(Min:y() - Max:y()), abs(Min:z() - Max:z()))
+    Center = (Min + Max) * 0.5
+    
+    holoCreate(1)
+    holoScaleUnits(1, Size)
+    holoPos(1, Center + holoEntity(1):boxCenter() * holoScale(1))
+    holoAlpha(1, 30)
+    
+    Length = vec(Size:x()/2, 0, 0)
+    
+    rangerPersist(1)
+    rangerIgnoreWorld(1)
+    rangerHitEntities(1)
+    rangerDefaultZero(1)
+}
+Ranger = rangerOffsetHull(Size:x(), Center, vec(1,0,0),Size)
+
+
+
+if (Ranger:entity()){
+    Hit = 1
+    Color = vec(255,0,0)
+} else {
+    Hit = 0
+    Color = vec(0, 255, 0)
+}
+Boop = changed(Hit)
+
+holoColor(1, Color) 
+
+

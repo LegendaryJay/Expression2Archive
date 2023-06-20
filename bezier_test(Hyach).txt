@@ -1,0 +1,22 @@
+@name bezier test
+@inputs 
+@outputs 
+@persist T [P Pos1 Pos2 Pos3]:vector Prop:entity
+@trigger 
+if(first()){
+    Prop = propSpawn("models/Combine_Helicopter/helicopter_bomb01.mdl",entity():toWorld(vec(0,50,20)),1)
+}
+Pos1 = entity():pos()
+Pos2 = ((Prop:pos()+entity():pos())/2)+vec(0,0,0.5*entity():pos():distance(Prop:pos()))
+Pos3 = Prop:pos()
+#runOnTick(1)
+interval(200)
+for(X=0,140){
+    T=X/80
+Pos = (1-T)^2*Pos1 + 2*(1-T)*T*Pos2 + T^2*Pos3
+holoCreate(X)
+holoPos(X,Pos)
+if(X==40){holoColor(X,vec(255,0,0))}
+holoAng(X,(holoEntity(X):pos()-(1-T+(X+1/70))^2*Pos1 + 2*(1-T+(X+1/70))*(T+(X+1/70))*Pos2 + (T+(X+1/70))^2*Pos3):toAngle())
+}
+#https://javascript.info/bezier-curve

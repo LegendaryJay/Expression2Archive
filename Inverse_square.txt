@@ -1,0 +1,54 @@
+@name 
+@inputs 
+@outputs 
+@persist CountArray [E Seat]:entity PlayerArray:array A
+@trigger 
+ runOnTick(1)
+
+
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+
+if (first()){
+
+    
+    E=entity()
+    Seat=E:isConstrainedTo()
+    Seat:propGravity(0)
+    
+    PlayerArray=players()
+    CountArray=PlayerArray:count()
+    I=CountArray
+    A=entity():pos():z()
+}
+PlayerCount=numPlayers()
+
+
+if (CountArray!=PlayerCount)
+{
+    if (CountArray<PlayerCount)
+    {
+        holoDelete(CountArray)
+    }
+    PlayerArray=players()
+    CountArray=PlayerArray:count()
+}
+Vec=vec()
+while (perf() & I<=CountArray){
+    #if (PlayerArray[I,entity]==owner()){continue}
+    Dist=Seat:boxCenterW():distance(PlayerArray[I,entity]:boxCenterW())
+   # if (Dist<300){
+        Vec=Vec + (-PlayerArray[I,entity]:boxCenterW()+Seat:boxCenterW())*(1/((Dist+1)^2))*50000
+        
+   # }
+    I++
+}
+Seat:applyForce(Vec)
+Seat:face(ang(0,Seat:angles():yaw(),0))

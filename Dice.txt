@@ -1,0 +1,37 @@
+@name 
+@inputs 
+@outputs 
+@persist Prop:entity
+@trigger 
+
+if (first()){
+    propSpawnUndo(0)
+    Prop = propSpawn("models/holograms/hq_rcube.mdl", 1)
+    Prop:setMaterial("models/shiny")
+    Prop:setColor(hsv2rgb(289, 1, 0.67))
+    #Prop:setAlpha(50)
+    Length = Prop:boxSize():z()
+    
+    Sides = array( 
+        vec( 0,  0,  1),
+        vec( 1,  0,  0),
+        vec( 0,  1,  0),
+        vec( 0, -1,  0),
+        vec(-1,  0,  0),
+        vec( 0,  0, -1)
+    )
+    for (I = 1, 6){
+        ModelString = "models/sprops/misc/alphanum/alphanum_" + I + ".mdl"
+        holoCreate(I)
+        holoModel(I, ModelString)
+        holoPos(I, Prop:toWorld(Sides[ I, vector] * (Length * 0.5 - 0.3)))
+        holoAng(I, Prop:toWorld((quat(Sides[ I, vector]:toAngle()) * quat(ang(0,-90,0))):toAngle()))
+        holoScale(I, vec(0.5))
+        holoParent(I, Prop)
+        holoMaterial(I,"models/shiny")
+        holoColor(I, vec(255))
+        
+    }
+    
+    
+}

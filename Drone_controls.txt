@@ -1,0 +1,74 @@
+@name Drone Controls Demo
+@inputs 
+@outputs TarPitch
+@persist TarPitch TarRoll AngAmp RollAcc PitchAcc AccAmp PitchAdd PitchAmp LastPitch
+@trigger 
+@model models/sprops/misc/origin.mdl
+function void entity:moveTo(Pos:vector){
+    Vec = (Pos - This:pos())*50
+    This:applyForce((Vec-This:vel())*This:mass())
+}
+function entity:face(Ang:angle)
+{
+    TarQ = quat(Ang)
+    CurQ = quat(This)
+    Q = TarQ/CurQ
+    V = This:toLocal(rotationVector(Q)+This:pos())
+    This:applyTorque((V*30 - This:angVelVector())*25*This:inertia())
+}
+
+
+if (first()){
+    runOnTick(1)
+    holoCreate(1)
+    holoAlpha(1,0)
+    
+entity():setMass(400)
+AngAmp=0.7
+AccAmp=0.005
+}
+Driver= owner()
+LClick=Driver:keyAttack1()
+RClick=Driver:keyAttack2()
+R=Driver:keyReload()
+W=Driver:keyPressed("w")
+A=Driver:keyPressed("a")
+D=Driver:keyPressed("d")
+S=Driver:keyPressed("s")
+Shift=Driver:keyPressed("LSHIFT")
+Ctrl=Driver:keyPressed("LCONTROL")
+Space=Driver:keyPressed("Space")
+
+if (W|S){
+    if (W){PitchAdd++}
+    else {PitchAdd--}
+    PitchAcc++
+    TarPitch=LastPitch + PitchAdd*AngAmp*AccAmp*PitchAcc
+#[    if (TarPitch > 50){
+        TarPitch = 50
+    }
+    elseif (TarPitch < -50){
+        TarPitch = -50
+    }]#
+}
+else{
+    if (PitchAdd>0){PitchAdd--}
+    if (PitchAdd<0){PitchAdd++}
+    elseif (PitchAcc>0){PitchAcc--}
+}
+TarPitch=entity():angles():pitch() + PitchAdd*AngAmp*AccAmp*PitchAcc    
+#[if (A|D){
+    RollAdd= A ? AngAmp : -AngAmp
+    RollAcc+=RollAcc**Acc
+    TarRoll+=RollAcc
+    if (TarRoll > 50){
+        TarRoll = 50
+    }
+    elseif (TarRoll < -50){
+        TarRoll = -50
+    }
+}]#
+TargetAng=(ang(TarPitch,0,TarRoll))
+entity():face(TargetAng)
+EPos=entity():pos()
+entity():moveTo(holoEntity(1):pos())

@@ -1,0 +1,45 @@
+@name EGP Material Test
+@inputs 
+@outputs Run Me:entity EGP:wirelink
+@persist Run MatSize:vector2 Me:entity EGP:wirelink
+@trigger
+if (Run){
+    if (clk("egp")){
+        timer("egp",250)
+        EGP:egpClear()
+        
+        EGP:egpBox(101,vec2(200,600), MatSize)
+        EGP:egpMaterial(101, "models/props_lab/projector_noise")
+        
+        EGP:egpBox(100,vec2(200,600), MatSize)
+        
+        #EGP:egpColor(100,vec4(0,0,0,70))
+    }
+} else {
+    if (first()){
+        runOnTick(1)
+        Me = owner()
+        MatSize = vec2(70)
+    }
+    if (findCanQuery()){
+        findByClass("gmod_wire_egp_hud")
+        findClipToPlayerProps(Me)
+        TempEgp = find()
+        if (TempEgp){
+            runOnTick(0)
+            timer("egp",1)
+            hint("linked to " + TempEgp:toString(), 4)
+            EGP = TempEgp:wirelink()
+            Run = 1
+        }
+    }
+}
+    
+#[
+    Documentation and examples are available at:
+    https://github.com/wiremod/wire/wiki/Expression-2
+
+    Discord is available at https://discord.gg/cqJ45CT
+    Reddit is available at https://www.reddit.com/r/wiremod
+    Report any bugs you find here https://github.com/wiremod/wire/issues
+]#

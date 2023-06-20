@@ -1,0 +1,26 @@
+@name Hover around Player
+@inputs 
+@outputs 
+@persist [Target E Me]:entity Ang
+@trigger 
+
+if (first()){
+    runOnTick(1)
+    Me = owner()
+    E = entity()
+    #Target = findPlayerBySteamID("STEAM_0:0:119549069")
+    Target = findPlayerByName("BREEN")
+}
+R = 500
+Speed = 100
+
+
+
+
+SpeedVal = Speed/(2 * _PI * R)
+
+Ang += SpeedVal
+YAng = Ang % 360
+ZAng = (Ang  * 2.3) % 360
+Me:plySetPos(Target:boxCenterW() + vec(sin(YAng) * R, cos(YAng) * R, cos(ZAng) * 10) - Me:boxCenter())
+Me:plySetAng((Target:shootPos() - Me:shootPos()):toAngle())

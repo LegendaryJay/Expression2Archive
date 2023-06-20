@@ -1,0 +1,42 @@
+@name E2 finder
+@inputs 
+@outputs 
+@persist P:array
+@trigger 
+interval(200)
+
+OldP=P:clone()
+findByClass("gmod_wire_expression2")
+P=findToArray()
+if (P:count()!=OldP:count() | P[P:count(),entity]!=OldP[P:count(),entity]){
+    hint(toString(P:count()),3)
+}
+for (I=1,P:count()>OldP:count() ? P:count() : OldP:count()){
+    Target=P[I,entity]
+    BoundScale=Target:boxSize()*0.0026308863553119
+    OverBoundScale=1.005
+    if (P:count()!=OldP:count() | P[P:count(),entity]!=OldP[P:count(),entity]){
+
+        if (!Target){
+            holoDelete(I)
+        }
+        else{
+            if (!holoEntity(I)){
+                holoCreate(I)
+                holoModel(I,"models/sprops/geometry/sphere_144.mdl")
+                holoVisible(I,players(),0)
+                holoVisible(I,owner(),1)
+                holoMaterial(I,"hlmv/debugmrmwireframe")
+                holoDisableShading(I,1)
+                holoAlpha(I,50)
+                holoColor(I,vec(77,1,53))
+            }
+            holoPos(I,Target:boxCenterW())
+            holoAng(I,ang(0,0,90))
+        }
+    }
+    Dist=holoEntity(I):pos():setZ(0):distance(owner():pos():setZ(0))
+    if (Dist>200){Dist=200}
+    holoScale(I,0.013840830449827*(Dist*0.5)*vec(1,1,1))
+    holoAlpha(I,(1-Dist/200)*155 + 100)     
+}

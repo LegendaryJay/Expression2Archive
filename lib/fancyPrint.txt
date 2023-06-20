@@ -1,0 +1,4 @@
+@name fancyPrint
+function fancyPrint(TextA:string, TextB:string){
+    printColor(vec(77,1,53),TextA, vec(255), TextB)
+}

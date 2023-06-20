@@ -1,0 +1,36 @@
+@name 
+@inputs 
+@outputs 
+@persist Var1
+@trigger 
+runOnTick(1)
+if (first()){
+    for(II = 1, 30){
+        holoCreate(I)
+        holoEntity(I):setTrails(5,5,5,"trails/laser",hsv2rgb(vec(120 * (I % 3),1,1)),255)
+        holoScale(I,vec())
+    }
+}
+
+Var1 += 0.1
+Var2 = Var1 * 10
+Var3 = Var2 * 10
+
+Layer1R = 50
+Layer2R = 25
+Layer3R = 17
+
+Origin = entity():pos() + vec( 0, 0, Layer1R * 1.01)
+
+Layer1 = Origin + vec(sin(Var1),cos(Var1),0) * Layer1R
+
+Layer2 = Layer1 + vec(sin(Var1) * sin(Var2), cos(Var1) * sin(Var2),cos(Var2)) * Layer2R
+
+Cos3 = vec( sin(Var2) * sin(Var1) * cos(Var3), sin(Var2) * cos(Var1) * cos(Var3), cos(Var2) * cos(Var3)) * Layer3R
+Sin3 = vec( cos(-Var1) * sin(Var3), sin(-Var1)*sin(Var3), 0) * Layer3R
+Layer3=Layer2 + Cos3 + Sin3
+
+
+holoPos(1,Layer1)
+holoPos(2,Layer2)
+holoPos(3,Layer3)

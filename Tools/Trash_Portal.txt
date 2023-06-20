@@ -1,0 +1,41 @@
+@name Trash Portal
+@inputs 
+@outputs 
+@persist [Me E]:entity
+@model models/sprops/geometry/sphere_144.mdl 
+
+function void entity:moveTo(){
+    Vec = E:boxCenterW() - This:boxCenterW()
+    This:applyForce((-Vec:normalized() * 60 - This:vel())*This:mass())
+}
+
+if(first()){
+    
+runOnTick(1)
+    E = entity()
+    noCollideAll(E, 1)
+    Me = owner()
+    E:setMaterial("models/wireframe")
+}
+E:setAng(ang(0,E:angles():yaw() + 1,0))
+if(findCanQuery()){
+    findIncludePlayerProps(Me)
+    findExcludeEntity(Me)
+    findExcludeClass("weapon")
+    findExcludeClass("tool")
+    findInSphere(E:boxCenterW(), E:boxSize():z()/2)
+    Prop = findToArray()
+    
+    if(!Prop:count()){
+        E:setColor(vec(0,255,0))
+    } else {
+        E:setColor(vec(255,0,0))
+        for(I = 1, Prop:count()){
+            Prop[I, entity]:propFreeze(0)
+            Prop[I, entity]:propDelete()
+        }
+    }
+    E:propFreeze(!E:isPlayerHolding())
+    
+}
+E:propNotSolid(!Me:isFlashlightOn())

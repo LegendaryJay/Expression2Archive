@@ -1,0 +1,174 @@
+@name Colorator
+@inputs 
+@outputs Hue Sat Val Alp
+@persist  [SliderEnts SlideHold]:array
+@persist TargetColor:vector [E Me Target Back HueEnt SatEnt ValEnt]:entity ChangeTargetKey ActiveSlider TargetChangedColor Setup
+@persist HueHold SatHold ValHold BackHold RGB:vector4
+@model models/sprops/geometry/t_hhex_18.mdl
+
+function number array:hsvSlider(Pos, Hold:vector2){
+    local Ent = This[Pos, entity]
+    if (Hold){
+        if (Hold:y()){
+            Ent:propFreeze(0)
+        }
+        Ent:setPos(Back:toWorld(clamp(Back:toLocal(Ent:pos()), vec(-15,Pos * 6 - 15,3), vec(15,Pos * 6 - 15,3))))
+        ActiveSlider = 1
+    } 
+    elseif (Hold:y()){
+        Ent:propFreeze(1)
+        ActiveSlider = 0
+    }
+    return clamp(Back:toLocal(Ent:pos()):x() + 15, 0, 30)/30
+}
+    
+
+function void setSliders(H, S, V, A){
+    local HueEnt = SliderEnts[ 1, entity]
+    local SatEnt = SliderEnts[ 2, entity]
+    local ValEnt = SliderEnts[ 3, entity]
+    local AlpEnt = SliderEnts[ 4, entity]
+    
+    HueEnt:setColor(hsv2rgb(H, 1, 1))
+    SatEnt:setColor(hsv2rgb(H, S, 1))
+    ValEnt:setColor(hsv2rgb(H, 1, V))
+    AlpEnt:setColor(hsv2rgb(H, 1, 1))
+    AlpEnt:setAlpha(A)
+    
+    HueEnt:setPos(Back:toWorld( vec((H/360) * 30 - 15, -9, 3)))
+    SatEnt:setPos(Back:toWorld( vec(S * 30  - 15, -3,3)))
+    ValEnt:setPos(Back:toWorld( vec(V * 30 - 15, 3, 3)))
+    AlpEnt:setPos(Back:toWorld( vec((A/255) * 30 - 15, 9, 3)))
+    
+    RGB = vec4(round(hsv2rgb(H, S, V)),A)
+    Back:setColor(RGB)
+    E:setColor(vec(RGB))
+    
+}
+
+function void setTargetColor(){
+    #
+}
+if (clk("Setup")){
+    for (I = 1, 4){
+        local Ent = SliderEnts[I, entity] = propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", Back:toWorld(vec(15, I * 6 - 15, 3)), Back:angles(), 0)
+        #Ent:propShadow(0)
+        noCollideAll(Ent, 1)
+        slider(Back,vec(0, I * 6 - 15, 0), Ent, vec(0, 0, -3))
+        
+        holoCreate(I)
+        holoModel( I, "models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl")
+        holoMaterial( I, "models/wireframe")
+        holoScale(I, vec(0.91))
+        holoAng(I, Ent:angles())
+        holoPos(I, Ent:pos())
+        holoParent(I, Ent)
+    }
+    E:setPos(Back:toWorld(vec(0,-14,3)))
+    E:setAng(Back:toWorld(ang(0,0,45)))
+    E:propFreeze(0)
+    weld( E, Back)
+    setSliders(360, 1, 1, 255)
+    Hue = 360
+    Sat = 1
+    Val = 1
+    Alp = 255
+}
+if (first()){
+    runOnLast(1)
+    runOnTick(1)
+    
+    E = entity()
+    E:setMaterial("models/debug/debugwhite")
+    
+    Me = owner()
+    Back = propSpawn("models/sprops/rectangles_thin/size_3/rect_24x36x1_5.mdl", entity():pos(), ang(),1)
+    Back:setMaterial("models/debug/debugwhite")
+    Back:setColor(vec(255, 0, 0))
+    
+    
+    
+    local I = 100
+    holoCreate(I)
+    holoModel( I, "models/sprops/rectangles_thin/size_3/rect_24x36x1_5.mdl")
+    holoMaterial( I, "models/wireframe")
+    holoAng(I, Back:angles())
+    holoPos(I, Back:pos())
+    holoScale(I, vec(0.95))
+    holoParent(I, Back)
+
+    timer("Setup", 1000)
+}
+
+ChangeTargetKey = Me:keyPressed("p")
+
+for (I = 1, 4){
+    local OldHold = SlideHold[I, vector2]:x()
+    local TempHold = SliderEnts[ I, entity]:isPlayerHolding()
+    SlideHold[I, vector2] = vec2(TempHold, TempHold ^ OldHold)
+    if (!ActiveSlider & TempHold){
+        ActiveSlider = 1
+    }
+}
+
+BackHold = Back:isPlayerHolding()
+
+if (changed(ChangeTargetKey) & ChangeTargetKey){
+    local TempTarget = Me:aimEntity()
+    if (TempTarget == Back | TempTarget:isConstrainedTo() == Back){
+        hint("Cannot Target Self", 2)
+    } elseif (TempTarget){
+        Target = TempTarget
+        hint(Target:type() + " | " + Target:model(),2)
+    } else {
+        hint("No Target", 2)
+    }
+}
+
+if (changed(BackHold)){
+    if (BackHold){
+        for (I = 1, 4){
+            Ent = SliderEnts[I, entity] 
+            Ent:parentTo(Back)
+            Ent:propFreeze(0)
+        }
+    } else {
+        Back:propFreeze(1)
+        for (I = 1, 4){
+            Ent = SliderEnts[I, entity] 
+            Ent:deparent()
+            Ent:propFreeze(1)
+        }
+    }
+}
+TargetColor = Target:getColor()
+if (ActiveSlider){
+    XVal = array()
+
+    for (I = 1, 4){
+        XVal[ I, number] = SliderEnts:hsvSlider(I, SlideHold[ I, vector2])
+    }
+    
+    Hue = 360 * XVal[ 1, number] 
+    Sat = XVal[ 2, number] 
+    Val = XVal[ 3, number] 
+    Alp = XVal[ 4, number] * 255
+    
+    setSliders(Hue, Sat, Val, Alp)
+    Target:setColor(hsv2rgb(Hue, Sat, Val),Alp)
+    ActiveSlider--
+    
+} elseif (changed(TargetColor) & Target){
+    TargetHSV = rgb2hsv(TargetColor)
+    Hue = TargetHSV:x()
+    Sat = TargetHSV:y()
+    Val = TargetHSV:z()
+    Alp = Target:getAlpha()
+        
+    setSliders(Hue, Sat, Val, Alp)
+}
+
+setName("rgb[   " + round(RGB:x()) + ",   " + RGB:y() + ",   " + RGB:z() + "] [ " + Alp + " ]\nhsv[   " + round(Hue,2) + ",   " + round(Sat,2) + ",   " + round(Val,2) + "]")
+if (last()){
+    propDeleteAll()
+}

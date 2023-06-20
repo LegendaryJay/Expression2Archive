@@ -1,0 +1,38 @@
+@name Distance
+@inputs EGP:wirelink
+@outputs Dist
+@persist Me:entity Mode
+@trigger 
+
+runOnTick(1)
+if (first()){
+    Me=owner()
+    holoCreate(1)
+    holoColor(1,vec(77,1,53))
+    holoCreate(2)
+    for (I=1,2){
+        holoScale(I,vec(1,1,100)*0.05)
+    }
+    Dist=0
+    EGP:egpClear()
+    EGP:egpBox(2,vec2(256,256),vec2(456,50))
+    EGP:egpColor(2,vec(77,1,53))
+    EGP:egpText(1,"Distance: " + Dist,vec2(256,230))
+    EGP:egpAlign(1,1)
+    EGP:egpSize(1,50)
+    timer("egp",1)
+}
+LClick=Me:keyAttack1()
+RClick=Me:keyAttack2()
+if (changed(LClick) & !LClick){
+    holoPos(1,Me:aimPos())
+    Dist=holoEntity(1):pos():distance(holoEntity(2):pos())
+    EGP:egpSetText(1,"Distance: " + round(Dist,2))
+}
+if (changed(RClick) & !RClick){
+    holoPos(2,Me:aimPos())
+    Dist=holoEntity(1):pos():distance(holoEntity(2):pos())
+    EGP:egpSetText(1,"Distance: " + round(Dist,2))
+}    
+
+

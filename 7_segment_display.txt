@@ -1,0 +1,131 @@
+@name 7 segment display
+@inputs #Number
+@outputs DigitArray:string I Run
+@persist Run E:entity I [DigitEnts SevSegArray SevSegAngArray]:array [Size Scale]:vector YPos HalfHeight DigitGap Digits ScaleVal DigitGapVal
+@model models/sprops/rectangles_thin/size_0/rect_1_5x6x1_5.mdl
+
+if (Run){
+    interval(5000)
+    Number = random() * 10 
+    if (changed(Number)){
+        DigitArray = Number:toString()
+        Skip = 0
+        for(I = 1, Digits + 1){
+            switch(DigitArray[I]){
+                case "0",
+                    DisplayArray = array(1, 1, 1, 0, 1, 1, 1)
+                    break
+                case "1",
+                    DisplayArray = array(0, 0, 1, 0, 0, 1, 0)
+                    break
+                case "2",
+                    DisplayArray = array(1, 0, 1, 1, 1, 0, 1)
+                    break
+                case "3",
+                    DisplayArray = array(1, 0, 1, 1, 0, 1, 1)
+                    break
+                case "4",
+                    DisplayArray = array(0, 1, 1, 1, 0, 1, 0)
+                    break
+                case "5",
+                    DisplayArray = array(1, 1, 0, 1, 0, 1, 1)
+                    break
+                case "6",
+                    DisplayArray = array(1, 1, 0, 1, 1, 1, 1)
+                    break
+                case "7",
+                    DisplayArray = array(1, 0, 1, 0, 0, 1, 0)
+                    break
+                case "8",
+                    DisplayArray = array(1, 1, 1, 1, 1, 1, 1)
+                    break
+                case "9",
+                    DisplayArray = array(1, 1, 1, 1, 0, 1, 1)
+                    break
+                case ".",
+                    Skip = 1
+                    holoPos(400, E:toWorld(vec( -HalfHeight * 2 + Size:z() * 0.25, -DigitGap * (I - 1.5), 1 ) * Scale))
+                    break
+                case "",
+                    DisplayArray = array( 0, 0, 0, 0, 0, 0, 0)
+            }
+            if (Skip){
+                Skip = 0
+                Offset = 1
+            } else {
+                for (DigiI = 1, 7){
+                    holoColor((I - 1 - Offset) * 7 + DigiI, DisplayArray[DigiI, number] ? vec4(hsv2rgb(200, 1, 1), 255) : vec4(hsv2rgb(200, 1, 1), 20))
+                }
+            }
+        }
+    }
+} else {
+    if (first()){
+        runOnTick(1)
+        E = entity()
+        Gap = 5
+        Digits = 17
+        DigitGapVal = 10
+        Scale = vec(1)
+        
+        holoCreate(1)
+        holoScale(1, Scale)
+        holoModel(1, "models/segment2.mdl")
+        
+        Size = holoEntity(1):boxSize() * Scale
+        
+        YPos = Gap * Scale:y() + Size:z()
+        HalfHeight = -(Size:y() + Gap * Scale:z()) * 0.5
+        
+        DigitGap = -(YPos + Size:y() + DigitGap * Scale:y())
+        
+        Period = holoCreate(400)
+        holoModel(400, "models/sprops/triangles/regular/etri_144x144.mdl")
+        holoScaleUnits(400, vec( Size:z(), Size:x(), Size:z() * 0.5) )
+        holoMaterial(400, "lights/white")
+        holoAng(400, E:toWorld(ang(0, 90, -90)))
+        
+        
+        
+        SevSegAngArray = array(0, 90, 90, 0, 90, 90, 0)
+        SevSegArray = array(
+            vec(2 * HalfHeight, 0, 0),
+            vec(HalfHeight, -YPos, 0),
+            vec(HalfHeight, YPos, 0),
+            vec(0, 0, 0),
+            vec(-HalfHeight, -YPos, 0),
+            vec(-HalfHeight, YPos, 0),
+            vec(-2 * HalfHeight, 0, 0)
+        )
+    }
+    while (holoCanCreate()){
+        Seg = I % 7 + 1
+        Digit = floor( I / 7)
+        
+        if (Seg - 1){
+            Parent = holoEntity(Digit * 7 + 1)
+        } else {
+            Parent = E
+        }
+        
+        holoCreate(I + 1)
+        holoModel(I + 1, "models/segment2.mdl")
+        #holoMaterial(I + 1, "models/wireframe")
+        holoMaterial(I + 1, "lights/white")
+        holoScale(I + 1, Scale)
+        holoParent(I + 1, Parent)
+        
+        holoPos(I + 1, E:toWorld(SevSegArray[Seg, vector] - vec(0, Digit * DigitGap, 0)))
+        holoAng(I + 1, E:toWorld(ang(90, 0, SevSegAngArray[Seg, number])))
+        I++
+        if (I > 7 * Digits - 1){
+            Run++
+            runOnTick(0)
+            interval(1)
+            break
+        }
+    }
+    
+    
+}
+

@@ -1,0 +1,55 @@
+@name 
+@inputs 
+@outputs Targets:array PushTimer PushTarget:entity
+@persist [E PushProp]:entity Targets:array PushTimer PushI Exclude:entity
+@trigger 
+if (first()){
+    runOnTick(1)
+    
+    #include "lib/applyforce"
+    E = entity()    
+    
+    propSpawnUndo(0)
+    
+    PushTimer = -5
+    
+    PushProp = propSpawn("models/holograms/hq_dome.mdl", E:toWorld(vec(0,0,50)),1)
+    
+    #Exclude = owner()
+}
+if (findCanQuery()){
+    findInSphere(E:pos(), 500)
+    findClipToClass("player")
+    findExcludePlayer(Exclude)
+    Targets = findToArray()
+}
+
+if (Targets:count()){
+    PushTimer++
+    #TargetBoxSize = Target:boxSize()
+     
+    PushI = PushI % Targets:count()
+    PushTarget = Targets[PushI + 1, entity]
+    VecDiff = E:boxCenterW() - PushTarget:pos()
+    PushDist = (VecDiff):length()
+    if (PushTimer < 2){
+        PushProp:setMass((500 - PushDist)/25)
+        PushProp:propFreeze(0)
+    } elseif (PushTimer < 5){
+        PushProp:setPos(PushTarget:boxCenterW() + VecDiff:normalized() * 40) 
+    } elseif (PushTimer < 10){
+        PushProp:moveTo(PushTarget:boxCenterW())
+    }
+    else {
+        PushTimer = 0
+        PushI = (PushI + 1) % Targets:count()  
+    }
+    PushProp:setAng(ang())
+} else {
+    PushTimer = -5   
+    
+    PushProp:propFreeze(1)
+    
+    PushProp:setAng(ang())
+    PushProp:setPos( E:toWorld(vec(0,0,50)) )
+}

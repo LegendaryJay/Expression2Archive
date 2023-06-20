@@ -1,0 +1,37 @@
+@name MessWithSelfOnPlayerLook
+@inputs 
+@outputs 
+@persist [Me]:entity Players:array
+@trigger 
+
+if(first()){
+    runOnTick(1)
+    Me = owner()    
+    timer("updatePlayers", 1)
+    
+}
+if (clkName() == "updatePlayers"){
+    timer("updatePlayers", 30000)
+    Players = players()
+}
+Seen = 0
+foreach(K, Player:entity = Players){
+    if (Player:aimEntity() == Me){
+        hint(Player:name(), 4)
+        #CamPos = Player:shootPos() - Player:eye() * 200
+        #Me:plySetPos(CamPos - Me:toLocal(Me:shootPos()))
+        #Me:plySetAng((Player:shootPos() - CamPos):toAngle())
+        
+        Seen = 1
+    }
+}
+if (changed(Seen)){
+    if (Seen){
+        hint("Seen", 2)
+        Me:plyFreeze(1)
+    } else {
+        hint("Free",2)
+        Me:plyFreeze(0)
+    }
+    
+}

@@ -1,0 +1,49 @@
+@name bezier test
+@inputs 
+@outputs 
+@persist [E Prop]:entity HoloCount
+@trigger 
+if(first()){
+    propSpawnUndo(0)
+    Prop = propSpawn("models/Combine_Helicopter/helicopter_bomb01.mdl",entity():toWorld(vec(0,50,20)),1)
+    E = entity()
+    HoloCount = 21
+}
+interval(200)
+
+Pos1 = E:pos()
+Pos3 = Prop:pos()
+Distance = Pos1:distance(Pos3)
+
+if (changed(Distance)){
+    Pos2 = (Pos3 + Pos1 + vec():setZ(Distance)) * 0.5
+    
+    for( X = 1, HoloCount){
+        Percent = (X - 1) / HoloCount
+        InvPercent = 1 - Percent
+        
+        Holo = holoEntity(X)
+        if (!Holo){
+            Holo = holoCreate(X)
+            holoModel(X, "models/holograms/hq_sphere.mdl")
+            if ( X == ceil(HoloCount * 0.5) ) {
+                holoColor( X, vec(255,0,0) )
+            }
+        }
+        
+        holoPos(X, InvPercent^2 * Pos1      +        3 * InvPercent * Percent * Pos2       +       Percent^2 * Pos3)
+    }  
+}
+
+
+#https://javascript.info/bezier-curve
+
+
+
+#[        
+        Similar = Percent + ( X + 1/70 )
+        InvSimilar = 1 - Similar
+        holoAng(
+            X, 
+            ( Holo:pos() - InvSimilar^2 * EPos + 2 * InvSimilar * Similar * CenterPos + Similar^2 * PropPos ):toAngle()
+        )]#

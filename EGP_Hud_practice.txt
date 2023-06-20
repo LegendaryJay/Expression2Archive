@@ -1,0 +1,85 @@
+#[@name Target HUD
+@inputs E:wirelink
+@persist Players:array
+
+interval(75)
+
+if (first()|duped()){
+    E:egpClear()
+    
+    findByClass("player")
+    findSortByDistance(owner():pos())
+    Players = findToArray()
+    
+    for (Tracker=1,Players:count()){
+        Player = Players[Tracker,entity]
+        
+        Rect = Tracker+Players:count()
+        Name = Tracker+Players:count()*2
+        
+        E:egp3DTracker(Tracker,Player:pos())
+        
+        E:egpBoxOutline(Rect, vec2(0,-Player:height()/2), vec2(0,0))
+        E:egpColor(Rect,vec(0,255,0))
+        
+        E:egpText(Name,Player:name(),vec2(-10,-Player:height()))
+        E:egpSize(Name,15)
+        
+        E:egpParent(Name,Tracker)
+        E:egpParent(Rect,Tracker)
+    }
+    
+    timer("reset",10000)
+}
+for (Tracker=1,Players:count()){
+    Player = Players[Tracker,entity]
+    X = Tracker+Players:count()
+    
+    Dist = Player:pos():distance(owner():pos())
+    
+    E:egpSize(X, vec2(40,50))
+    E:egpPos(Tracker,Player:pos())
+}
+if (clk("reset")){
+    reset()
+}]#
+@name Target HUD
+@inputs E:wirelink
+@outputs Target:entity Array:array
+@persist Target:entity Array:array Length
+
+runOnTick(1)
+
+if (first()|duped()){
+    E:egpClear()
+
+    Target = entity()
+    
+    Length = 30
+    Array = array( vec(), vec(1,0,0), vec(0,1,0), vec(0,0,1))
+    timer("egp", 1)
+    for(I = 1, 4){
+        E:egp3DTracker( I, Target:toWorld(Array[I, vector] * Length) )
+        E:egpBoxOutline(I + 4, vec2(), vec2())
+        E:egpParent(I + 4, I)
+    }
+    for(I = 1, 3){
+        E:egpLine(8 + I, vec(), vec())
+        E:egpSize(8 + I, 5)
+        E:egpParent(I + 8, 1)
+    }
+}
+AimEnt = owner():aimEntity()
+if (AimEnt){
+    Target = AimEnt
+}
+if (clk("egp")){
+    timer("egp", 250)
+    for(I = 1, 4){
+        E:egpSize(I + 4, vec2(5))
+        E:egpPos( I, Target:toWorld(Array[I, vector]* Length) )
+        
+    }
+    hint(E:egpPos(5):toString(),5)
+}
+

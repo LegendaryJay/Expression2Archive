@@ -1,0 +1,264 @@
+@name Invisible BlackRoom 4 Privacy Edition 4
+@outputs [TargetList]:array Darkness
+@persist [Prop E Marker1 Marker2 Me]:entity HoloSeperation EBottom [Min Max RoomCenter BoxSize RoomBoxCenter]:vector [WhitelistBySteam]:array Run TwoMarkers EYaw Darkness
+@persist TargetList:array TargetI
+@model models/sprops/geometry/hring_18.mdl
+#models/sprops/misc/sq_holes/hsqhole_d0_12.mdl 
+# models/sprops/misc/tubes_thin/size_1/t_h_tube_12x6.mdl
+
+if (!Run){
+    if (first()){
+        
+        
+        
+        
+        TwoMarkers = 1  # 0 or 1
+        WhitelistBySteam = array("STEAM_0:0:90656110", "STEAM_0:1:39301792")
+        #killerLuigi, Kinky
+        
+        
+        
+        Darkness = 0.5
+        function vector getPropHome(){
+            return E:boxCenterW() - E:up() * EBottom
+        }
+        function moveProp(Vec:vector){
+            Prop:setPos(Vec)
+        }
+        function moveCenter(Vec:vector){
+            E:setPos(Vec)
+            Prop:setPos(Vec  - vec(0,0,Prop:boxSize():z()))
+        }
+        
+        runOnTick(1) 
+        propSpawnUndo(0)
+        
+        CenterColors = hsv2rgb(290, 1, 0.3)
+        
+        Me = owner()
+        
+        runOnKeys(Me, 1, array("pad_minus", "pad_plus" ))
+        
+        E = entity()
+        E:setMaterial("lights/white")
+        E:setColor(CenterColors)
+        EBottom = E:boxSize():z()/2
+        
+        Prop = propSpawn("models/sprops/misc/domes/size_0/dome_6x3.mdl", 1)
+        Prop:setMaterial("lights/white")
+        Prop:setColor(CenterColors)
+        
+        MarkerColor = vec(105,0,75)
+        HoloColor = vec(30)
+        MarkerModel = "models/sprops/rectangles/size_1/rect_3x3x3.mdl"     # "models/jaanus/wiretool/wiretool_pixel_med.mdl"
+        HoloMaterial = "lights/white"
+        
+        Marker1 = propSpawn(MarkerModel, E:boxCenterW() + vec( 200, 200, 200), 1)
+        Marker1:setMaterial("models/wireframe")
+        Marker1:setColor(MarkerColor)
+        noCollideAll( Marker1, 1)
+        
+        MarkerBoxSize = Marker1:boxSize()
+
+        if (TwoMarkers){
+            Marker2 = propSpawn(MarkerModel, E:boxCenterW() + vec( -200, -200, -EBottom), 1)
+            Marker2:setMaterial("models/wireframe")
+            Marker2:setColor(MarkerColor)
+            noCollideAll( Marker2, 1)
+            
+            holoCreate( 101, Marker2:boxCenterW(), vec(1), Marker2:angles(), HoloColor, "models/editor/axis_helper.mdl")
+            holoMaterial(101, HoloMaterial)
+            holoParent(101, Marker2)
+            
+            
+            function changeRoomSize(){
+                holoAng(100, ang())
+                M1Pos = Marker1:boxCenterW()
+                M2Pos = Marker2:boxCenterW()
+                
+                BoxSize = positive( M1Pos - M2Pos )
+                
+                RoomCenter = (M1Pos + M2Pos) * 0.5
+                
+                Min = RoomCenter - BoxSize * 0.5
+                Max = RoomCenter + BoxSize * 0.5
+                
+                for(I = 1, 4){
+                    HoloOffset = vec(HoloSeperation) * (I - 1)
+                    holoScaleUnits(I, sign(2.5 - I) * (BoxSize - HoloOffset) * 1.0013)
+                    holoPos(I, RoomCenter - RoomBoxCenter * holoScale(I)) 
+                }
+
+                moveCenter(RoomCenter - vec( 0, 0, BoxSize:z() * 0.5 - EBottom))
+            }
+        } else {
+            function changeRoomSize(){
+                holoAng(100, ang())
+                M1Pos = Marker1:boxCenterW()
+                M2Pos = E:pos() - vec(0,0,EBottom)
+                BoxSize = positive( M1Pos - M2Pos ) * vec(2,2,1)
+                
+                RoomCenter = M2Pos + vec(0,0,BoxSize:z() * 0.5)
+                
+                Min = RoomCenter - BoxSize * 0.5
+                Max = RoomCenter + BoxSize * 0.5
+                
+                for(I = 1, 4){
+                    HoloOffset = vec(HoloSeperation) * (I - 1)
+                    holoScaleUnits(I, sign(2.5 - I) * (BoxSize - HoloOffset) * 1.0013)
+                    holoPos(I, RoomCenter - RoomBoxCenter * holoScale(I)) 
+                }
+            }
+        }
+        
+        holoCreate( 100, Marker1:boxCenterW(), vec(1), Marker1:angles(), HoloColor, "models/editor/axis_helper.mdl")
+        holoMaterial(100, HoloMaterial)
+        holoParent(100, Marker1)
+
+        MatArray = array("models/wireframe","engine/writez_model","lights/white","models/wireframe")
+        ColorArray = array(vec(20), vec(255), vec(0), vec(50))
+        for(I = 1, 4){
+            holoCreate(I)
+            holoAng(I, ang())
+            holoModel(I, "models/hunter/blocks/cube8x8x8.mdl")
+            holoMaterial(I, MatArray[I, string])
+            holoColor(I, ColorArray[I, vector])
+        }
+        holoAlpha(3, Darkness * 255)
+        RoomBoxCenter = holoEntity(1):boxCenter()
+        
+        HoloSeperation = 0.644
+        
+        function onPlayerDisconnect(Id:string, Table:table){}
+        function onPlayerConnect(Id:string, Table:table){
+            for (I = 1, WhitelistBySteam:count()){
+                if (findPlayerBySteamID(WhitelistBySteam[I, string]) == entity( Id:toNumber())){
+                    PlayerInfoTable:remove(Id)
+                }
+            }
+        }
+        
+        #include "PlayerWatcherTableWithHooks"
+        
+        for (I = 1, WhitelistBySteam:count()){
+            WhitePlayer = findPlayerBySteamID(WhitelistBySteam[I, string])
+            
+            if (WhitePlayer){
+                hint("Whitelisted: " + WhitePlayer:name(),2)
+                PlayerInfoTable:remove(WhitePlayer:id() + "")
+            } 
+        }
+        changeRoomSize()
+        hint("Press Enter to Run", 5)
+        Run = 1
+    }
+} elseif (Run == 2) {
+
+    TargetsExist = 0
+    TargetList = array()
+    foreach (K, PlayerId:string = PlayerInfoTable){
+        Player = entity(PlayerId:toNumber())
+        if (inrange(Player:boxCenterW(), Min, Max)){
+            TargetsExist = 1
+            TargetList:pushEntity(Player)
+        }
+    }
+    TargetCount = TargetList:count()
+    if (TargetsExist){
+        runOnTick(1)
+        TargetI = TargetI % TargetCount + 1
+        Target = TargetList[TargetI, entity]
+        TargetPos = Target:boxCenterW() + Target:vel():normalized()
+    } else {
+        runOnTick(0)
+        interval(300)
+        TargetPos = getPropHome()
+    }
+    ChangedExist = changed(TargetsExist)
+    if (ChangedExist | TargetsExist){
+        Prop:setPos(TargetPos)
+        if (ChangedExist & TargetsExist){
+            hint("Intruder Detected", 0.5)
+        }
+    }
+    
+    
+    if(keyClk()){
+        LClick = Me:keyPressed("pad_plus")
+        RClick = Me:keyPressed("pad_minus")
+        
+        MaxDark = 100
+        Darkness = clamp(Darkness + (LClick - RClick) * (10 * (1- Darkness/MaxDark) + 1), 
+            0, 
+            MaxDark 
+        )
+        if (changed(Darkness)){    
+            DarkPercent = Darkness/MaxDark 
+            DarkDisplayPercent = round(100 * DarkPercent)
+        
+            hint(DarkDisplayPercent + "% Shade", 2)
+            holoAlpha(3, DarkPercent * 255)
+        }
+
+    }
+
+} else {
+
+    ControlDevice = Me:weapon():type() == "remotecontroller"
+    if (Me:weapon():type() == "remotecontroller"){
+        LClick = Me:keyAttack1()
+        
+        if (changed(LClick) & LClick){
+            Marker1:setPos(Me:aimPos())
+            timer("changeSize", 1)
+        }
+        
+        if (TwoMarkers){
+            RClick = Me:keyAttack2()
+            
+            if (changed(RClick) & RClick){
+                Marker2:setPos(Me:aimPos())
+                timer("changeSize", 1)
+            }
+        }
+    }
+    if (owner():keyPressed("pad_enter")){
+        hint("Engaged", 2)
+        Marker1:propDelete()
+        Marker2:propDelete()
+        Run = 2
+    }
+    
+    Holding = Marker1:isPlayerHolding() | Marker2:isPlayerHolding()
+    if (changed(Holding)){
+        if (!Holding){
+            changeRoomSize()
+            Marker1:propNotSolid(0)
+            Marker1:propFreeze(1)
+            if (TwoMarkers){ 
+                Marker2:propNotSolid(0)
+                Marker2:propFreeze(1)
+            } 
+        } else {
+            Marker1:propNotSolid(1)
+            if (TwoMarkers){
+                Marker2:propNotSolid(1)
+            }
+        }
+    }
+}
+    
+if (clkName() == "changeSize"){ changeRoomSize()}
+
+
+EYaw = (EYaw + 1) % 360
+E:setAng(E:angles():setYaw(EYaw))
+
+
+
+
+
+
+
+
+

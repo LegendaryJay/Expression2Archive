@@ -1,0 +1,101 @@
+@name Exploding Box
+@inputs 
+@outputs Vec:vector 
+@persist [BoxSize PerimeterSize Center]:vector Perimeter PropCount PropI X Y Z  Model:string E:entity Run Props:array ExplodeI ExplodeForce
+@trigger 
+
+
+
+if (!Run){
+    if (first()){
+        
+        
+        Perimeter = 5
+        Oversize = 20
+        Height = 500
+        ExplodeForce = 5000
+        
+        
+        E = entity()
+        propSpawnUndo(0)
+        PropCount = Perimeter ^ 3
+        E = entity()
+        
+        #Model = "models/holograms/hq_rcube_thick.mdl"
+        #Model = "models/sprops/cuboids/height12/size_1/cube_12x12x12.mdl"
+        #Model = "models/sprops/cuboids/height24/size_1/cube_24x24x24.mdl"
+        #Model = "models/props_phx/construct/metal_wire1x1x1.mdl"
+        Model = "models/sprops/geometry/sphere_24.mdl"
+        holoCreate(1, E:pos(), vec(1), ang(), vec(255), Model)
+        holoScale(1, vec(0.5))
+    
+        BoxSize = holoEntity(1):boxSize() + vec(Oversize)
+        
+        PerimeterSize = BoxSize * Perimeter
+        
+        Center = E:pos() + vec(0,0,PerimeterSize:z() * 0.5 + Height)
+        holoPos(1, Center)
+        PropI = 1
+        runOnTick(1)
+        
+    } 
+    while(propCanCreate()){
+        if (X > (Perimeter - 1)){
+            X = 0
+            Y++
+            if (Y > (Perimeter - 1)){
+                Y = 0
+                Z++
+                if (Z > (Perimeter - 1)){
+                    Run = 1
+                    break
+                }
+            }
+        }
+        Color = 255 * vec(X,Y,Z)/(Perimeter - 1)
+        #Color = hsv2rgb(vec(360,1,1) * (vec(X,Y,Z)/(Perimeter - 1)))
+        
+        Prop = Props[PropI, entity] = propSpawn(Model, Center + (vec(X,Y,Z) - Perimeter * 0.5 + 0.5) * BoxSize,ang(),0)
+        Prop:setColor(Color)
+        Prop:propShadow(0)
+        Prop:propGravity(0)
+        
+        Prop:setMaterial("debug/debugdrawflat")
+        Prop:setTrails(100,100,100,"trails/laser", Color ,255)
+        noCollideAll(Prop, 1)
+        Prop:propNotSolid(1)
+        #(number startSize,number endSize,number length,string material,vector color,number alpha)
+        PropI++
+        X++
+    }
+     Ratio = floor(PropI/PropCount,1)
+    
+    if (changed(Ratio)){
+        if (Ratio == 1){
+            concmd("say explode!")
+        } elseif (Ratio == 0.9){
+            Ratio = floor(PropI/PropCount,2)
+            if (Ratio >= 95){
+                concmd("say " + Ratio * 100 + "\%")
+                
+            }
+        
+        } else {
+            concmd("say " + Ratio * 100 + "\%")
+        }
+        
+    }
+    
+}
+ elseif (Run) {
+    while(ExplodeI < PropCount & perf()){
+        ExplodeI++
+        Prop = Props[ExplodeI, entity]
+        Vel = holoEntity(1):toLocal(Prop:pos())
+        Vel = Vel:normalized()
+        Prop:propStatic(0)
+        #Prop:propFreeze(0)
+        Prop:applyForce(Vel * ExplodeForce)
+        
+    }
+}

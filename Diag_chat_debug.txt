@@ -1,0 +1,112 @@
+@name 
+@inputs 
+@outputs Target:entity
+@persist Target:entity
+@trigger 
+interval(10000)
+Me = owner()
+
+Target = Me
+
+MyPos = Me:pos()
+MyAng = Me:angles()
+AimPos = Me:aimPos()
+
+Eye = Target:eye()
+Name = Target:name()
+SteamID = Target:steamID()
+TeamID = Target:team()
+Team = TeamID:teamName()
+TeamColor = teamColor(TeamID)
+Tool = Target:tool()
+Weapon = Target:weapon()
+
+MySteamID = Me:steamID()
+MyModel = Me:model()
+MyTool = Me:tool()
+MyWeapon = Me:weapon()
+
+
+Class = Target:type()
+Mat = Target:getMaterial()
+Color = Target:getColor()
+Alpha = Target:getAlpha()
+Weight = Target:mass()
+
+ID = Target:id()
+Owner = Target:owner()
+Model = Target:model()
+Skin = Target:getSkin()
+
+BoxSize = Target:boxSize()
+BoxCenter = Target:boxCenter()
+
+Pos=Target:pos()
+Ang=Target:angles()
+
+
+
+PrintBtn = Me:keyPressed("pad_0")
+
+Target = Me:aimEntity()
+
+White = vec(255,255,255)
+BlackBerry = vec(77,1,53)
+
+ToolString = Tool ? "(" + Tool + ")" : ""    
+printColor(BlackBerry, "Player: ", TeamColor, "[" + Team + " (" + TeamID + ")] \"" + Name + "\"", White, " (" + SteamID + ")")
+printColor(BlackBerry, "Weapon: ", White, " \"" + Weapon:model() + "\" [" + Weapon:type() + "] " + ToolString)
+printColor(BlackBerry, "Entity Info: ", White, "\"" + Model + "\" [" + Class + "] [" + ID + "]")
+printColor(BlackBerry, "Look: ", White, "\"" + Model + "\" [" + Class + "] [" + ID + "]")
+print("")
+printColor(BlackBerry, "Player Position: " ,White, "(" + round(Pos:x(),2) + ", " + round(Pos:y(),2) + ", " + round(Pos:z(),2) + ")")
+printColor(BlackBerry, "Player Angle: " ,White, "(" + round(Ang:pitch(),2) + ", " + round(Ang:yaw(),2) + ", " + round(Ang:roll(),2) + ")")
+#printColor(BlackBerry, "Player Eyes: " ,White, "(" + round(Eye:x(),3) + ", " + round(Eye:y(),3) + ", " + round(Eye:z(),3) + ")")
+    
+
+#[
+if (Target:type() == "player"){
+    printColor(BlackBerry, "Player Name: ",White, Name)
+    printColor(BlackBerry, "Player SteamID: " ,White, SteamID)
+    printColor(BlackBerry, "Player Team: ",TeamColor, Team + " [" + TeamID + "]")
+    printColor(BlackBerry, "Player Model: " ,White, Model)
+    if (Tool){
+        printColor(BlackBerry,"Player Tool: ",White, Tool)
+    } elseif ( Weapon ) {
+        printColor(BlackBerry,"Player Weapon: ",White, Weapon:toString())
+    }
+    print("")
+    printColor(BlackBerry, "Player Position: " ,White, toString(round(Pos,2)))
+    printColor(BlackBerry, "Player Angle: " ,White, toString(round(Ang,2)))
+    printColor(BlackBerry, "Player Eyes: " ,White, toString(round(Target:eye(),4)))
+}
+elseif (Target == entity()){
+    printColor(BlackBerry,"My SteamID: ",White, MySteamID)
+    printColor(BlackBerry,"My Model: ",White, MyModel)
+    if (MyTool){
+        printColor(BlackBerry,"My Tool: ",White, MyTool)
+    } elseif ( MyWeapon ) {
+        printColor(BlackBerry,"My Weapon: ",White, MyWeapon:toString())
+    }
+        
+    printColor(BlackBerry,"My Position: " ,White, toString(round(MyPos,2)))
+    printColor(BlackBerry,"My Angle: " ,White, toString(round(MyAng,2)))
+    printColor(BlackBerry,"My Eyes: " ,White, toString(round(Me:eye(),4)))
+}
+else {
+    printColor(BlackBerry,"Target Identity: " ,White, Class + " [" + ID + "] \"" + Model + "\"")
+    printColor(BlackBerry,"Target Owner: " ,TeamColor, Owner)
+    if (Mat){
+        printColor(BlackBerry,"Target Material: " ,White, Mat)
+    }
+    printColor(BlackBerry,"Target Color: " ,White, Color + " [" + Alpha + "]")
+    printColor(BlackBerry,"Target Weight: " ,White, Weight)            
+    
+    printColor(BlackBerry, "Target Box Size: " ,White, toString(round(BoxSize,4)))
+    if (BoxCenter != vec()){
+        printColor(BlackBerry, "Target Box Center: " ,White, toString(round(BoxCenter,4)))
+    }
+    printColor(BlackBerry, "Target Position: " ,White, toString(round(Pos,2)))
+    printColor(BlackBerry, "Target Angle: " ,White, toString(round(Ang,2)))
+}
+]#

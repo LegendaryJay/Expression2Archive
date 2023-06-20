@@ -1,0 +1,45 @@
+@name Color Thing Revisited
+@inputs 
+@outputs I Main
+@persist I HoloNumber Ticker Main Epos:vector
+@trigger 
+runOnTick(1)
+if (first()){
+    HoloNumber=200
+    I=1
+    Ticker = 1
+    Epos = entity():pos()
+}
+if (Main){
+    
+    while ( perf() & I < HoloNumber + 1){
+        Circle = (I + 1)*360/HoloNumber
+        
+        Hue = I*360/HoloNumber + (Ticker % 360 + 1) * 2
+        holoColor(I, hsv2rgb(Hue, 1, 1))
+        holoPos( 
+            I, 
+            Epos + vec(
+                sin(Circle + Ticker) * 200, 
+                cos(Circle + Ticker) * (cos(Circle*8)) * 200, 
+                400 + sin(Circle*8 + Ticker) * 200
+            )
+        )
+        I += 1
+    }
+    if (I > HoloNumber){
+        Ticker++
+        I = 1
+    }
+} else {
+    while (holoCanCreate()){
+        holoCreate(I)
+        holoModel( I, "models/holograms/tetra.mdl")
+        I++
+        if ( I > HoloNumber){
+            Main = 1
+            I = 1
+            break
+        }
+    }
+}

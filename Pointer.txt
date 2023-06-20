@@ -1,0 +1,30 @@
+@name Pointer
+@inputs 
+@outputs 
+@persist Me:entity I
+@trigger 
+
+if (first()){
+    runOnTick(1)
+    Me = owner()
+    
+    holoCreate(1)
+    holoModel(1,"models/holograms/hq_torus.mdl")
+    holoMaterial(1, "/ijwtb/logo/welcomebanner")
+    
+    holoCreate(2)
+    holoModel(2, "models/holograms/hq_cone.mdl")
+    holoScale(2, vec(0.5))
+}
+AimPos = Me:aimPos()
+AimNorm = Me:aimNormal()
+
+holoAng( 1, AimNorm:toAngle() + ang(90,I,0))
+holoPos( 1, AimPos + AimNorm * 10)
+holoScale(1, vec( 1 + sin(180 + I*2)*0.1, 1 + sin(180 + I*2)*0.1,1))
+
+holoAng( 2, AimNorm:toAngle() + ang(-90,-I,0))
+holoPos( 2, AimPos + AimNorm * (15 + 2*sin(I*2)))
+
+I++
+if (I>400){I-=360}

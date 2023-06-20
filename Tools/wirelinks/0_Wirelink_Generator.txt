@@ -1,0 +1,32 @@
+@name Wirelink Generator
+@inputs Wirelink:wirelink
+@outputs PrintableIO:string
+@persist PrintMode PrintArr:array
+@trigger 
+
+if(~Wirelink | first()){
+    NameArr = Wirelink:entity():type():explode("_") "wiremod_eye_controller"
+    Name = NameArr[NameArr:count(), string]
+    Name = Name:sub(1,1):upper() + Name:sub(2)
+    
+    Inputs = Wirelink:inputs()
+    Outputs = Wirelink:outputs()
+    
+    PrintableIO = "#Inputs\n"
+    foreach (K, In:string = Inputs){
+        PrintableIO += Name + "[\"" + In + "\", " + Wirelink:inputType(In) + "]\n"
+    }
+    PrintableIO += "#Outputs\n"
+    foreach (K, Out:string = Outputs){
+        PrintableIO += Name + "[\"" + Out + "\", " + Wirelink:outputType(Out) + "]\n"
+    }
+    PrintMode = 1
+    PrintArr = PrintableIO:explode("\n\n")
+}
+if (PrintMode){
+    interval(500)
+    print(PrintArr:shiftString())
+    if (!PrintArr:count()){
+        PrintMode = 0
+    }
+}

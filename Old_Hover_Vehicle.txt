@@ -1,0 +1,114 @@
+@name Old Hover Vehicle
+@inputs 
+@outputs InvRangeDist
+@persist [Me E Seat]:entity HoverDist SeatStart:vector [Epos Vec Vel]:vector RSpread
+ 
+
+runOnTick(1)
+
+
+
+
+
+
+
+
+Speed= toUnit("mph",Seat:vel():length())
+
+if (first()|duped())
+{
+    Me = owner() 
+    E=entity()
+    Seat=E:isConstrainedTo()
+    HoverDist=100
+    RSpread=50
+    
+    holoCreate(1,Seat:toWorld(vec(0,20,-1)),vec(4,4,6),Seat:toWorld(ang(0,0,90)))
+    holoModel(1,"models/items/combine_rifle_ammo01.mdl")
+    holoEntity(1):setTrails(10,0,0.5,"trails/tube",vec(0,0,0),100)
+    holoParent(1,Seat)
+    
+    holoCreate(2,Seat:toWorld(vec(0,30,0)),vec(4,2,2),Seat:toWorld(ang(10,90,135)))
+    holoModel(2,"models/gibs/scanner_gib05.mdl")
+    holoParent(2,Seat)
+    
+    holoCreate(10,Seat:toWorld(vec(10,-4,-19)),vec(0.3,1,1),Seat:toWorld(ang(-60,180,90)))
+    holoModel(10,"models/props_combine/combine_light001b.mdl")
+    holoParent(10,Seat)
+    
+    holoCreate(11,Seat:toWorld(vec(-10,-4,-19)),vec(0.3,1,1),Seat:toWorld(ang(-110,180,90)))
+    holoModel(11,"models/props_combine/combine_light001b.mdl")
+    holoParent(11,Seat)
+    
+    holoCreate(12,Seat:toWorld(vec(0,20,-7)),vec(1,0.7,0.7),Seat:toWorld(ang(-15,-90,0)))
+    holoModel(12,"models/props_combine/combine_interface001a.mdl")
+    holoParent(12,Seat)
+    
+    holoCreate(13,Seat:toWorld(vec(0,-20,5)),vec(0.9,1.3,1),Seat:toWorld(ang(-96,-90,0)))
+    holoModel(13,"models/props_combine/breenpod.mdl")
+    holoParent(13,Seat)
+    
+    #holoCreate(16,Seat:toWorld(vec(0,11,20)),vec(0.4,0.9,0.5),Seat:toWorld(ang(0,0,-20)))
+    holoModel(16,"models/hunter/misc/sphere2x2.mdl")
+    holoMaterial(16,"debug/env_cubemap_model")
+    holoAlpha(16,150)
+    holoParent(16,Seat)
+
+    SeatStart=Seat:pos()
+
+    holoCreate(200,Seat:toWorld(vec(0,RSpread,-20)))
+    holoColor(200,vec(255,100,100))
+    holoAlpha(200,80)
+    holoParent(200,Seat)
+    
+    holoCreate(201,Seat:toWorld(vec(0,-RSpread,-20)))
+    #holoColor(201,vec(255,100,100))
+    holoAlpha(201,80)
+    holoParent(201,Seat)
+}
+Driver=Seat:driver()
+
+ChPos=Seat:pos()
+ChAng=Seat:angles()
+
+Mass=E:mass()+Seat:mass() + Driver:mass()
+
+#Ranger Filters
+rangerHitWater(1)
+rangerFilter(E)
+rangerFilter(Seat)
+
+#Ranger
+Front=rangerOffset(9999999,Seat:toWorld(vec(RSpread,0,0)),-ang(0,0,0):up())
+Back=rangerOffset(9999999,Seat:toWorld(vec(-RSpread,0,0)),-ang(0,0,0):up())  
+
+FrontDist=Front:distance()
+BackDist=Back:distance()
+
+#Ranger Math
+AvgRangeDist=(FrontDist+BackDist)/2
+InvRangeDist=-(AvgRangeDist-HoverDist)
+
+LegA=-FrontDist+BackDist
+LegB=RSpread*2
+
+#applyForce
+X=owner():aimPos():x()
+Y= owner():aimPos():y()
+Z=(ChPos+InvRangeDist):z()
+Loc=vec(X,Y,Z)
+
+Vel=entity():vel()
+Vec = Loc-Epos
+
+Seat:applyForce((Vec*5-Vel)*Mass)
+
+#applyAngForce
+P=-asin(LegA/LegB) + ChAng:pitch()
+Y=Me:eyeAngles():yaw()
+R=ChAng:roll()
+Gyro=Seat:toLocal(ang(P,Y,R))
+
+Inertia=shiftL(ang(Seat:inertia()))
+
+Seat:applyAngForce((Gyro - Seat:angVel())*Inertia)

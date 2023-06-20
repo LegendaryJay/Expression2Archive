@@ -1,0 +1,59 @@
+@name Invisible BlackRoom 3
+@persist Markers:array HoloSeperation
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl
+
+if (first()){
+    runOnTick(1)   
+    E = entity()
+    
+    propSpawnUndo(0)
+    
+    Markers:pushEntity(E)
+    Markers:pushEntity(propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", E:toWorld( vec( 700, 700, 500)), 1))
+    
+    for(I = 1, 4){
+        holoCreate(I)
+        holoAng(I, ang())
+        holoModel(I, "models/hunter/blocks/cube8x8x8.mdl")
+    }
+     
+    holoMaterial(1,"models/wireframe")
+    holoColor(1,vec(20))
+    
+    holoMaterial(2,"engine/writez")
+    holoColor(2,vec(255))
+     
+    
+    holoMaterial(3,"lights/white")
+    holoColor(3,vec(0))
+    
+    holoMaterial(4,"models/wireframe")
+    holoColor(4,vec(50))
+
+    HoloSeperation = 0.644
+}
+
+if (Markers[1, entity]:isPlayerHolding() | Markers[2, entity]:isPlayerHolding() | first()){
+    Marker1Pos = Markers[1, entity]:pos() + Markers[1, entity]:boxMin()
+    Marker2Pos = Markers[2, entity]:pos() + Markers[2, entity]:boxMax()
+    
+    Min = minVec(Marker1Pos, Marker2Pos)
+    Max = maxVec(Marker1Pos, Marker2Pos)
+
+    Size = Max - Min
+    Center = (Min + Max) * 0.5
+
+
+    for(I = 1, 4){
+        HoloOffset = vec(HoloSeperation) * (I - 1)
+
+        holoScaleUnits(I, sign(2.5 - I) * (Size - HoloOffset) * (1.0013))
+    
+        
+        TempScale = holoScale(I):z()
+        holoPos( I, Center - holoScale(I) * holoEntity(I):boxCenter())
+    }
+} else {
+    Markers[1, entity]:propFreeze(1)
+    Markers[2, entity]:propFreeze(1)
+}

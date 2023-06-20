@@ -1,0 +1,66 @@
+@name Evenly covered Sphere
+@inputs 
+@outputs Phi Theta
+@persist I Max Run B E:entity BoxSize:vector Offset Increment HoloMode Props:array BackwardsCount
+@model
+
+if (!Run & holoCanCreate() & propCanCreate()){
+    if (first()){
+        Max = holoMaxAmount()
+        HoloMode = 1
+        
+        propSpawnUndo(0)
+        
+        E = seatSpawn("models/sprops/geometry/sphere_144.mdl", entity():pos() + vec(0,0,500), ang(), 1)
+        entity():propNotSolid(1)
+        E:setAlpha(10)
+        BoxSize = E:boxSize()
+        #runOnTick(1)
+        
+    
+    }
+    
+    
+    
+    Phi = acos(1 - 2 * (I + 0.5)/Max)
+    Theta =  _PHI * (I + 0.5) * 360
+
+    X = cos(Theta) * sin(Phi)
+    Y = sin(Theta) * sin(Phi)
+    Z = cos(Phi)
+    
+    if (!(I %14)){
+        BackwardsCount++
+    }
+    
+    Pos = E:boxCenterW() + vec(X,Y,Z) * BoxSize * 0.5 
+    Scale = vec(1,1,1)
+    Angle = ang(Phi, Theta , 0)
+    Color = hsv2rgb(240, 1,(I % 4)/3)
+    Alpha = 255
+    Model = "models/sprops/cylinders/size_5/cylinder_12x6.mdl" 
+    Material = "models/debug/debugwhite"
+    
+    if (HoloMode){
+        Props[I + 1,entity] = holoCreate(I + 1, Pos, Scale, Angle, vec4(Color,Alpha), Model)
+        holoMaterial(I + 1, Material)
+        holoParent(I + 1, E)
+    } else {
+        Prop = Props[I + 1, entity] = propSpawn(Model, Pos, Angle, 1)
+        Prop:propNotSolid(1)
+        Prop:setMaterial(Material)
+        Prop:setColor(Color)
+        Prop:propStatic(1)
+        Prop:parentTo(E)
+    }
+    
+    I++
+    if (I > Max){
+        Run++
+        runOnTick(0)
+    }
+
+    
+}
+
+interval(200)

@@ -1,0 +1,49 @@
+@name Custom Area
+@inputs 
+@outputs [Min Max Size Center LocMin LocMax]:vector
+@persist Markers:array
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl
+
+if (first()){
+    runOnTick(1)   
+    E = entity()
+    
+    propSpawnUndo(0)
+    
+    Markers:pushEntity(E)
+    Markers:pushEntity(propSpawn("models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl", E:toWorld( vec( 50, 50, 50)), 1))
+    
+    for (I = 1, 2){
+        Marker = Markers[I, entity]
+        Marker:setAlpha(0)
+        noCollideAll( Marker, 1)
+        
+        holoCreate(I)
+        holoColor(I, vec(105,0,75))
+        holoPos(I, Marker:boxCenterW())
+        holoAng(I, Marker:angles())
+        holoMaterial(I, "models/wireframe")
+        holoModel(I,"models/editor/axis_helper.mdl")
+        holoParent(I, Marker)
+    }
+    
+    holoColor(1, vec(75,0,105))
+    holoCreate(100)
+    holoMaterial(100,"models/wireframe")
+    holoModel(100, "models/hunter/blocks/cube8x8x8.mdl")
+    holoScale(100, vec())
+}
+Marker1Pos = Markers[1, entity]:boxCenterW()
+Marker2Pos = Markers[2, entity]:boxCenterW()
+
+Min = minVec(Marker1Pos, Marker2Pos)
+Max = maxVec(Marker1Pos, Marker2Pos)
+
+LocMin = Min - Center
+LocMax = Max - Center
+Size = Max - Min
+Center = (Min + Max) * 0.5
+
+holoScaleUnits(100, -Size)
+holoPos(100, Center - holoEntity(100):boxCenter() * holoScale(100))
+holoAlpha(100, 250)

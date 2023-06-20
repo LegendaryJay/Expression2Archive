@@ -1,0 +1,35 @@
+@name HoloConnectorAtoB
+@inputs InputEnt:entity
+@outputs 
+@persist StartPos:vector [PointAEnt PointBEnt]:entity  
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl 
+runOnTick(1)
+runOnLast(1)
+
+if (first()){
+    propSpawnUndo(0)
+    
+    PointAEnt = owner()
+    
+    
+    #PointAEnt = entity()
+    #PointBEnt = 
+    Me=owner()
+    
+    holoCreate( 1)
+    holoModel(1,"models/sprops/cylinders/size_1/cylinder_1_5x480.mdl")
+
+}
+PointBEnt = InputEnt
+
+PointA = PointAEnt:boxCenterW()
+PointB = PointBEnt:boxCenterW()
+
+Vec = PointA - PointB
+
+
+holoPos(1,PointA - Vec * 0.5)
+holoAng(1, Vec:toAngle() + ang(90,0,0))
+holoScaleUnits(1, vec(1, 1,Vec:length()))
+
+

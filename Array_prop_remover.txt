@@ -1,0 +1,27 @@
+@name Array prop remover
+#@inputs Entity:array
+@inputs
+@outputs Entities:array
+@persist Target:entity
+@trigger 
+@model
+if (owner():keyPressed("l")){
+    Aim = owner():aimEntity()
+    if (Aim:type():lower() == "player" & Aim != Target){
+        Target = Aim
+        hint(Target:name(), 2)
+    }
+}
+interval(100)
+if (findCanQuery()){
+    findInSphere(vec(), 9999999)
+    findIncludePlayerProps(Target)
+    Entities = findToArray()
+    
+    for(N = 0,Entities:count()){
+        Prop = Entities[N,entity]
+        Entities[ N, entity ]:propBreak()
+    }
+}
+
+if(dupefinished()){reset()}

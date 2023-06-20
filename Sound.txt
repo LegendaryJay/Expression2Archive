@@ -1,0 +1,26 @@
+@name Sound
+@inputs 
+@outputs 
+@persist Target
+@trigger 
+if(first()){
+    runOnTick(1)
+    for (I = 1, 2){
+        holoCreate(I)
+        holoScale(I, vec())
+        holoEntity(I):soundPlay(I, 99999999, "npc/zombie_poison/pz_breathe_loop" + I + ".wav")
+    }
+    holoParent(2, 1)
+    
+}
+
+R = owner():keyPressed("R")
+if (R){
+    Aim = owner():aimEntity()
+    holoPos(1, owner():aimPos())
+    if (Aim){
+        holoParent(1, Aim)    
+        hint(Aim:toString(), 6)
+    }
+        
+}

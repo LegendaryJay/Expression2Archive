@@ -1,0 +1,57 @@
+@name Xray 2
+@inputs 
+@outputs 
+@persist [E Seat]:entity Players:array Radius NumPlayers
+@trigger 
+    
+    
+if (first()){
+    runOnTick(1)
+    runOnLast(1)
+    runOnPlayerConnect(1)
+    runOnPlayerDisconnect(1)
+    
+    E=entity()
+    Seat=seatSpawn("models/sprops/geometry/sphere_12.mdl", 1)
+    
+    Radius=10
+    
+    Players = players()
+    NumPlayers = numPlayers()
+}
+if (playerConnectClk() | playerDisconnectClk()){
+    Players = players()
+    NumPlayers = numPlayers()
+}
+
+Driver=Seat:driver()
+
+if (Driver){
+    Center = Seat:boxCenterW()
+    for (I = 1, NumPlayers){   
+        Player = Players[I, entity]
+        RawVec = Player:boxCenterW() - Center
+        Vec = RawVec:normalized() * Radius
+        Dist = RawVec:length()
+        
+        Holo = holoEntity(I)
+        if (!Holo){
+            Holo = holoCreate(I)
+            holoModel(I,"hq_cylinder")
+            holoDisableShading(I,1)
+        }
+        holoVisible(I, Players, 0)
+        
+        if (Player != Driver){
+            holoVisible(I, Driver, 1)
+        }   
+        holoScale(I, Player:boxSize() * 0.09 * (-Radius/Dist))
+        holoPos(I, Center + Vec)
+        holoColor(I, teamColor(Player:team()))
+        holoAlpha(I, clamp(round(Dist/20), 0, 255))
+        
+    }
+}
+if (last()){
+    propDeleteAll()
+}

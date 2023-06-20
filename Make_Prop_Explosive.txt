@@ -1,0 +1,66 @@
+@name Make Prop Explosive
+@inputs 
+@outputs Force Payload:entity
+@persist [Me Prop Payload]:entity Vel:vector MaxForce Held
+@trigger 
+@model models/props_c17/oildrum001_explosive.mdl
+
+if (first()){
+    MaxForce = 600
+    
+    
+    runOnLast(1)
+    runOnTick(1)
+    propSpawnUndo(0)    
+    Me = owner()
+}
+
+Shift=Me:keyPressed("lShift")
+LClick=Me:keyAttack1()
+Ctrl=Me:keyDuck()
+
+if (changed(LClick) & LClick & Shift & Ctrl & Me:aimEntity()){
+    Held = 5
+    
+    Prop = Me:aimEntity()
+    hint(Prop:model() + " made explosive",2)  
+    noCollideAll(Prop, 0)
+    Prop:propFreeze(0)
+    
+    if (!Payload){
+        Payload = propSpawn("models/props_junk/gascan001a.mdl", Prop:boxCenterW() ,0)
+        Payload:setAlpha(0)
+        Payload:propNotSolid(1)
+        Payload:propShadow(0)
+    }
+}
+
+
+Vel = Prop:vel()
+Force = abs($Vel:length())
+
+if (Prop:isPlayerHolding()){
+    Held = 5
+} elseif (Held) {
+    Held--
+}
+
+if ((!Held & Force > MaxForce) | !Prop){
+    Payload:propBreak()
+    Prop:setAlpha(0)
+    
+} elseif (!Payload){
+    Prop:propDelete()
+    Prop = noentity()
+}
+
+if (Prop){
+    Payload:setPos(Prop:massCenter())
+}
+
+
+
+
+
+
+

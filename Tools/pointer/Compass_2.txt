@@ -1,0 +1,107 @@
+@name Compass 2
+@inputs WireEntity:entity WireVector:vector
+@outputs [Driver Target]:entity [TargetPos]:vector Distance PercentDistance
+@persist [Compass Target Seat Me]:entity TargetPos:vector CameraOn
+@trigger 
+@model models/sprops/misc/domes/size_2/dome_24x12.mdl
+
+if (first()){
+    runOnTick(1)
+    propSpawnUndo(0)
+    
+    Seat = seatSpawn("models/sprops/geometry/sphere_24.mdl", entity():pos() + vec(0,0,40), ang(), 1)
+    Seat:setMaterial("lights/white")
+    Seat:setColor(hsv2rgb(300, 0.2, 1))
+    
+    Me = owner()
+    
+    Compass = holoCreate(1)
+    holoAng(1, ang(90,-90,0))
+    holoPos(1, Seat:toWorld(vec(0, 11, 0)))
+    holoModel(1, "models/Items/combine_rifle_ammo01.mdl")
+    holoMaterial(1, "lights/white")
+    holoColor(1, hsv2rgb(300, 0.6, 0.3))
+    holoScale(1, vec(2.85, 2.85,1.8) * 1.05)
+    holoParent(1, Seat)
+    
+    holoCreate(2, Seat:boxCenterW())
+    holoModel(2, "models/sprops/geometry/sphere_24.mdl")
+    holoMaterial(2, "lights/white")
+    holoScale(2, -vec(1.1))
+    holoParent(2,Seat)
+
+    
+    
+    holoCreate(3)
+    holoAng(3, ang(0, 0, 90))
+    holoPos(3, Compass:toWorld(vec(0,0,-1.4)))
+    holoModel(3, "models/Mechanics/gears/gear12x6_small.mdl")
+    holoMaterial(3, "lights/white")
+    holoColor(3, hsv2rgb(300, 0.6, 0.3))
+    holoScale(3, vec(vec2(0.77), 7.7))
+    holoParent(3, Seat)
+    
+    cameraCreate(1, Seat:toWorld(vec(0, 12,0)), Seat:forward():toAngle())
+    cameraParent(1, Seat)
+    
+    Target = WireEntity
+}
+TargetKey = Me:keyPressed("m")
+Holding = Seat:isPlayerHolding()
+
+Driver = Seat:driver()
+if (changed(Driver)){
+    cameraToggle( 1, Driver:isPlayer() , Seat)
+} else {
+    CameraKey = Me:keyPressed("n")
+    if (changed(CameraKey) & CameraKey){
+        CameraOn = !CameraOn
+        cameraToggle(1, CameraOn)
+    }
+}
+if (changed(Holding)){
+    Seat:propNotSolid(Holding)
+    Seat:propFreeze(!Holding)
+}
+
+if (changed(TargetKey) & TargetKey){
+    AimEnt = Me:aimEntity()
+    if (AimEnt){
+        Target = AimEnt
+        hint(Target:type() + " | " + Target:model(), 2)
+    } else {
+        Target = noentity()
+        TargetPos = Me:aimPos()
+        StringTarget = round(TargetPos, 0)
+        hint("Aim Coordinates: ( " + StringTarget:x() + ", " + StringTarget:y() + ", " + StringTarget:z() + " )", 4)
+    }
+}
+
+if (~WireEntity & WireEntity){
+    Target = WireEntity
+}
+
+if (~WireVector & WireVector){
+    TargetPos = WireVector
+} elseif (Target) {
+    TargetPos = Target:boxCenterW()
+}
+
+Center = Seat:boxCenterW()
+Distance = Center:distance(TargetPos)
+
+if (changed(TargetPos) | changed(Distance)){
+    PercentDistance = min(Distance / 2000, 1)
+    ViewAng = (TargetPos - Seat:boxCenterW()):toAngle()
+    IrisColor = vec(76.5,30.6,76.5) * PercentDistance
+    
+    holoColor(1, IrisColor )
+    holoColor(2, hsv2rgb(300, 0.3, 0.8 * PercentDistance) )
+    holoColor(3, IrisColor) 
+    
+    holoAng(3, toWorldAng( vec(), ang( 3 * 360 * PercentDistance,0,90), vec(), Seat:angles() ))
+    R = 0.07 + 0.7 * PercentDistance
+    holoScale(3, vec(R, R, 7.7))
+    
+    Seat:setAng( toWorldAng(vec(),ang(0,-90,0),vec(), ViewAng))
+}

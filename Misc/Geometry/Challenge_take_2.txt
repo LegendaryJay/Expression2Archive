@@ -1,0 +1,48 @@
+@name 
+@inputs 
+@outputs 
+@persist Var1 Var2 Var3 L1Amp L2Amp L3Amp
+@trigger 
+runOnTick(1)
+if (first()){
+    L1Amp=100
+    L2Amp=30
+    L3Amp=15
+    holoCreate(1)
+    holoModel(1,"hq_torus")
+    holoScale(1,vec(1,1,1)*0.083333280351461*L1Amp/2)
+    holoEntity(1):setTrails(5,5,10,"trails/laser",hsv2rgb(vec(0,1,1)),255)
+    
+    holoCreate(2)
+    holoModel(2,"hq_torus")
+    holoScale(2,vec(1,1,1)*0.083333280351461*L1Amp/2)
+    holoEntity(2):setTrails(3,5,10,"trails/laser",hsv2rgb(vec(120,1,1)),255)
+    
+    holoCreate(3)
+    holoModel(3,"hq_torus")
+    holoScale(3,vec(1,1,1)*0.083333280351461*L1Amp/2)
+    holoEntity(3):setTrails(0.1,5,10,"trails/laser",hsv2rgb(vec(240,1,1)),255)
+    
+}
+
+Layer1=entity():pos()+ vec(sin(Var1)*L1Amp,cos(Var1)*L1Amp,100)
+Layer2=Layer1 + vec(sin(Var1)*sin(Var2)*L2Amp,cos(Var1)*sin(Var2)*L2Amp,cos(Var2)*L2Amp)
+Layer3=Layer1
+
+
+
+
+holoPos(1,Layer1)
+holoAng(1, ang(90,-Var1,0))
+
+holoPos(2,Layer2)
+holoAng(2, ang(0,-Var1,-Var2 + 90))
+
+holoAlpha(3,0)
+holoAng(3, ang(0,-Var1,0))
+holoPos(3,Layer3)
+
+Var1+=2
+Var2+=10
+Var3+=30
+

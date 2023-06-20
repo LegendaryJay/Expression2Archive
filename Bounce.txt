@@ -1,0 +1,62 @@
+@name 
+@inputs 
+@outputs Z
+@persist G I Z StartPos:vector [E Me]:entity Boom
+@trigger 
+runOnTick(1)
+runOnLast(1)
+
+if (first()){
+    E=entity()
+    Me=owner()
+    holoCreate(1,entity():pos()+vec(0,0,1))
+    holoColor(1,vec(77,1,53))
+    StartPos=entity():pos()
+    holoCreate(2,StartPos)
+    holoModel(2,"models/sprops/misc/tubes/size_5/tube_96x144.mdl")
+    G=200
+    
+
+}
+Space=Me:keyPressed("space")
+Vec=E:pos()-StartPos
+
+if (Space){
+    Vel=Vec
+    Boom=1
+}
+if (Boom){
+    }
+holoPos(2,StartPos+Vec/2)
+holoAng(2,ang(0,Vec:toAngle():yaw(),Vec:toAngle():pitch()) + ang(0,90,0))
+holoScale(2,vec(0.010362693481232,0.006920391109384,0.010362694300518)*vec(20,Vec:length(),20))
+#[if (I==20){
+    holoPos(2,E:pos())
+}
+elseif (I==40) {
+    holoPos(2,StartPos)
+    I=0
+}]#
+    
+
+Z=rangerOffset(9990,holoEntity(1):pos(),holoEntity(1):vel()):distance()
+#A=A-14.714285714286
+
+if (Z>0){
+    G=-G
+    G=G*0.98
+    Z2=Z-holoEntity(1):pos():z()
+    holoPos(1,holoEntity(1):pos():setZ(Z+G-Z2))
+}
+else {
+    G=G-14.714285714286/3
+    G=G*0.99
+    holoPos(1,holoEntity(1):pos() + vec(0,0,G))
+}
+
+I++
+
+    
+
+
+

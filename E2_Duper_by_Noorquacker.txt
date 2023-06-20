@@ -1,0 +1,110 @@
+@name E2 Duper by Noorquacker
+@persist FN:string T:table [P RAM]:array [E E2]:entity
+#MADE BY QUACKER
+if(first()) {
+    RAM[67,number] = 0
+    runOnTick(1)
+    runOnChat(1)
+    runOnFile(1)
+    ##################3
+    ################3
+    ##################3
+    ################
+    #########
+    #######
+    #        NOTE: delete this ugly a-- comment block once you get this
+    #        EVEN BEFORE YOU SAVE THIS E2: remove this nasty comment block and UNFREEZE THE FOLLOWING 3 LINES:
+    entity():propNotSolid(1)
+    entity():propDraw(0)
+    entity():propFreeze(1)
+    ########
+    ######
+    #      They're for copy protection. They make the E2 pretty much uncopyable EXCEPT for special servers.
+    #         THIS INCLUDES IJWTB, ALL IJWTB STAFF MEMBERS HAVE SPECIAL E2 THINGYS
+    # now delete this
+}
+if(chatClk(owner())) {
+    local LS = owner():lastSaid():explode(" ")
+    if(LS[1,string]=="-dupe") {
+        hideChat(1)
+        if(LS[2,string]=="load" & LS[3,string]!="") {
+            FN = LS[3,string]
+            print("file: "+fileCanLoad())
+            fileLoad(">e2shared/dupes/"+FN+".txt")
+            print("Loading dupe save "+FN+"...")
+        }
+        elseif(LS[2,string]=="pasteprop") {
+            if(fileLoaded()|T:count()>1) {
+                print("PASTING "+T:count()+" PROPS...")
+                RAM[65,number] = 1
+                RAM[67,number] = 0
+                RAM[68,vector] = owner():aimPos()
+            }
+            else{print("Load a file, dummy!")}
+        }
+        elseif(LS[2,string]=="pasteholo") {
+            if(fileLoaded()|T:count()>1) {
+                print("PASTING "+T:count()+" HOLOS...")
+                RAM[66,number] = 1
+                RAM[67,number] = 0
+                RAM[68,vector] = owner():aimPos()
+            }
+            else{print("Load a file, dummy!")}
+        }
+        elseif(LS[2,string]=="select") {
+            P = owner():aimEntity():getConstraints()
+            local Look = owner():aimEntity()
+            if(!P:count()) {print("You're not duping just 1 darn prop")}
+            else{
+                print("Selected "+P:count()+" props. Converting to table...")
+                RAM[1,number] = 1
+                RAM[2,vector] = owner():pos()
+                T[1,array] = array(Look:pos()-RAM[2,vector],Look:angles(),Look:getColor(),Look:model(),Look:getMaterial(),Look:getAlpha())
+            }
+        }
+        elseif(LS[2,string]=="save" & LS[3,string]!="") {
+            print("Saving to file...")
+            fileWrite(">e2shared/dupes/"+LS[3,string]+".txt",vonEncode(T))
+            print("Saved!")
+        }
+        elseif(LS[2,string]=="delete") {propDeleteAll(),holoDeleteAll(),print("Deleted all props and holos."),RAM[66,number]=0,RAM[65,number]=0}
+        else{print("Eh, sonny? What did you say?")}
+    }
+    else{
+        hideChat(0)
+    }
+}
+if(fileClk()) {
+    print("Ready to load "+FN+"!")
+    T = vonDecodeTable(fileRead())
+    if(vonError()!="") {error("VON DECODE ERROR: "+vonError())}
+    else{print(T:count():toString()+" props found. Looks about right.")}
+}
+while(perf() & RAM[65,number] & propCanCreate()) {
+    RAM[67,number] = RAM[67,number]+1
+    local TD = T[RAM[67,number],array]
+    E = propSpawn(TD[4,string],TD[1,vector]+RAM[68,vector],TD[2,angle],1)
+    E:setColor(TD[3,vector])
+    E:setMaterial(TD[5,string])
+    E:setAlpha(TD[6,number])
+    noCollideAll(E,1)
+    if(RAM[67,number]>1) {#[weld(E2,E)]#}
+    E2=E
+    if(RAM[67,number]==T:count()) {RAM[65,number]=0,print("Done!")}
+}
+while(perf() & RAM[66,number] & holoCanCreate()) {
+    RAM[67,number] = RAM[67,number]+1
+    local TD = T[RAM[67,number],array]
+    holoCreate(RAM[67,number],TD[1,vector]+RAM[68,vector],vec(1,1,1),TD[2,angle],TD[3,vector],TD[4,string])
+    holoModel(RAM[67,number],TD[4,string])
+    #print(TD[4,string])
+    holoMaterial(RAM[67,number],TD[5,string])
+    holoAlpha(RAM[67,number],TD[6,number])
+    if(RAM[67,number]==T:count()) {RAM[66,number]=0,print("Done!")}
+}
+while(perf() & RAM[1,number]) {
+    RAM[3,number] = RAM[3,number]+1
+    local Ent = P[RAM[3,number],entity]
+    T[RAM[3,number]+1,array] = array(Ent:pos()-RAM[2,vector],Ent:angles(),Ent:getColor(),Ent:model(),Ent:getMaterial(),Ent:getAlpha())
+    if(RAM[3,number]==P:count()) {RAM[1,number]=0,print("Successfully converted to table.")}
+}

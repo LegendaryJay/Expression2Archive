@@ -1,0 +1,95 @@
+@name GunGame
+@inputs 
+@outputs [Direction PosArr]:array
+@persist E:entity SetUp Table:table PropN Max I [MinBox MaxBox]:vector [Direction PosArr]:array
+@trigger 
+function void entity:moveTo(TarVec:vector){
+    Vec = This:toLocal(This:pos() + TarVec)
+    This:applyForce((Vec*50-This:vel())*This:mass())
+}
+function vector newWorldVector(){
+    return E:toWorld(randvec(MinBox, MaxBox))
+}
+function vector newLocalVector(){
+    return randvec(vec(-10), vec(10))
+}
+function array newProp(){
+    return array(propSpawn("models/props_c17/oildrum001_explosive.mdl", newWorldVector(), ang(), 0), newLocalVector())
+}
+
+function vector entity:bounce(Vec:vector){
+    local Pos = E:toLocal(This:pos())
+    local NewVec = Vec
+    
+    if (Pos:x() < MinBox:x()){
+        NewVec = NewVec:setX(abs(Vec:x()))
+    } elseif (Pos:x() > MaxBox:x()) {
+        NewVec = NewVec:setX(-abs(Vec:x()))
+    }
+    
+    if (Pos:y() < MinBox:y()){
+        NewVec = NewVec:setY(abs(Vec:y()))
+    } elseif (Pos:y() > MaxBox:y()) {
+        NewVec = NewVec:setY(-abs(Vec:y()))
+    }
+    
+    if (Pos:z() < MinBox:z()){
+        NewVec = NewVec:setZ(abs(Vec:z()))
+    } elseif (Pos:z() > MaxBox:z()) {
+        NewVec = NewVec:setZ(-abs(Vec:z()))
+    }
+    
+    return NewVec
+}
+if (first()){
+    runOnTick(1)
+    runOnLast(1)
+    
+    E = entity()
+    SetUp = 1
+    Max = 20
+    I = 1
+    
+    MinBox = vec(-500, -500, 40)
+    MaxBox = vec(500, 500, 500)
+}
+
+if (SetUp & perf()){
+    if (propCanCreate()){
+        PropN++, Table:pushArray(newProp())
+        if (PropN >= Max){
+            SetUp = 0
+        }
+    }
+} else {
+    
+    for(I = 1, Max){
+        Array = Table[I, array]
+        Prop = Array[1, entity]
+        
+        if (!Prop){
+            Table[I, array] = newProp()
+            Array = Table[I, array]
+            Prop = Array[1, entity]
+        }
+        
+        Array[2, vector] = Prop:bounce(Array[2, vector])
+        Prop:moveTo(Array[2, vector])
+        PosArr[I, vector] = E:toLocal(Prop:pos())
+        Direction[I, vector] = Array[2, vector]
+        I++
+        if (I>Max){
+            I = 1
+            break
+        }
+        
+    }
+
+}
+if (owner():keyPressed("K")){
+    selfDestruct()
+}
+if (last()){
+    propDeleteAll()
+    
+}

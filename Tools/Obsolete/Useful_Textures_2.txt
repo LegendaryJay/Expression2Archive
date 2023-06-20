@@ -1,0 +1,111 @@
+@name Useful Textures 2
+@inputs 
+@outputs 
+@persist Run Pos [E Me]:entity MatCount Ang Dist HN Materials:array
+@model models/sprops/cuboids/height06/size_1/cube_6x6x6.mdl
+
+
+
+if (first()){
+    runOnTick(1)
+    propSpawnUndo(0)
+    Materials = array(
+        "models/player/shared/ice_player",
+        "engine/shadowbuild",
+        "engine/writez",
+        "lights/white",
+        "models/debug/debugwhite",
+        "models/wireframe",
+        "models/props_c17/fisheyelens",
+        "hlmv/debugmrmwireframe",
+        "effects/combineshield/comshieldwall",
+        "models/effects/portalfunnel_sheet",
+        "models/perftest/high_poly_test",
+        "models/props_lab/monitorface",
+        "models/effects/vortshield",
+        "dev/dev_energyflow",
+        "glass/glasswindow_refract01",
+        "models/props_dev/test_graygrid",
+        "wingf0x/seethrough_plastic",
+        "dak/dakpittedmetaldark",
+        "effects/combineshield/comshieldwall2"
+    ) 
+    MatCount = Materials:count()
+    
+    E = entity()
+    E:setAlpha(0)
+    
+    Me = owner()
+    
+    Prop = propSpawn("models/sprops/geometry/fring_48.mdl", E:boxCenterW(), E:toWorld(ang(0,90,0)), 1)
+    Prop:parentTo(E)
+    Prop:propNotSolid(1)
+    Prop:setMaterial("models/debug/debugwhite")
+    Prop:setColor(vec(150))
+    
+    Ang = 360 * 1/MatCount
+    Ang2 = (180 - Ang)/2 # a polygon is made of isocolese triangles- these are the other angles
+    
+    #diameter of the sphere + gap
+    Dist = (  (42 + 10) * sin(Ang2)  ) / sin(Ang)
+    
+    HN = 1
+}
+
+function setHoloPos(I){
+    ThisAng = Ang * (I - Pos - 1) + 180
+    holoPos(
+        I, 
+        E:toWorld(
+            E:boxCenter() + vec( sin(ThisAng), 0, cos(ThisAng) ) * Dist + vec( 0, 0, Dist ) 
+        )
+    )
+}
+
+if (Run){
+    Right = Me:keyPressed("right")
+    Left = Me:keyPressed("left")
+    PrintKey = Me:keyPressed("down")
+    
+    if ((changed(Left) & Left) | (changed(Right) & Right)){
+        Pos += Right - Left
+        Pos = Pos % MatCount
+        hint(Materials[Pos + 1, string], 2)
+        for(I = 1, MatCount){
+            setHoloPos(I)
+        }
+    }
+    
+    if (changed(PrintKey) & PrintKey){
+        print("\"" + Materials[Pos + 1, string] + "\"")
+    }
+} else {
+    while(holoCanCreate() & HN <= MatCount){
+        holoCreate(HN)
+        holoModel(HN, "models/sprops/geometry/sphere_42.mdl")
+        setHoloPos(HN)
+        holoMaterial(HN, Materials[HN, string])
+        holoParent(HN, E)
+        HN++
+    }
+    if (HN > MatCount){
+        runOnTick(0)
+        runOnKeys(Me, 1)
+        Run = 1
+    }
+}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

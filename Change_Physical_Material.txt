@@ -1,0 +1,9 @@
+@name Change Physical Material
+@inputs 
+@outputs 
+@persist 
+@trigger 
+Prop = entity():isConstrainedTo()
+Prop:propPhysicalMaterial("crowbar")
+
+selfDestruct()

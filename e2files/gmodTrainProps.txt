@@ -1,0 +1,97 @@
+[
+	{
+		"model": "models/props_phx/trains/tracks/track_crossing.mdl",
+		"size": "[150.5515 150.5515 18.9856]",
+		"center": "[-0.0203 0.0064 8.7123]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_pass.mdl",
+		"size": "[600.4584 326.3934 19.1919]",
+		"center": "[-70.0581 0.0024 7.4227]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_single.mdl",
+		"size": "[32.1113 123.635 18.9816]",
+		"center": "[-0.3215 0.0077 8.7143]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_1x.mdl",
+		"size": "[150.5519 123.6364 18.9816]",
+		"center": "[4.9356 0.007 8.7143]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_2x.mdl",
+		"size": "[300.5419 123.6364 18.9816]",
+		"center": "[79.9306 0.007 8.7143]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_4x.mdl",
+		"size": "[600.5209 123.6364 18.9816]",
+		"center": "[-70.0588 0.007 8.7143]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_8x.mdl",
+		"size": "[1200.48 123.6365 18.9816]",
+		"center": "[229.9207 0.007 8.7143]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_16x.mdl",
+		"size": "[2400.3987 123.6365 18.9816]",
+		"center": "[829.88 0.0071 8.7143]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_225_down.mdl",
+		"size": "[81.6699 123.5739 71.5238]",
+		"center": "[-34.4306 0.007 34.4286]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_45_down.mdl",
+		"size": "[150.3666 123.574 71.5238]",
+		"center": "[-0.0823 0.007 34.4286]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_225_up.mdl",
+		"size": "[81.6729 123.5739 33.6024]",
+		"center": "[-34.4291 0.007 15.4678]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_45_up.mdl",
+		"size": "[150.4488 123.5739 77.8371]",
+		"center": "[-0.0412 0.007 37.031]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_x.mdl",
+		"size": "[600.4587 505.0713 18.9191]",
+		"center": "[-49.5049 49.6193 7.381]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_switch.mdl",
+		"size": "[1200.4175 433.7935 18.9416]",
+		"center": "[229.9214 155.0947 7.3922]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_switcher.mdl",
+		"size": "[387.1648 82.0403 18.1951]",
+		"center": "[177.3965 -32.4335 7.7642]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_switch2.mdl",
+		"size": "[1200.4175 433.7936 18.9305]",
+		"center": "[229.9214 -155.0947 7.3867]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_switcher2.mdl",
+		"size": "[387.1648 82.0403 16.8647]",
+		"center": "[177.3965 32.4336 8.4324]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_turn45.mdl",
+		"size": "[849.804 433.7447 18.9849]",
+		"center": "[308.3794 -110.2156 7.3828]"
+	},
+	{
+		"model": "models/props_phx/trains/tracks/track_turn90.mdl",
+		"size": "[1216.5989 1216.4592 18.9849]",
+		"center": "[124.982 281.0587 7.3828]"
+	}
+]

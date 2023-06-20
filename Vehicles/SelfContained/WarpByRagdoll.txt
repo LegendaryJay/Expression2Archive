@@ -1,0 +1,73 @@
+@name WarpByRagdoll
+@inputs 
+@outputs 
+@persist [Prop Target Me]:entity 
+@trigger 
+if (first()){
+    runOnChat(1)
+    Me = owner()
+    runOnTick(1)
+    cameraCreate(1)
+}
+function teleport(){
+    concmd("iam ragdoll _ 1")
+    cameraAng(1, Target:eye():setY(0):normalized():toAngle())
+    cameraPos(1, Target:boxCenterW() - Target:eye():setY(0):normalized() * 200)
+    cameraParent(1, Target)
+    cameraToggle(1, 1)
+    timer("find doll", 400)
+    
+} 
+if (clk("find doll")){
+    findByClass("prop_ragdoll")
+    findClipToPlayerProps(Me)
+    Array = findToArray()
+    for(I = 1, Array:count()){
+        Prop = Array[I, entity]
+        if (Prop:model() == Me:model()){
+            Prop:propFreeze(1)
+            Prop:propNotSolid(1)
+            Prop:propDraw(0)
+            Prop:parentTo(Target)
+            Prop:setAng(Target:eye():setY(0):normalized():toAngle())
+            Prop:setPos(Target:boxCenterW() - Target:eye():setY(0):normalized() * 200)
+            
+            break
+        }
+    }
+    cameraToggle(1, 0)
+    concmd("iam ragdoll _ 0")
+}
+if (chatClk(Me)){
+    Said = lastSaid()
+    
+    if (Said[1] == "!"){
+        SaidArray = array()
+        TempArray = Said:sub(2):trimRight():explode("\"")
+        for(I = 1, TempArray:count()){
+            if (TempArray[I, string] == ""){
+                
+            }elseif ( I % 2 == 1){
+                local SuperTempArray = TempArray[I, string]:trim():explode(" ")
+                SaidArray = SaidArray:add(SuperTempArray)
+            } else {
+                SaidArray:pushString(TempArray[I, string])
+            }
+        }
+        S1 = SaidArray[1,string]:lower()
+        if(S1 == "go"){
+            hideChat(1)
+            S2 = SaidArray[2, string]
+            if (S2:sub(1,6):lower() == "steam_"){
+                TempPlayer = findPlayerBySteamID(S2:trim())
+            } else {
+                TempPlayer = findPlayerByName(S2:trim())
+            }      
+            print(TempPlayer:name())
+            if (TempPlayer) {
+                Target = TempPlayer
+                teleport()
+            }
+        }
+    }
+}
